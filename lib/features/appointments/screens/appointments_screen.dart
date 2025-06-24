@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/appointment_provider.dart';
 import '../../../shared/models/appointment_model.dart';
 
@@ -26,9 +25,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   void _loadAppointments() {
     final dateString = _selectedDate.toIso8601String().split('T')[0];
     context.read<AppointmentProvider>().loadAppointments(
-      date: dateString,
-      status: _selectedStatus,
-    );
+          date: dateString,
+          status: _selectedStatus,
+        );
   }
 
   @override
@@ -75,7 +74,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             child: GestureDetector(
               onTap: _selectDate,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(8),
@@ -199,8 +199,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 Text(
                   appointment.appointmentTime,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 _buildStatusChipForCard(appointment.status),
               ],
@@ -213,8 +213,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             Text(
               appointment.clientPhone,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -229,13 +229,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ),
               ],
             ),
-            if (appointment.notes?.isNotEmpty == true) ...[
+            if (appointment.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                appointment.notes ?? '',
+                appointment.notes,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
-                ),
+                      fontStyle: FontStyle.italic,
+                    ),
               ),
             ],
             const SizedBox(height: 16),
@@ -370,7 +370,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             title: const Text('Cancelar'),
             onTap: () {
               Navigator.of(context).pop();
-              _updateAppointmentStatus(appointment.id, AppointmentStatus.cancelled);
+              _updateAppointmentStatus(
+                  appointment.id, AppointmentStatus.cancelled);
             },
           ),
           ListTile(
@@ -386,7 +387,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
-  Future<void> _updateAppointmentStatus(String appointmentId, AppointmentStatus status) async {
+  Future<void> _updateAppointmentStatus(
+      String appointmentId, AppointmentStatus status) async {
     final success = await context.read<AppointmentProvider>().updateAppointment(
       appointmentId,
       {'status': status.name},
@@ -419,8 +421,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
 
     if (confirmed == true) {
-      final success = await context.read<AppointmentProvider>().deleteAppointment(appointmentId);
-      
+      final success = await context
+          .read<AppointmentProvider>()
+          .deleteAppointment(appointmentId);
+
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Agendamento excluído com sucesso')),
@@ -432,8 +436,18 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   String _formatDate(DateTime date) {
     final weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     final months = [
-      'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez'
     ];
 
     return '${weekdays[date.weekday % 7]}, ${date.day} ${months[date.month - 1]}';
