@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
+
 import '../providers/appointment_provider.dart';
 import '../../../shared/models/appointment_model.dart';
 
@@ -229,10 +229,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ),
               ],
             ),
-            if (appointment.notes.isNotEmpty) ...[
+            if (appointment.notes?.isNotEmpty == true) ...[
               const SizedBox(height: 8),
               Text(
-                appointment.notes,
+                appointment.notes ?? '',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                 ),

@@ -246,7 +246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _getStatusText(appointment['status']),
           style: const TextStyle(fontSize: 12),
         ),
-        backgroundColor: _getStatusColor(appointment['status']).withOpacity(0.2),
+        backgroundColor: _getStatusColor(appointment['status']).withValues(alpha: 0.2),
       ),
     );
   }
