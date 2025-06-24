@@ -229,10 +229,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 ),
               ],
             ),
-            if (appointment.notes.isNotEmpty) ...[
+            if (appointment.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
-                appointment.notes,
+                appointment.notes ?? '',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontStyle: FontStyle.italic,
                     ),
