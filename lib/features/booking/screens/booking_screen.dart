@@ -17,7 +17,7 @@ class BookingScreen extends StatelessWidget {
           children: [
             const Icon(Icons.calendar_today, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text('Agendamento Público'),
+            const Text('Agendamento Público'),
             Text('Profissional: $professionalId'),
             const Text('Em desenvolvimento'),
           ],

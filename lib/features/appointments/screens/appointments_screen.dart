@@ -331,11 +331,22 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   }
 
   void _showFilterDialog() {
-    // TODO: Implement advanced filter dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filtros'),
+        content: const Text('Filtros avançados em desenvolvimento'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCreateAppointmentDialog() {
-    // TODO: Implement create appointment dialog
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -362,7 +373,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             title: const Text('Editar'),
             onTap: () {
               Navigator.of(context).pop();
-              // TODO: Navigate to edit screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edição em desenvolvimento')),
+              );
             },
           ),
           ListTile(
