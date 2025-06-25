@@ -36,6 +36,15 @@ Resources:
     Properties:
       CodeUri: AuthFunction
       Handler: index.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UsersTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - cognito-idp:*
+          Resource: '*'
       Events:
         AuthApi:
           Type: Api
@@ -51,6 +60,16 @@ Resources:
     Properties:
       CodeUri: UsersFunction
       Handler: index.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: UsersTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ServicesTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AppointmentsTable
       Events:
         UsersApi:
           Type: Api
@@ -66,6 +85,10 @@ Resources:
     Properties:
       CodeUri: ServicesFunction
       Handler: index.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ServicesTable
       Events:
         ServicesApi:
           Type: Api
@@ -81,6 +104,10 @@ Resources:
     Properties:
       CodeUri: AppointmentsFunction
       Handler: index.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AppointmentsTable
       Events:
         AppointmentsApi:
           Type: Api
@@ -96,6 +123,13 @@ Resources:
     Properties:
       CodeUri: BookingFunction
       Handler: index.handler
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AppointmentsTable
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ServicesTable
       Events:
         BookingApi:
           Type: Api

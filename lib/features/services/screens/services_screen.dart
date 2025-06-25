@@ -236,12 +236,14 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 return;
               }
 
+              if (!mounted) return;
+              
               Navigator.of(context).pop();
 
               bool success;
               if (isEditing) {
                 success = await context.read<ServiceProvider>().updateService(
-                  service!.id,
+                  service.id,
                   {
                     'name': name,
                     'price': price,
