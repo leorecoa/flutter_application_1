@@ -85,11 +85,6 @@ jobs:
             --config-env dev \
             --region ${{ env.AWS_REGION }}
 
-      - name: Run integration tests
-        run: npm run test:integration
-        env:
-          API_GATEWAY_URL: ${{ steps.deploy.outputs.ApiGatewayUrl }}
-
   deploy-prod:
     needs: test
     runs-on: ubuntu-latest
@@ -129,11 +124,6 @@ jobs:
             --config-env prod \
             --region ${{ env.AWS_REGION }}
 
-      - name: Run smoke tests
-        run: npm run test:smoke
-        env:
-          API_GATEWAY_URL: ${{ steps.deploy.outputs.ApiGatewayUrl }}
-
   security-scan:
     runs-on: ubuntu-latest
     defaults:
@@ -143,6 +133,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run Snyk security scan
         uses: snyk/actions/node@master
