@@ -1,0 +1,126 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/Lambda", "Invocations", "FunctionName", "agenda-facil-dev-AuthFunction"],
+          [".", ".", ".", "agenda-facil-dev-UsersFunction"],
+          [".", ".", ".", "agenda-facil-dev-ServicesFunction"],
+          [".", ".", ".", "agenda-facil-dev-AppointmentsFunction"],
+          [".", ".", ".", "agenda-facil-dev-BookingFunction"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Lambda Invocations",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/Lambda", "Errors", "FunctionName", "agenda-facil-dev-AuthFunction"],
+          [".", ".", ".", "agenda-facil-dev-UsersFunction"],
+          [".", ".", ".", "agenda-facil-dev-ServicesFunction"],
+          [".", ".", ".", "agenda-facil-dev-AppointmentsFunction"],
+          [".", ".", ".", "agenda-facil-dev-BookingFunction"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Lambda Errors",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/Lambda", "Duration", "FunctionName", "agenda-facil-dev-AuthFunction"],
+          [".", ".", ".", "agenda-facil-dev-UsersFunction"],
+          [".", ".", ".", "agenda-facil-dev-ServicesFunction"],
+          [".", ".", ".", "agenda-facil-dev-AppointmentsFunction"],
+          [".", ".", ".", "agenda-facil-dev-BookingFunction"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Lambda Duration (ms)",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/ApiGateway", "Count", "ApiName", "agenda-facil-dev"],
+          [".", "4XXError", ".", "."],
+          [".", "5XXError", ".", "."]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "API Gateway Metrics",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "agenda-facil-dev-users"],
+          [".", "ConsumedWriteCapacityUnits", ".", "."],
+          [".", "ConsumedReadCapacityUnits", ".", "agenda-facil-dev-services"],
+          [".", "ConsumedWriteCapacityUnits", ".", "."],
+          [".", "ConsumedReadCapacityUnits", ".", "agenda-facil-dev-appointments"],
+          [".", "ConsumedWriteCapacityUnits", ".", "."]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "DynamoDB Capacity Units",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "log",
+      "x": 12,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/aws/lambda/agenda-facil-dev-AuthFunction'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "region": "us-east-1",
+        "title": "Recent Errors",
+        "view": "table"
+      }
+    }
+  ]
+}
