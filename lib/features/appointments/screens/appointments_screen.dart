@@ -322,7 +322,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
-    if (date != null) {
+    if (date != null && mounted) {
       setState(() {
         _selectedDate = date;
       });
@@ -433,7 +433,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       final success = await context
           .read<AppointmentProvider>()
           .deleteAppointment(appointmentId);
