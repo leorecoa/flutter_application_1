@@ -1,11 +1,10 @@
 const AWS = require('aws-sdk');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-const TABLE_NAME = process.env.DYNAMODB_TABLE;
-
 class DynamoDBService {
-  static async getItem(pk, sk) {
+  static async getItem(pk, sk, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = {
         TableName: TABLE_NAME,
         Key: { PK: pk, SK: sk }
@@ -19,8 +18,9 @@ class DynamoDBService {
     }
   }
 
-  static async putItem(item) {
+  static async putItem(item, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = {
         TableName: TABLE_NAME,
         Item: {
@@ -38,8 +38,9 @@ class DynamoDBService {
     }
   }
 
-  static async updateItem(pk, sk, updateExpression, expressionAttributeValues, expressionAttributeNames = {}) {
+  static async updateItem(pk, sk, updateExpression, expressionAttributeValues, expressionAttributeNames = {}, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = {
         TableName: TABLE_NAME,
         Key: { PK: pk, SK: sk },
@@ -60,8 +61,9 @@ class DynamoDBService {
     }
   }
 
-  static async deleteItem(pk, sk) {
+  static async deleteItem(pk, sk, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = {
         TableName: TABLE_NAME,
         Key: { PK: pk, SK: sk }
@@ -75,8 +77,9 @@ class DynamoDBService {
     }
   }
 
-  static async query(pk, skBeginsWith = null, indexName = null) {
+  static async query(pk, skBeginsWith = null, indexName = null, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = {
         TableName: TABLE_NAME,
         KeyConditionExpression: indexName ? 'GSI1PK = :pk' : 'PK = :pk',
@@ -100,8 +103,9 @@ class DynamoDBService {
     }
   }
 
-  static async scan(filterExpression = null, expressionAttributeValues = {}) {
+  static async scan(filterExpression = null, expressionAttributeValues = {}, tableName = null) {
     try {
+      const TABLE_NAME = tableName || process.env.USERS_TABLE;
       const params = { TableName: TABLE_NAME };
       
       if (filterExpression) {
