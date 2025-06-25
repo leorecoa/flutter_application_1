@@ -1,98 +1,102 @@
-const DynamoDBService = require('../shared/dynamodb');
-const ResponseHelper = require('../shared/response');
-const AuthHelper = require('../shared/auth');
+const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
+const MultiTenantMiddleware = require('../shared/multi-tenant');
+const ResponseHelper = require('../shared/response');
 
-exports.handler = async (event) => {
-  console.log('Services Event:', JSON.stringify(event, null, 2));
+const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-  if (event.httpMethod === 'OPTIONS') {
-    return ResponseHelper.cors();
-  }
+const handler = async (event) => {
+  const { httpMethod, pathParameters, body } = event;
+  const path = pathParameters?.proxy || '';
+  const requestBody = body ? JSON.parse(body) : {};
 
-  const user = AuthHelper.extractUserFromEvent(event);
-  if (!user) {
-    return ResponseHelper.unauthorized();
-  }
-
-  try {
-    const { httpMethod, pathParameters, body } = event;
-    const serviceId = pathParameters?.proxy;
-    const requestBody = body ? JSON.parse(body) : {};
-
-    switch (httpMethod) {
-      case 'GET':
-        return serviceId ? await getService(user.userId, serviceId) : await getServices(user.userId);
-      
-      case 'POST':
-        return await createService(user.userId, requestBody);
-      
-      case 'PUT':
-        return await updateService(user.userId, serviceId, requestBody);
-      
-      case 'DELETE':
-        return await deleteService(user.userId, serviceId);
-      
-      default:
-        return ResponseHelper.error('Method not allowed', 405);
-    }
-  } catch (error) {
-    console.error('Services Handler Error:', error);
-    return ResponseHelper.serverError(error.message);
+  switch (`${httpMethod}:${path}`) {
+    case 'GET:':
+      return await getServices(event);
+    
+    case 'POST:':
+      return await createService(event, requestBody);
+    
+    case 'PUT:':
+      return await updateService(event, requestBody);
+    
+    case 'DELETE:':
+      return await deleteService(event, requestBody);
+    
+    default:
+      return ResponseHelper.notFound('Endpoint not found');
   }
 };
 
-async function getServices(userId) {
+async function getServices(event) {
+  const { id: tenantId } = event.tenant;
+
   try {
-    const services = await DynamoDBService.query(`USER#${userId}`, 'SERVICE#');
-    return ResponseHelper.success(services);
+    const params = {
+      TableName: process.env.MAIN_TABLE,
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+      ExpressionAttributeValues: {
+        ':pk': `TENANT#${tenantId}#SERVICES`,
+        ':sk': 'SERVICE#'
+      }
+    };
+
+    const result = await dynamodb.query(params).promise();
+
+    return ResponseHelper.success({
+      data: result.Items,
+      count: result.Items.length
+    });
+
   } catch (error) {
     console.error('Get services error:', error);
     return ResponseHelper.serverError('Failed to get services');
   }
 }
 
-async function getService(userId, serviceId) {
+async function createService(event, body) {
+  const { id: tenantId, plan } = event.tenant;
+  const { name, price, duration, description } = body;
+
+  if (!name || !price || !duration) {
+    return ResponseHelper.error('Missing required fields: name, price, duration');
+  }
+
   try {
-    const service = await DynamoDBService.getItem(`USER#${userId}`, `SERVICE#${serviceId}`);
-    
-    if (!service) {
-      return ResponseHelper.notFound('Service not found');
+    // Check quota for free plan
+    const quota = await MultiTenantMiddleware.checkQuota(tenantId, plan, 'services');
+    if (!quota.allowed) {
+      return ResponseHelper.error(`Service limit reached. Current: ${quota.current}/${quota.limit}`);
     }
 
-    return ResponseHelper.success(service);
-  } catch (error) {
-    console.error('Get service error:', error);
-    return ResponseHelper.serverError('Failed to get service');
-  }
-}
-
-async function createService(userId, body) {
-  const { name, description, duration, price, category } = body;
-
-  if (!name || !duration || !price) {
-    return ResponseHelper.error('Name, duration, and price are required');
-  }
-
-  try {
     const serviceId = uuidv4();
+    const now = new Date().toISOString();
+
     const service = {
-      PK: `USER#${userId}`,
+      PK: `TENANT#${tenantId}#SERVICES`,
       SK: `SERVICE#${serviceId}`,
       serviceId,
-      userId,
+      tenantId,
       name,
-      description: description || '',
-      duration: parseInt(duration),
       price: parseFloat(price),
-      category: category || 'general',
+      duration: parseInt(duration),
+      description: description || '',
       isActive: true,
-      GSI1PK: `USER#${userId}`,
-      GSI1SK: `SERVICE#${name.toLowerCase()}`
+      createdAt: now,
+      updatedAt: now,
+      GSI1PK: `TENANT#${tenantId}#SERVICES`,
+      GSI1SK: `ACTIVE#${serviceId}`
     };
 
-    await DynamoDBService.putItem(service);
-    return ResponseHelper.success(service, 201);
+    await dynamodb.put({
+      TableName: process.env.MAIN_TABLE,
+      Item: service
+    }).promise();
+
+    return ResponseHelper.success({
+      data: service,
+      message: 'Service created successfully'
+    });
 
   } catch (error) {
     console.error('Create service error:', error);
@@ -100,66 +104,55 @@ async function createService(userId, body) {
   }
 }
 
-async function updateService(userId, serviceId, body) {
+async function updateService(event, body) {
+  const { id: tenantId } = event.tenant;
+  const { serviceId, name, price, duration, description } = body;
+
   if (!serviceId) {
-    return ResponseHelper.error('Service ID is required');
+    return ResponseHelper.error('Service ID required');
   }
 
   try {
-    const existingService = await DynamoDBService.getItem(`USER#${userId}`, `SERVICE#${serviceId}`);
-    
-    if (!existingService) {
-      return ResponseHelper.notFound('Service not found');
-    }
+    const updateExpression = [];
+    const expressionAttributeValues = {};
 
-    const { name, description, duration, price, category, isActive } = body;
-    
-    let updateExpression = 'SET updatedAt = :updatedAt';
-    const expressionAttributeValues = {
-      ':updatedAt': new Date().toISOString()
-    };
-
-    if (name !== undefined) {
-      updateExpression += ', #name = :name';
+    if (name) {
+      updateExpression.push('name = :name');
       expressionAttributeValues[':name'] = name;
     }
-
+    if (price !== undefined) {
+      updateExpression.push('price = :price');
+      expressionAttributeValues[':price'] = parseFloat(price);
+    }
+    if (duration !== undefined) {
+      updateExpression.push('duration = :duration');
+      expressionAttributeValues[':duration'] = parseInt(duration);
+    }
     if (description !== undefined) {
-      updateExpression += ', description = :description';
+      updateExpression.push('description = :description');
       expressionAttributeValues[':description'] = description;
     }
 
-    if (duration !== undefined) {
-      updateExpression += ', duration = :duration';
-      expressionAttributeValues[':duration'] = parseInt(duration);
-    }
+    updateExpression.push('updatedAt = :updatedAt');
+    expressionAttributeValues[':updatedAt'] = new Date().toISOString();
 
-    if (price !== undefined) {
-      updateExpression += ', price = :price';
-      expressionAttributeValues[':price'] = parseFloat(price);
-    }
+    const params = {
+      TableName: process.env.MAIN_TABLE,
+      Key: {
+        PK: `TENANT#${tenantId}#SERVICES`,
+        SK: `SERVICE#${serviceId}`
+      },
+      UpdateExpression: `SET ${updateExpression.join(', ')}`,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ReturnValues: 'ALL_NEW'
+    };
 
-    if (category !== undefined) {
-      updateExpression += ', category = :category';
-      expressionAttributeValues[':category'] = category;
-    }
+    const result = await dynamodb.update(params).promise();
 
-    if (isActive !== undefined) {
-      updateExpression += ', isActive = :isActive';
-      expressionAttributeValues[':isActive'] = isActive;
-    }
-
-    const expressionAttributeNames = name !== undefined ? { '#name': 'name' } : {};
-
-    const updatedService = await DynamoDBService.updateItem(
-      `USER#${userId}`,
-      `SERVICE#${serviceId}`,
-      updateExpression,
-      expressionAttributeValues,
-      expressionAttributeNames
-    );
-
-    return ResponseHelper.success(updatedService);
+    return ResponseHelper.success({
+      data: result.Attributes,
+      message: 'Service updated successfully'
+    });
 
   } catch (error) {
     console.error('Update service error:', error);
@@ -167,23 +160,31 @@ async function updateService(userId, serviceId, body) {
   }
 }
 
-async function deleteService(userId, serviceId) {
+async function deleteService(event, body) {
+  const { id: tenantId } = event.tenant;
+  const { serviceId } = body;
+
   if (!serviceId) {
-    return ResponseHelper.error('Service ID is required');
+    return ResponseHelper.error('Service ID required');
   }
 
   try {
-    const existingService = await DynamoDBService.getItem(`USER#${userId}`, `SERVICE#${serviceId}`);
-    
-    if (!existingService) {
-      return ResponseHelper.notFound('Service not found');
-    }
+    await dynamodb.delete({
+      TableName: process.env.MAIN_TABLE,
+      Key: {
+        PK: `TENANT#${tenantId}#SERVICES`,
+        SK: `SERVICE#${serviceId}`
+      }
+    }).promise();
 
-    await DynamoDBService.deleteItem(`USER#${userId}`, `SERVICE#${serviceId}`);
-    return ResponseHelper.success({ message: 'Service deleted successfully' });
+    return ResponseHelper.success({
+      message: 'Service deleted successfully'
+    });
 
   } catch (error) {
     console.error('Delete service error:', error);
     return ResponseHelper.serverError('Failed to delete service');
   }
 }
+
+exports.handler = MultiTenantMiddleware.withMultiTenant(handler);

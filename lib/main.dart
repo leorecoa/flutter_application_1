@@ -8,6 +8,8 @@ import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/appointments/providers/appointment_provider.dart';
 import 'features/services/providers/service_provider.dart';
 import 'features/booking/providers/booking_provider.dart';
+import 'features/tenant/providers/tenant_provider.dart';
+import 'features/reports/providers/report_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ServiceProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
+        ChangeNotifierProvider(create: (_) => TenantProvider()),
+        ChangeNotifierProvider(create: (_) => ReportProvider()),
       ],
       child: MaterialApp.router(
         title: 'AgendaFácil - SaaS',
