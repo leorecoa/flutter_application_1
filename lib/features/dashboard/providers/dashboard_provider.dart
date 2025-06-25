@@ -2,68 +2,54 @@ import 'package:flutter/foundation.dart';
 import '../../../core/services/api_service.dart';
 
 class DashboardProvider extends ChangeNotifier {
-  Map<String, dynamic>? _dashboardData;
+  final ApiService _apiService = ApiService();
+  
   bool _isLoading = false;
   String? _error;
+  
+  int _todayAppointments = 0;
+  int _monthlyAppointments = 0;
+  double _monthlyRevenue = 0.0;
+  int _totalClients = 0;
 
-  Map<String, dynamic>? get dashboardData => _dashboardData;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int get todayAppointments => _todayAppointments;
+  int get monthlyAppointments => _monthlyAppointments;
+  double get monthlyRevenue => _monthlyRevenue;
+  int get totalClients => _totalClients;
 
   Future<void> loadDashboardData() async {
-    _setLoading(true);
-    _clearError();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
     try {
-      // Get today's appointments
-      final today = DateTime.now().toIso8601String().split('T')[0];
-      final appointmentsResponse = await ApiService.get('/appointments?date=$today&limit=10');
+      final response = await _apiService.get('/users/dashboard');
       
-      // Get total appointments count
-      final allAppointmentsResponse = await ApiService.get('/appointments');
-      
-      // Calculate metrics
-      final todayAppointments = appointmentsResponse['data'] as List;
-      final allAppointments = allAppointmentsResponse['data'] as List;
-      
-      final totalRevenue = allAppointments
-          .where((apt) => apt['paymentStatus'] == 'paid')
-          .fold(0.0, (sum, apt) => sum + (apt['servicePrice'] ?? 0.0));
-      
-      final totalClients = allAppointments
-          .map((apt) => apt['clientPhone'])
-          .toSet()
-          .length;
-
-      _dashboardData = {
-        'todayAppointments': todayAppointments,
-        'totalAppointments': allAppointments.length,
-        'totalRevenue': totalRevenue,
-        'totalClients': totalClients,
-        'pendingAppointments': allAppointments
-            .where((apt) => apt['status'] == 'scheduled')
-            .length,
-      };
-
-      _setLoading(false);
-      notifyListeners();
+      if (response['success'] == true) {
+        final data = response['data'];
+        _todayAppointments = data['todayAppointments'] ?? 0;
+        _monthlyAppointments = data['monthlyAppointments'] ?? 0;
+        _monthlyRevenue = (data['monthlyRevenue'] ?? 0.0).toDouble();
+        _totalClients = data['totalClients'] ?? 0;
+      } else {
+        _error = response['message'] ?? 'Erro ao carregar dados do dashboard';
+        _resetData();
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      _error = 'Erro de conexão: $e';
+      _resetData();
     }
-  }
 
-  void _setLoading(bool loading) {
-    _isLoading = loading;
+    _isLoading = false;
     notifyListeners();
   }
 
-  void _setError(String error) {
-    _error = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _error = null;
+  void _resetData() {
+    _todayAppointments = 0;
+    _monthlyAppointments = 0;
+    _monthlyRevenue = 0.0;
+    _totalClients = 0;
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
-import '../../../shared/models/service_model.dart';
 import '../../../core/services/api_service.dart';
+import '../../../shared/models/service_model.dart';
 
 class ServiceProvider extends ChangeNotifier {
+  final ApiService _apiService = ApiService();
+  
   List<ServiceModel> _services = [];
   bool _isLoading = false;
   String? _error;
@@ -12,96 +14,95 @@ class ServiceProvider extends ChangeNotifier {
   String? get error => _error;
 
   Future<void> loadServices() async {
-    _setLoading(true);
-    _clearError();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
 
     try {
-      final response = await ApiService.get('/services');
-      final servicesData = response['data'] as List;
+      final response = await _apiService.get('/services');
       
-      _services = servicesData
-          .map((data) => ServiceModel.fromJson(data))
-          .toList();
-
-      _setLoading(false);
-      notifyListeners();
+      if (response['success'] == true) {
+        final List<dynamic> servicesData = response['data'] ?? [];
+        _services = servicesData.map((json) => ServiceModel.fromJson(json)).toList();
+      } else {
+        _error = response['message'] ?? 'Erro ao carregar serviços';
+        _services = [];
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      _error = 'Erro de conexão: $e';
+      _services = [];
     }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<bool> createService(Map<String, dynamic> serviceData) async {
-    _setLoading(true);
-    _clearError();
+    _isLoading = true;
+    notifyListeners();
 
     try {
-      final response = await ApiService.post('/services', serviceData);
-      final newService = ServiceModel.fromJson(response['data']);
+      final response = await _apiService.post('/services', serviceData);
       
-      _services.add(newService);
-      _setLoading(false);
-      notifyListeners();
-      return true;
+      if (response['success'] == true) {
+        await loadServices(); // Reload services
+        return true;
+      } else {
+        _error = response['message'] ?? 'Erro ao criar serviço';
+        return false;
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      _error = 'Erro de conexão: $e';
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  Future<bool> updateService(String serviceId, Map<String, dynamic> updates) async {
-    _setLoading(true);
-    _clearError();
+  Future<bool> updateService(String serviceId, Map<String, dynamic> serviceData) async {
+    _isLoading = true;
+    notifyListeners();
 
     try {
-      final response = await ApiService.put('/services/$serviceId', updates);
-      final updatedService = ServiceModel.fromJson(response['data']);
+      final response = await _apiService.put('/services/$serviceId', serviceData);
       
-      final index = _services.indexWhere((service) => service.id == serviceId);
-      if (index != -1) {
-        _services[index] = updatedService;
+      if (response['success'] == true) {
+        await loadServices(); // Reload services
+        return true;
+      } else {
+        _error = response['message'] ?? 'Erro ao atualizar serviço';
+        return false;
       }
-      
-      _setLoading(false);
-      notifyListeners();
-      return true;
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      _error = 'Erro de conexão: $e';
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<bool> deleteService(String serviceId) async {
-    _setLoading(true);
-    _clearError();
+    _isLoading = true;
+    notifyListeners();
 
     try {
-      await ApiService.delete('/services/$serviceId');
+      final response = await _apiService.delete('/services/$serviceId');
       
-      _services.removeWhere((service) => service.id == serviceId);
-      _setLoading(false);
-      notifyListeners();
-      return true;
+      if (response['success'] == true) {
+        await loadServices(); // Reload services
+        return true;
+      } else {
+        _error = response['message'] ?? 'Erro ao excluir serviço';
+        return false;
+      }
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      _error = 'Erro de conexão: $e';
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-  }
-
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _error = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _error = null;
   }
 }

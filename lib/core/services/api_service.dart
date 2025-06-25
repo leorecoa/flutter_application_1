@@ -3,106 +3,74 @@ import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 
 class ApiService {
-  static const String _baseUrl = AppConfig.apiGatewayUrl;
-  static String? _authToken;
-
-  static void setAuthToken(String token) {
-    _authToken = token;
+  String? _token;
+  
+  void setToken(String token) {
+    _token = token;
   }
-
-  static Map<String, String> get _headers {
-    final headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
-    
-    if (_authToken != null) {
-      headers['Authorization'] = 'Bearer $_authToken';
+  
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_token != null) 'Authorization': 'Bearer $_token',
+  };
+  
+  Future<Map<String, dynamic>> get(String endpoint, [Map<String, dynamic>? params]) async {
+    var url = '${AppConfig.apiGatewayUrl}$endpoint';
+    if (params != null && params.isNotEmpty) {
+      final queryString = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+      url += '?$queryString';
     }
     
-    return headers;
+    final uri = Uri.parse(url);
+    final response = await http.get(uri, headers: _headers);
+    return _handleResponse(response);
   }
-
-  static Future<Map<String, dynamic>> get(String endpoint) async {
+  
+  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data) async {
+    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
+    final response = await http.post(
+      uri,
+      headers: _headers,
+      body: json.encode(data),
+    );
+    return _handleResponse(response);
+  }
+  
+  Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> data) async {
+    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
+    final response = await http.put(
+      uri,
+      headers: _headers,
+      body: json.encode(data),
+    );
+    return _handleResponse(response);
+  }
+  
+  Future<Map<String, dynamic>> delete(String endpoint) async {
+    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
+    final response = await http.delete(uri, headers: _headers);
+    return _handleResponse(response);
+  }
+  
+  Map<String, dynamic> _handleResponse(http.Response response) {
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl$endpoint'),
-        headers: _headers,
-      );
+      final data = json.decode(response.body);
       
-      return _handleResponse(response);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return data;
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Erro na API',
+          'statusCode': response.statusCode,
+        };
+      }
     } catch (e) {
-      throw ApiException('Erro de conexão: $e');
+      return {
+        'success': false,
+        'message': 'Erro de conexão',
+        'error': e.toString(),
+      };
     }
   }
-
-  static Future<Map<String, dynamic>> post(
-    String endpoint,
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl$endpoint'),
-        headers: _headers,
-        body: jsonEncode(data),
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw ApiException('Erro de conexão: $e');
-    }
-  }
-
-  static Future<Map<String, dynamic>> put(
-    String endpoint,
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$_baseUrl$endpoint'),
-        headers: _headers,
-        body: jsonEncode(data),
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw ApiException('Erro de conexão: $e');
-    }
-  }
-
-  static Future<Map<String, dynamic>> delete(String endpoint) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$_baseUrl$endpoint'),
-        headers: _headers,
-      );
-      
-      return _handleResponse(response);
-    } catch (e) {
-      throw ApiException('Erro de conexão: $e');
-    }
-  }
-
-  static Map<String, dynamic> _handleResponse(http.Response response) {
-    final data = jsonDecode(response.body);
-    
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return data;
-    } else {
-      throw ApiException(
-        data['message'] ?? 'Erro desconhecido',
-        statusCode: response.statusCode,
-      );
-    }
-  }
-}
-
-class ApiException implements Exception {
-  final String message;
-  final int? statusCode;
-
-  ApiException(this.message, {this.statusCode});
-
-  @override
-  String toString() => 'ApiException: $message';
 }
