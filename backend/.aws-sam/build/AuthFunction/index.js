@@ -1,6 +1,6 @@
-const DynamoDBService = require('../shared/dynamodb');
-const ResponseHelper = require('../shared/response');
-const AuthHelper = require('../shared/auth');
+const DynamoDBService = require('./shared/dynamodb');
+const ResponseHelper = require('./shared/response');
+const AuthHelper = require('./shared/auth');
 
 exports.handler = async (event) => {
   console.log('Auth Event:', JSON.stringify(event, null, 2));
