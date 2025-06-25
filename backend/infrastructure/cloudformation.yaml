@@ -1,4 +1,3 @@
-sam deploy --template-file .aws-sam/build/template.yaml --stack-name agenda-facil-dev --capabilities CAPABILITY_IAM --region us-east-1
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: 'AgendaFacil SaaS - Serverless Backend'
@@ -94,7 +93,6 @@ Resources:
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
         - USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
       TokenValidityUnits:
         AccessToken: hours
         IdToken: hours
@@ -231,11 +229,6 @@ Resources:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowOrigin: "'*'"
-      Auth:
-        DefaultAuthorizer: CognitoAuthorizer
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt UserPool.Arn
 
 Outputs:
   ApiGatewayUrl:

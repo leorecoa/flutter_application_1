@@ -4,9 +4,9 @@ class AppConfig {
   
   // AWS Configuration
   static const String awsRegion = 'us-east-1';
-  static const String apiGatewayUrl = 'https://api.agendafacil.com.br';
-  static const String cognitoUserPoolId = 'us-east-1_XXXXXXXXX';
-  static const String cognitoClientId = 'XXXXXXXXXXXXXXXXXXXXXXXXXX';
+  static const String apiGatewayUrl = 'https://vkbjulc69d.execute-api.us-east-1.amazonaws.com/dev';
+  static const String cognitoUserPoolId = 'us-east-1_V0tcWz9Kj';
+  static const String cognitoClientId = '4b4d5o9s2n83e225umf3bsr5o0';
   
   // External APIs
   static const String whatsappApiUrl = 'https://api.z-api.io';
