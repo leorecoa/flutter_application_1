@@ -72,18 +72,25 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
           aws-region: ${{ env.AWS_REGION }}
+        # Ensure that AWS_ACCESS_KEY_ID_DEV and AWS_SECRET_ACCESS_KEY_DEV are set in your repository's GitHub Actions secrets.
 
       - name: Build SAM application
         run: sam build --use-container
 
       - name: Deploy to development
+        id: deploy-dev
         run: |
           sam deploy \
             --config-env dev \
             --region ${{ env.AWS_REGION }}
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          API_GATEWAY_URL: ${{ steps.deploy-dev.outputs.ApiGatewayUrl }}
 
   deploy-prod:
     needs: test
@@ -119,10 +126,16 @@ jobs:
         run: sam build --use-container
 
       - name: Deploy to production
+        id: deploy-prod
         run: |
           sam deploy \
             --config-env prod \
             --region ${{ env.AWS_REGION }}
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+        env:
+          API_GATEWAY_URL: ${{ steps.deploy-prod.outputs.ApiGatewayUrl }}
 
   security-scan:
     runs-on: ubuntu-latest
@@ -134,19 +147,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Run Snyk security scan
         uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
+          snyk-token: ${{ secrets.SNYK_TOKEN }}
