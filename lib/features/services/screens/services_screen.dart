@@ -238,11 +238,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
               if (!mounted) return;
               
-              Navigator.of(context).pop();
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final serviceProvider = context.read<ServiceProvider>();
+              
+              navigator.pop();
 
               bool success;
               if (isEditing) {
-                success = await context.read<ServiceProvider>().updateService(
+                success = await serviceProvider.updateService(
                   service.id,
                   {
                     'name': name,
@@ -252,7 +256,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   },
                 );
               } else {
-                success = await context.read<ServiceProvider>().createService({
+                success = await serviceProvider.createService({
                   'name': name,
                   'price': price,
                   'duration': duration,
@@ -261,7 +265,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               }
 
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   SnackBar(
                     content: Text(success
                         ? '${isEditing ? 'Serviço atualizado' : 'Serviço criado'} com sucesso'
