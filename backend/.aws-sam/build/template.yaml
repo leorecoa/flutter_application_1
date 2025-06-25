@@ -1,0 +1,275 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "AgendaF\xE1cil SaaS Backend"
+Parameters:
+  CognitoDomainPrefix:
+    Type: String
+    Default: agenda-facil-dev
+    Description: Cognito domain prefix
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs18.x
+    Environment:
+      Variables:
+        USERS_TABLE:
+          Ref: UsersTable
+        SERVICES_TABLE:
+          Ref: ServicesTable
+        APPOINTMENTS_TABLE:
+          Ref: AppointmentsTable
+        COGNITO_USER_POOL_ID:
+          Ref: UserPool
+        COGNITO_CLIENT_ID:
+          Ref: UserPoolClient
+Resources:
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Cors:
+        AllowMethods: '''*'''
+        AllowHeaders: '''*'''
+        AllowOrigin: '''*'''
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: AuthFunction
+      Handler: index.handler
+      Events:
+        AuthApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /auth/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: AuthFunction
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: UsersFunction
+      Handler: index.handler
+      Events:
+        UsersApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /users/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: UsersFunction
+  ServicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ServicesFunction
+      Handler: index.handler
+      Events:
+        ServicesApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /services/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: ServicesFunction
+  AppointmentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: AppointmentsFunction
+      Handler: index.handler
+      Events:
+        AppointmentsApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /appointments/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: AppointmentsFunction
+  BookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: BookingFunction
+      Handler: index.handler
+      Events:
+        BookingApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /booking/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: BookingFunction
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${AWS::StackName}-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: email
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: email-index
+        KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${AWS::StackName}-services
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: userId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: userId-index
+        KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        Projection:
+          ProjectionType: ALL
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${AWS::StackName}-appointments
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: userId
+        AttributeType: S
+      - AttributeName: date
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      GlobalSecondaryIndexes:
+      - IndexName: userId-date-index
+        KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName:
+        Fn::Sub: ${AWS::StackName}-users
+      AutoVerifiedAttributes:
+      - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 6
+          RequireUppercase: false
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: UserPool
+      ClientName:
+        Fn::Sub: ${AWS::StackName}-client
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ADMIN_NO_SRP_AUTH
+      - USER_PASSWORD_AUTH
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain:
+        Ref: CognitoDomainPrefix
+      UserPoolId:
+        Ref: UserPool
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: DynamoDBAccess
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - cognito-idp:*
+            Resource: '*'
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway URL
+    Value:
+      Fn::Sub: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiUrl
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value:
+      Ref: UserPool
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UserPoolId
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value:
+      Ref: UserPoolClient
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UserPoolClientId
+  UsersTableName:
+    Description: Users DynamoDB Table Name
+    Value:
+      Ref: UsersTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-UsersTable
+  ServicesTableName:
+    Description: Services DynamoDB Table Name
+    Value:
+      Ref: ServicesTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ServicesTable
+  AppointmentsTableName:
+    Description: Appointments DynamoDB Table Name
+    Value:
+      Ref: AppointmentsTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-AppointmentsTable
