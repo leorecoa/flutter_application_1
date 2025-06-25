@@ -31,11 +31,26 @@ class StructuredLogger {
       logEntry.correlationId = this.correlationId;
     }
 
+    // Add tenant context if available
+    if (this.tenantId) {
+      logEntry.tenantId = this.tenantId;
+    }
+
+    if (this.userId) {
+      logEntry.userId = this.userId;
+    }
+
     console.log(JSON.stringify(logEntry));
   }
 
   setCorrelationId(id) {
     this.correlationId = id;
+    return this;
+  }
+
+  setTenantContext(tenantId, userId) {
+    this.tenantId = tenantId;
+    this.userId = userId;
     return this;
   }
 

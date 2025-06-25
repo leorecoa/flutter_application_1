@@ -1,0 +1,76 @@
+# SAM Configuration for AgendaFácil SaaS
+
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "agenda-facil-dev"
+resolve_s3 = true
+s3_prefix = "agenda-facil-dev"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.validate.parameters]
+lint = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+fail_on_empty_changeset = false
+stack_name = "agenda-facil-dev"
+s3_prefix = "agenda-facil-dev"
+region = "us-east-1"
+resolve_s3 = true
+parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
+
+[default.package.parameters]
+resolve_s3 = true
+
+[default.sync.parameters]
+watch = true
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+
+# Development Environment
+[dev]
+[dev.deploy.parameters]
+stack_name = "agenda-facil-dev"
+s3_prefix = "agenda-facil-dev"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
+confirm_changeset = false
+fail_on_empty_changeset = false
+
+# Staging Environment
+[staging]
+[staging.deploy.parameters]
+stack_name = "agenda-facil-staging"
+s3_prefix = "agenda-facil-staging"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=staging CognitoDomainPrefix=agenda-facil-staging"
+confirm_changeset = false
+fail_on_empty_changeset = false
+
+# Production Environment
+[prod]
+[prod.deploy.parameters]
+stack_name = "agenda-facil-prod"
+s3_prefix = "agenda-facil-prod"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=prod CognitoDomainPrefix=agenda-facil-prod"
+confirm_changeset = true
+fail_on_empty_changeset = false
+tags = "Project=AgendaFacil Environment=prod CriticalSystem=true"

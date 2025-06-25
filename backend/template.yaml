@@ -1,21 +1,50 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AgendaFácil SaaS Backend - Multi-Tenant
+Description: AgendaFácil SaaS - Multi-Tenant Serverless Platform
 
 Parameters:
-  CognitoDomainPrefix:
-    Type: String
-    Default: agenda-facil-dev
   Environment:
     Type: String
     Default: dev
     AllowedValues: [dev, staging, prod]
+    Description: Environment name
+  
+  CognitoDomainPrefix:
+    Type: String
+    Default: agenda-facil
+    Description: Cognito domain prefix
+
+Mappings:
+  EnvironmentMap:
+    dev:
+      MemorySize: 256
+      Timeout: 30
+      ProvisionedConcurrency: 0
+      DynamoDBReadCapacity: 5
+      DynamoDBWriteCapacity: 5
+    staging:
+      MemorySize: 512
+      Timeout: 30
+      ProvisionedConcurrency: 5
+      DynamoDBReadCapacity: 10
+      DynamoDBWriteCapacity: 10
+    prod:
+      MemorySize: 1024
+      Timeout: 30
+      ProvisionedConcurrency: 10
+      DynamoDBReadCapacity: 25
+      DynamoDBWriteCapacity: 25
+
+Conditions:
+  IsProduction: !Equals [!Ref Environment, prod]
+  IsNotDev: !Not [!Equals [!Ref Environment, dev]]
 
 Globals:
   Function:
-    Timeout: 30
     Runtime: nodejs18.x
-    MemorySize: 256
+    MemorySize: !FindInMap [EnvironmentMap, !Ref Environment, MemorySize]
+    Timeout: !FindInMap [EnvironmentMap, !Ref Environment, Timeout]
+    Tracing: Active
     Environment:
       Variables:
         MAIN_TABLE: !Ref MainTable
@@ -23,33 +52,54 @@ Globals:
         COGNITO_CLIENT_ID: !Ref UserPoolClient
         ENVIRONMENT: !Ref Environment
         S3_BUCKET: !Ref FilesBucket
-    Tracing: Active
+        LOG_LEVEL: !If [IsProduction, info, debug]
     Tags:
       Project: AgendaFacil
       Environment: !Ref Environment
+      ManagedBy: SAM
+
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'"
+      AllowOrigin: "'*'"
+      MaxAge: "'600'"
+    GatewayResponses:
+      DEFAULT_4XX:
+        ResponseParameters:
+          Headers:
+            Access-Control-Allow-Origin: "'*'"
+            Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      DEFAULT_5XX:
+        ResponseParameters:
+          Headers:
+            Access-Control-Allow-Origin: "'*'"
+            Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
 
 Resources:
-  # Cognito Authorizer
-  CognitoAuthorizer:
-    Type: AWS::ApiGateway::Authorizer
-    Properties:
-      Name: CognitoAuthorizer
-      Type: COGNITO_USER_POOLS
-      IdentitySource: method.request.header.Authorization
-      RestApiId: !Ref ApiGateway
-      ProviderARNs:
-        - !GetAtt UserPool.Arn
-
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'*'"
-        MaxAge: "'600'"
+      TracingEnabled: true
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: !If [IsProduction, ERROR, INFO]
+          DataTraceEnabled: !If [IsProduction, false, true]
+          MetricsEnabled: true
+
+  # Cognito Authorizer
+  CognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Name: !Sub "${AWS::StackName}-CognitoAuthorizer"
+      Type: COGNITO_USER_POOLS
+      IdentitySource: method.request.header.Authorization
+      RestApiId: !Ref ApiGateway
+      ProviderARNs:
+        - !GetAtt UserPool.Arn
 
   # Lambda Functions
   AuthFunction:
@@ -72,28 +122,17 @@ Resources:
       CodeUri: lambda/tenant/
       Handler: index.handler
       Role: !GetAtt TenantFunctionRole.Arn
+      ProvisionedConcurrencyConfig:
+        !If
+          - IsNotDev
+          - ProvisionedConcurrencyUnits: !FindInMap [EnvironmentMap, !Ref Environment, ProvisionedConcurrency]
+          - !Ref AWS::NoValue
       Events:
         TenantApi:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /tenants/{proxy+}
-            Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
-
-  UsersFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/users/
-      Handler: index.handler
-      Role: !GetAtt UsersFunctionRole.Arn
-      Events:
-        UsersApi:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /users/{proxy+}
             Method: ANY
             Auth:
               Authorizer: CognitoAuthorizer
@@ -126,6 +165,22 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /appointments/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
+
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/users/
+      Handler: index.handler
+      Role: !GetAtt UsersFunctionRole.Arn
+      Events:
+        UsersApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /users/{proxy+}
             Method: ANY
             Auth:
               Authorizer: CognitoAuthorizer
@@ -176,15 +231,15 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
-  # Single DynamoDB Table for Multi-Tenant
+  # DynamoDB Table
   MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "${AWS::StackName}-main"
       BillingMode: PROVISIONED
       ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
+        ReadCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
+        WriteCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
@@ -209,16 +264,52 @@ Resources:
           Projection:
             ProjectionType: ALL
           ProvisionedThroughput:
-            ReadCapacityUnits: 10
-            WriteCapacityUnits: 10
+            ReadCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
+            WriteCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
+        PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
+      DeletionProtectionEnabled: !If [IsProduction, true, false]
+      Tags:
+        - Key: Project
+          Value: AgendaFacil
+        - Key: Environment
+          Value: !Ref Environment
 
-  # S3 Bucket for Files
+  # Auto Scaling
+  MainTableReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: IsNotDev
+    Properties:
+      MaxCapacity: 1000
+      MinCapacity: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
+      ResourceId: !Sub "table/${MainTable}"
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+
+  MainTableWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: IsNotDev
+    Properties:
+      MaxCapacity: 1000
+      MinCapacity: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
+      ResourceId: !Sub "table/${MainTable}"
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+
+  # S3 Bucket
   FilesBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${AWS::StackName}-files-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: !If [IsProduction, Enabled, Suspended]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders: ['*']
@@ -226,7 +317,7 @@ Resources:
             AllowedOrigins: ['*']
             MaxAge: 3600
 
-  # Cognito with Custom Attributes
+  # Cognito User Pool
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -251,7 +342,10 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
       UserPoolAddOns:
-        AdvancedSecurityMode: ENFORCED
+        AdvancedSecurityMode: !If [IsProduction, ENFORCED, AUDIT]
+      Tags:
+        Project: AgendaFacil
+        Environment: !Ref Environment
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -272,10 +366,10 @@ Resources:
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Ref CognitoDomainPrefix
+      Domain: !Sub "${CognitoDomainPrefix}-${Environment}"
       UserPoolId: !Ref UserPool
 
-  # IAM Roles
+  # IAM Roles (Simplified - only showing AuthFunctionRole)
   AuthFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -288,8 +382,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: AuthPolicy
+        - PolicyName: AuthFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -304,6 +399,7 @@ Resources:
                   - cognito-idp:*
                 Resource: !GetAtt UserPool.Arn
 
+  # Additional IAM Roles (TenantFunction, ServicesFunction, etc.)
   TenantFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -316,8 +412,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: TenantPolicy
+        - PolicyName: TenantFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -329,41 +426,14 @@ Resources:
                   - !Sub "${MainTable.Arn}/index/*"
               - Effect: Allow
                 Action:
-                  - s3:PutObject
-                  - s3:GetObject
-                  - s3:DeleteObject
-                Resource: !Sub "${FilesBucket}/*"
+                  - s3:*
+                Resource: 
+                  - !GetAtt FilesBucket.Arn
+                  - !Sub "${FilesBucket.Arn}/*"
               - Effect: Allow
                 Action:
                   - cognito-idp:AdminUpdateUserAttributes
                 Resource: !GetAtt UserPool.Arn
-
-  UsersFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: UsersPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:Query
-                Resource: 
-                  - !GetAtt MainTable.Arn
-                  - !Sub "${MainTable.Arn}/index/*"
 
   ServicesFunctionRole:
     Type: AWS::IAM::Role
@@ -377,8 +447,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: ServicesPolicy
+        - PolicyName: ServicesFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -401,14 +472,43 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: AppointmentsPolicy
+        - PolicyName: AppointmentsFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
                   - dynamodb:*
+                Resource: 
+                  - !GetAtt MainTable.Arn
+                  - !Sub "${MainTable.Arn}/index/*"
+
+  UsersFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: UsersFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
                 Resource: 
                   - !GetAtt MainTable.Arn
                   - !Sub "${MainTable.Arn}/index/*"
@@ -425,8 +525,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: BookingPolicy
+        - PolicyName: BookingFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -450,8 +551,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: RelatorioPolicy
+        - PolicyName: RelatorioFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -466,7 +568,7 @@ Resources:
                 Action:
                   - s3:PutObject
                   - s3:GetObject
-                Resource: !Sub "${FilesBucket}/*"
+                Resource: !Sub "${FilesBucket.Arn}/*"
 
   AdminFunctionRole:
     Type: AWS::IAM::Role
@@ -480,8 +582,9 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-        - PolicyName: AdminPolicy
+        - PolicyName: AdminFunctionPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -522,3 +625,9 @@ Outputs:
     Value: !Ref FilesBucket
     Export:
       Name: !Sub "${AWS::StackName}-FilesBucket"
+
+  CognitoAuthorizerArn:
+    Description: Cognito Authorizer ARN
+    Value: !Ref CognitoAuthorizer
+    Export:
+      Name: !Sub "${AWS::StackName}-CognitoAuthorizer"

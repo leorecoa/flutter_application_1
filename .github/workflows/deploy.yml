@@ -82,13 +82,8 @@ jobs:
       - name: Deploy to development
         run: |
           sam deploy \
-            --stack-name agenda-facil-dev \
-            --parameter-overrides Environment=dev \
-            --capabilities CAPABILITY_IAM \
-            --region ${{ env.AWS_REGION }} \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --resolve-s3
+            --config-env dev \
+            --region ${{ env.AWS_REGION }}
 
       - name: Run integration tests
         run: npm run test:integration
@@ -131,13 +126,8 @@ jobs:
       - name: Deploy to production
         run: |
           sam deploy \
-            --stack-name agenda-facil-prod \
-            --parameter-overrides Environment=prod \
-            --capabilities CAPABILITY_IAM \
-            --region ${{ env.AWS_REGION }} \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --resolve-s3
+            --config-env prod \
+            --region ${{ env.AWS_REGION }}
 
       - name: Run smoke tests
         run: npm run test:smoke
