@@ -16,6 +16,9 @@ exports.handler = async (event) => {
     const requestBody = body ? JSON.parse(body) : {};
 
     switch (`${httpMethod}:${path}`) {
+      case 'GET:health':
+        return ResponseHelper.success({ status: 'healthy', timestamp: new Date().toISOString() });
+      
       case 'POST:register':
         return await handleRegister(requestBody);
       

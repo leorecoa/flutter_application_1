@@ -1,50 +1,139 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: "AgendaF\xE1cil SaaS Backend"
+Description: "AgendaF\xE1cil SaaS - Multi-Tenant Serverless Platform"
 Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - staging
+    - prod
+    Description: Environment name
   CognitoDomainPrefix:
     Type: String
-    Default: agenda-facil-dev
+    Default: agenda-facil
     Description: Cognito domain prefix
+Mappings:
+  EnvironmentMap:
+    dev:
+      MemorySize: 256
+      Timeout: 30
+      ProvisionedConcurrency: 0
+      DynamoDBReadCapacity: 5
+      DynamoDBWriteCapacity: 5
+    staging:
+      MemorySize: 512
+      Timeout: 30
+      ProvisionedConcurrency: 5
+      DynamoDBReadCapacity: 10
+      DynamoDBWriteCapacity: 10
+    prod:
+      MemorySize: 1024
+      Timeout: 30
+      ProvisionedConcurrency: 10
+      DynamoDBReadCapacity: 25
+      DynamoDBWriteCapacity: 25
+Conditions:
+  IsProduction:
+    Fn::Equals:
+    - Ref: Environment
+    - prod
+  IsNotDev:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: Environment
+      - dev
 Globals:
   Function:
-    Timeout: 30
     Runtime: nodejs18.x
+    MemorySize:
+      Fn::FindInMap:
+      - EnvironmentMap
+      - Ref: Environment
+      - MemorySize
+    Timeout:
+      Fn::FindInMap:
+      - EnvironmentMap
+      - Ref: Environment
+      - Timeout
+    Tracing: Active
     Environment:
       Variables:
-        USERS_TABLE:
-          Ref: UsersTable
-        SERVICES_TABLE:
-          Ref: ServicesTable
-        APPOINTMENTS_TABLE:
-          Ref: AppointmentsTable
+        MAIN_TABLE:
+          Ref: MainTable
         COGNITO_USER_POOL_ID:
           Ref: UserPool
         COGNITO_CLIENT_ID:
           Ref: UserPoolClient
+        ENVIRONMENT:
+          Ref: Environment
+        S3_BUCKET:
+          Ref: FilesBucket
+        LOG_LEVEL:
+          Fn::If:
+          - IsProduction
+          - info
+          - debug
+    Tags:
+      Project: AgendaFacil
+      Environment:
+        Ref: Environment
+      ManagedBy: SAM
+  Api:
+    Cors:
+      AllowMethods: '''GET,POST,PUT,DELETE,OPTIONS'''
+      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'''
+      AllowOrigin: '''*'''
+      MaxAge: '''600'''
+    GatewayResponses:
+      DEFAULT_4XX:
+        ResponseParameters:
+          Headers:
+            Access-Control-Allow-Origin: '''*'''
+            Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+      DEFAULT_5XX:
+        ResponseParameters:
+          Headers:
+            Access-Control-Allow-Origin: '''*'''
+            Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
 Resources:
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: dev
-      Cors:
-        AllowMethods: '''*'''
-        AllowHeaders: '''*'''
-        AllowOrigin: '''*'''
+      StageName:
+        Ref: Environment
+      TracingEnabled: true
+      MethodSettings:
+      - ResourcePath: /*
+        HttpMethod: '*'
+        LoggingLevel:
+          Fn::If:
+          - IsProduction
+          - ERROR
+          - INFO
+        DataTraceEnabled:
+          Fn::If:
+          - IsProduction
+          - false
+          - true
+        MetricsEnabled: true
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn:
+              Fn::GetAtt:
+              - UserPool
+              - Arn
   AuthFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: AuthFunction
       Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: UsersTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - cognito-idp:*
-          Resource: '*'
+      Role:
+        Fn::GetAtt:
+        - AuthFunctionRole
+        - Arn
       Events:
         AuthApi:
           Type: Api
@@ -55,40 +144,46 @@ Resources:
             Method: ANY
     Metadata:
       SamResourceId: AuthFunction
-  UsersFunction:
+  TenantFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: UsersFunction
+      CodeUri: TenantFunction
       Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: UsersTable
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: ServicesTable
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: AppointmentsTable
+      Role:
+        Fn::GetAtt:
+        - TenantFunctionRole
+        - Arn
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        Fn::If:
+        - IsNotDev
+        - ProvisionedConcurrencyUnits:
+            Fn::FindInMap:
+            - EnvironmentMap
+            - Ref: Environment
+            - ProvisionedConcurrency
+        - Ref: AWS::NoValue
       Events:
-        UsersApi:
+        TenantApi:
           Type: Api
           Properties:
             RestApiId:
               Ref: ApiGateway
-            Path: /users/{proxy+}
+            Path: /tenants/{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
     Metadata:
-      SamResourceId: UsersFunction
+      SamResourceId: TenantFunction
   ServicesFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ServicesFunction
       Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: ServicesTable
+      Role:
+        Fn::GetAtt:
+        - ServicesFunctionRole
+        - Arn
       Events:
         ServicesApi:
           Type: Api
@@ -97,6 +192,8 @@ Resources:
               Ref: ApiGateway
             Path: /services/{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
     Metadata:
       SamResourceId: ServicesFunction
   AppointmentsFunction:
@@ -104,10 +201,10 @@ Resources:
     Properties:
       CodeUri: AppointmentsFunction
       Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: AppointmentsTable
+      Role:
+        Fn::GetAtt:
+        - AppointmentsFunctionRole
+        - Arn
       Events:
         AppointmentsApi:
           Type: Api
@@ -116,20 +213,40 @@ Resources:
               Ref: ApiGateway
             Path: /appointments/{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
     Metadata:
       SamResourceId: AppointmentsFunction
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: UsersFunction
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+        - UsersFunctionRole
+        - Arn
+      Events:
+        UsersApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /users/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
+    Metadata:
+      SamResourceId: UsersFunction
   BookingFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: BookingFunction
       Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: AppointmentsTable
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: ServicesTable
+      Role:
+        Fn::GetAtt:
+        - BookingFunctionRole
+        - Arn
       Events:
         BookingApi:
           Type: Api
@@ -140,73 +257,176 @@ Resources:
             Method: ANY
     Metadata:
       SamResourceId: BookingFunction
-  UsersTable:
+  RelatorioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: RelatorioFunction
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+        - RelatorioFunctionRole
+        - Arn
+      Events:
+        RelatorioApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /relatorios/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
+    Metadata:
+      SamResourceId: RelatorioFunction
+  AdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: AdminFunction
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+        - AdminFunctionRole
+        - Arn
+      Events:
+        AdminApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /admin/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
+    Metadata:
+      SamResourceId: AdminFunction
+  MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName:
-        Fn::Sub: ${AWS::StackName}-users
-      BillingMode: PAY_PER_REQUEST
+        Fn::Sub: ${AWS::StackName}-main
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits:
+          Fn::FindInMap:
+          - EnvironmentMap
+          - Ref: Environment
+          - DynamoDBReadCapacity
+        WriteCapacityUnits:
+          Fn::FindInMap:
+          - EnvironmentMap
+          - Ref: Environment
+          - DynamoDBWriteCapacity
       AttributeDefinitions:
-      - AttributeName: id
+      - AttributeName: PK
         AttributeType: S
-      - AttributeName: email
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: GSI1PK
+        AttributeType: S
+      - AttributeName: GSI1SK
         AttributeType: S
       KeySchema:
-      - AttributeName: id
+      - AttributeName: PK
         KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
       GlobalSecondaryIndexes:
-      - IndexName: email-index
+      - IndexName: GSI1
         KeySchema:
-        - AttributeName: email
+        - AttributeName: GSI1PK
           KeyType: HASH
-        Projection:
-          ProjectionType: ALL
-  ServicesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName:
-        Fn::Sub: ${AWS::StackName}-services
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: userId
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: userId-index
-        KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
-        Projection:
-          ProjectionType: ALL
-  AppointmentsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName:
-        Fn::Sub: ${AWS::StackName}-appointments
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: userId
-        AttributeType: S
-      - AttributeName: date
-        AttributeType: S
-      KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-      GlobalSecondaryIndexes:
-      - IndexName: userId-date-index
-        KeySchema:
-        - AttributeName: userId
-          KeyType: HASH
-        - AttributeName: date
+        - AttributeName: GSI1SK
           KeyType: RANGE
         Projection:
           ProjectionType: ALL
+        ProvisionedThroughput:
+          ReadCapacityUnits:
+            Fn::FindInMap:
+            - EnvironmentMap
+            - Ref: Environment
+            - DynamoDBReadCapacity
+          WriteCapacityUnits:
+            Fn::FindInMap:
+            - EnvironmentMap
+            - Ref: Environment
+            - DynamoDBWriteCapacity
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled:
+          Fn::If:
+          - IsProduction
+          - true
+          - false
+      DeletionProtectionEnabled:
+        Fn::If:
+        - IsProduction
+        - true
+        - false
+      Tags:
+      - Key: Project
+        Value: AgendaFacil
+      - Key: Environment
+        Value:
+          Ref: Environment
+  MainTableReadCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: IsNotDev
+    Properties:
+      MaxCapacity: 1000
+      MinCapacity:
+        Fn::FindInMap:
+        - EnvironmentMap
+        - Ref: Environment
+        - DynamoDBReadCapacity
+      ResourceId:
+        Fn::Sub: table/${MainTable}
+      RoleARN:
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:ReadCapacityUnits
+      ServiceNamespace: dynamodb
+  MainTableWriteCapacityScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Condition: IsNotDev
+    Properties:
+      MaxCapacity: 1000
+      MinCapacity:
+        Fn::FindInMap:
+        - EnvironmentMap
+        - Ref: Environment
+        - DynamoDBWriteCapacity
+      ResourceId:
+        Fn::Sub: table/${MainTable}
+      RoleARN:
+        Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable
+      ScalableDimension: dynamodb:table:WriteCapacityUnits
+      ServiceNamespace: dynamodb
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${AWS::StackName}-files-${AWS::AccountId}
+      VersioningConfiguration:
+        Status:
+          Fn::If:
+          - IsProduction
+          - Enabled
+          - Suspended
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders:
+          - '*'
+          AllowedMethods:
+          - GET
+          - PUT
+          - POST
+          - DELETE
+          AllowedOrigins:
+          - '*'
+          MaxAge: 3600
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -214,13 +434,29 @@ Resources:
         Fn::Sub: ${AWS::StackName}-users
       AutoVerifiedAttributes:
       - email
+      Schema:
+      - Name: email
+        AttributeDataType: String
+        Required: true
+      - Name: tenantId
+        AttributeDataType: String
+        Mutable: true
+      - Name: plan
+        AttributeDataType: String
+        Mutable: true
       Policies:
         PasswordPolicy:
-          MinimumLength: 6
-          RequireUppercase: false
-          RequireLowercase: false
-          RequireNumbers: false
-          RequireSymbols: false
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      UserPoolAddOns:
+        AdvancedSecurityMode:
+          Fn::If:
+          - IsProduction
+          - ENFORCED
+          - AUDIT
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -232,14 +468,20 @@ Resources:
       ExplicitAuthFlows:
       - ADMIN_NO_SRP_AUTH
       - USER_PASSWORD_AUTH
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      WriteAttributes:
+      - email
+      - custom:tenantId
+      - custom:plan
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
       Domain:
-        Ref: CognitoDomainPrefix
+        Fn::Sub: ${CognitoDomainPrefix}-${Environment}
       UserPoolId:
         Ref: UserPool
-  LambdaExecutionRole:
+  AuthFunctionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -251,24 +493,241 @@ Resources:
           Action: sts:AssumeRole
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
       Policies:
-      - PolicyName: DynamoDBAccess
+      - PolicyName: AuthFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            Resource:
+              Fn::GetAtt:
+              - MainTable
+              - Arn
+          - Effect: Allow
+            Action:
+            - cognito-idp:*
+            Resource:
+              Fn::GetAtt:
+              - UserPool
+              - Arn
+  TenantFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: TenantFunctionPolicy
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
           - Effect: Allow
             Action:
             - dynamodb:*
-            Resource: '*'
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
           - Effect: Allow
             Action:
-            - cognito-idp:*
-            Resource: '*'
+            - s3:*
+            Resource:
+            - Fn::GetAtt:
+              - FilesBucket
+              - Arn
+            - Fn::Sub: ${FilesBucket.Arn}/*
+          - Effect: Allow
+            Action:
+            - cognito-idp:AdminUpdateUserAttributes
+            Resource:
+              Fn::GetAtt:
+              - UserPool
+              - Arn
+  ServicesFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: ServicesFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
+  AppointmentsFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: AppointmentsFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
+  UsersFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: UsersFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
+  BookingFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: BookingFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:PutItem
+            - dynamodb:Query
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
+  RelatorioFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: RelatorioFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
+          - Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            Resource:
+              Fn::Sub: ${FilesBucket.Arn}/*
+  AdminFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+      - PolicyName: AdminFunctionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource:
+            - Fn::GetAtt:
+              - MainTable
+              - Arn
+            - Fn::Sub: ${MainTable.Arn}/index/*
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway URL
     Value:
-      Fn::Sub: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/dev
+      Fn::Sub: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-ApiUrl
@@ -286,24 +745,17 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-UserPoolClientId
-  UsersTableName:
-    Description: Users DynamoDB Table Name
+  MainTableName:
+    Description: Main DynamoDB Table Name
     Value:
-      Ref: UsersTable
+      Ref: MainTable
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-UsersTable
-  ServicesTableName:
-    Description: Services DynamoDB Table Name
+        Fn::Sub: ${AWS::StackName}-MainTable
+  FilesBucketName:
+    Description: S3 Files Bucket Name
     Value:
-      Ref: ServicesTable
+      Ref: FilesBucket
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-ServicesTable
-  AppointmentsTableName:
-    Description: Appointments DynamoDB Table Name
-    Value:
-      Ref: AppointmentsTable
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-AppointmentsTable
+        Fn::Sub: ${AWS::StackName}-FilesBucket

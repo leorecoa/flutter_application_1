@@ -89,17 +89,10 @@ Resources:
           LoggingLevel: !If [IsProduction, ERROR, INFO]
           DataTraceEnabled: !If [IsProduction, false, true]
           MetricsEnabled: true
-
-  # Cognito Authorizer
-  CognitoAuthorizer:
-    Type: AWS::ApiGateway::Authorizer
-    Properties:
-      Name: !Sub "${AWS::StackName}-CognitoAuthorizer"
-      Type: COGNITO_USER_POOLS
-      IdentitySource: method.request.header.Authorization
-      RestApiId: !Ref ApiGateway
-      ProviderARNs:
-        - !GetAtt UserPool.Arn
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
 
   # Lambda Functions
   AuthFunction:
@@ -122,6 +115,7 @@ Resources:
       CodeUri: lambda/tenant/
       Handler: index.handler
       Role: !GetAtt TenantFunctionRole.Arn
+      AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
           - IsNotDev
@@ -343,9 +337,6 @@ Resources:
           RequireSymbols: true
       UserPoolAddOns:
         AdvancedSecurityMode: !If [IsProduction, ENFORCED, AUDIT]
-      Tags:
-        Project: AgendaFacil
-        Environment: !Ref Environment
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
@@ -626,8 +617,3 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-FilesBucket"
 
-  CognitoAuthorizerArn:
-    Description: Cognito Authorizer ARN
-    Value: !Ref CognitoAuthorizer
-    Export:
-      Name: !Sub "${AWS::StackName}-CognitoAuthorizer"
