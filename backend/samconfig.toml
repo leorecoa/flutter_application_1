@@ -28,6 +28,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
 confirm_changeset = false
 fail_on_empty_changeset = false
+resolve_s3 = true
 
 [prod]
 [prod.deploy.parameters]

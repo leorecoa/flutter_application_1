@@ -342,9 +342,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: !Sub "${AWS::StackName}-client"sam build
-sam deploy --guided
-
+      ClientName: !Sub "${AWS::StackName}-client"
       GenerateSecret: false
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
