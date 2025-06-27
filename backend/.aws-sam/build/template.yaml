@@ -452,11 +452,7 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
       UserPoolAddOns:
-        AdvancedSecurityMode:
-          Fn::If:
-          - IsProduction
-          - ENFORCED
-          - AUDIT
+        AdvancedSecurityMode: false
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:

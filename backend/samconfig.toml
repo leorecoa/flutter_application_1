@@ -20,14 +20,10 @@ parallel = true
 lint = true
 
 [default.deploy.parameters]
-capabilities = "CAPABILITY_IAM"
-confirm_changeset = false
+confirm_changeset = true
 fail_on_empty_changeset = false
-stack_name = "agenda-facil-dev"
-s3_prefix = "agenda-facil-dev"
-region = "us-east-1"
-resolve_s3 = true
-parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
+parameter_overrides = ""
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true
@@ -48,7 +44,7 @@ stack_name = "agenda-facil-dev"
 s3_prefix = "agenda-facil-dev"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
+parameter_overrides = ""
 confirm_changeset = false
 fail_on_empty_changeset = false
 

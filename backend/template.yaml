@@ -336,13 +336,15 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
       UserPoolAddOns:
-        AdvancedSecurityMode: !If [IsProduction, ENFORCED, AUDIT]
+        AdvancedSecurityMode: OFF
 
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       UserPoolId: !Ref UserPool
-      ClientName: !Sub "${AWS::StackName}-client"
+      ClientName: !Sub "${AWS::StackName}-client"sam build
+sam deploy --guided
+
       GenerateSecret: false
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
