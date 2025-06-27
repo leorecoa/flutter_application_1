@@ -1,7 +1,0 @@
-{
-  "name": "admin-function",
-  "version": "1.0.0",
-  "dependencies": {
-    "aws-sdk": "^2.1467.0"
-  }
-}
