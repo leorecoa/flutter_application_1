@@ -49,7 +49,7 @@ Globals:
       Variables:
         MAIN_TABLE: !Ref MainTable
         COGNITO_USER_POOL_ID: !Ref UserPool
-        COGNITO_CLIENT_ID: !Ref UserPoolClient
+        COGNITO_CLIENT_ID: "temp-client-id"
         ENVIRONMENT: !Ref Environment
         S3_BUCKET: !Ref FilesBucket
         LOG_LEVEL: !If [IsProduction, info, debug]
@@ -79,20 +79,20 @@ Globals:
 Resources:
   # API Gateway
   ApiGateway:
-    Type: AWS::Serverless::Api
+    Type: AWS::ApiGateway::RestApi
     Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - AuthFunction
+    Properties:
+      RestApiId: !Ref ApiGateway
       StageName: !Ref Environment
-      TracingEnabled: true
-      MethodSettings:
-        - ResourcePath: "/*"
-          HttpMethod: "*"
-          LoggingLevel: !If [IsProduction, ERROR, INFO]
-          DataTraceEnabled: !If [IsProduction, false, true]
-          MetricsEnabled: true
-      Auth:
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt UserPool.Arn
 
   # Lambda Functions
   AuthFunction:
@@ -336,28 +336,12 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
       UserPoolAddOns:
-        AdvancedSecurityMode: OFF
-
-  UserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      UserPoolId: !Ref UserPool
-      ClientName: !Sub "${AWS::StackName}-client"
-      GenerateSecret: false
-      ExplicitAuthFlows:
-        - ADMIN_NO_SRP_AUTH
-        - USER_PASSWORD_AUTH
-        - ALLOW_USER_SRP_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
-      WriteAttributes:
-        - email
-        - custom:tenantId
-        - custom:plan
+        AdvancedSecurityMode: "OFF"
 
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Sub "${CognitoDomainPrefix}-${Environment}"
+      Domain: !Sub "${CognitoDomainPrefix}-${Environment}-unique"
       UserPoolId: !Ref UserPool
 
   # IAM Roles (Simplified - only showing AuthFunctionRole)
@@ -599,11 +583,7 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-UserPoolId"
 
-  UserPoolClientId:
-    Description: Cognito User Pool Client ID
-    Value: !Ref UserPoolClient
-    Export:
-      Name: !Sub "${AWS::StackName}-UserPoolClientId"
+
 
   MainTableName:
     Description: Main DynamoDB Table Name

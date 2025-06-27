@@ -21,8 +21,8 @@ parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
 
 [dev]
 [dev.deploy.parameters]
-stack_name = "agenda-facil-dev"
-s3_prefix = "agenda-facil-dev"
+stack_name = "agenda-facil-dev-new"
+s3_prefix = "agenda-facil-dev-new"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=dev CognitoDomainPrefix=agenda-facil-dev"
