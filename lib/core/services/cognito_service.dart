@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class CognitoService {
+  static const String _region = 'us-east-1';
   static const String _clientId = 'kaog4tnmh1trlbuiu4ckf3sc8';
-  static const String _endpoint = 'https://cognito-idp.us-east-1.amazonaws.com/';
+  static const String _endpoint = 'https://cognito-idp.$_region.amazonaws.com/';
 
-  static Future<Map<String, dynamic>> signIn(String email, String password) async {
+  static Future<Map<String, dynamic>> signIn(
+      String email, String password) async {
     final headers = {
       'Content-Type': 'application/x-amz-json-1.1',
       'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
