@@ -1,75 +1,122 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../config/app_config.dart';
+import 'package:dio/dio.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'amplify_service.dart';
 
 class ApiService {
-  String? _token;
-  
-  void setToken(String token) {
-    _token = token;
-  }
-  
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    if (_token != null) 'Authorization': 'Bearer $_token',
-  };
-  
-  Future<Map<String, dynamic>> get(String endpoint, [Map<String, dynamic>? params]) async {
-    var url = '${AppConfig.apiGatewayUrl}$endpoint';
-    if (params != null && params.isNotEmpty) {
-      final queryString = params.entries.map((e) => '${e.key}=${e.value}').join('&');
-      url += '?$queryString';
+  static final Dio _dio = Dio();
+  static const String baseUrl = 'https://hk5bp3m596.execute-api.us-east-1.amazonaws.com/Prod';
+
+  static Future<void> _addAuthHeader() async {
+    final token = await AmplifyService.getAccessToken();
+    if (token != null) {
+      _dio.options.headers['Authorization'] = 'Bearer $token';
     }
-    
-    final uri = Uri.parse(url);
-    final response = await http.get(uri, headers: _headers);
-    return _handleResponse(response);
   }
-  
-  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data) async {
-    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
-    final response = await http.post(
-      uri,
-      headers: _headers,
-      body: json.encode(data),
-    );
-    return _handleResponse(response);
-  }
-  
-  Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> data) async {
-    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
-    final response = await http.put(
-      uri,
-      headers: _headers,
-      body: json.encode(data),
-    );
-    return _handleResponse(response);
-  }
-  
-  Future<Map<String, dynamic>> delete(String endpoint) async {
-    final uri = Uri.parse('${AppConfig.apiGatewayUrl}$endpoint');
-    final response = await http.delete(uri, headers: _headers);
-    return _handleResponse(response);
-  }
-  
-  Map<String, dynamic> _handleResponse(http.Response response) {
+
+  // Appointments
+  static Future<List<dynamic>> getAppointments() async {
     try {
-      final data = json.decode(response.body);
-      
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return data;
-      } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Erro na API',
-          'statusCode': response.statusCode,
-        };
-      }
+      await _addAuthHeader();
+      final response = await _dio.get('$baseUrl/appointments');
+      return response.data['appointments'] ?? [];
     } catch (e) {
+      safePrint('Error getting appointments: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createAppointment(Map<String, dynamic> appointment) async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.post('$baseUrl/appointments', data: appointment);
+      return response.data;
+    } catch (e) {
+      safePrint('Error creating appointment: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> updateAppointment(String id, Map<String, dynamic> appointment) async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.put('$baseUrl/appointments/$id', data: appointment);
+      return response.data;
+    } catch (e) {
+      safePrint('Error updating appointment: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> deleteAppointment(String id) async {
+    try {
+      await _addAuthHeader();
+      await _dio.delete('$baseUrl/appointments/$id');
+      return true;
+    } catch (e) {
+      safePrint('Error deleting appointment: $e');
+      return false;
+    }
+  }
+
+  // Clients
+  static Future<List<dynamic>> getClients() async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.get('$baseUrl/clients');
+      return response.data['clients'] ?? [];
+    } catch (e) {
+      safePrint('Error getting clients: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createClient(Map<String, dynamic> client) async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.post('$baseUrl/clients', data: client);
+      return response.data;
+    } catch (e) {
+      safePrint('Error creating client: $e');
+      return null;
+    }
+  }
+
+  // Services
+  static Future<List<dynamic>> getServices() async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.get('$baseUrl/services');
+      return response.data['services'] ?? [];
+    } catch (e) {
+      safePrint('Error getting services: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>?> createService(Map<String, dynamic> service) async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.post('$baseUrl/services', data: service);
+      return response.data;
+    } catch (e) {
+      safePrint('Error creating service: $e');
+      return null;
+    }
+  }
+
+  // Dashboard Stats
+  static Future<Map<String, dynamic>> getDashboardStats() async {
+    try {
+      await _addAuthHeader();
+      final response = await _dio.get('$baseUrl/dashboard/stats');
+      return response.data ?? {};
+    } catch (e) {
+      safePrint('Error getting dashboard stats: $e');
       return {
-        'success': false,
-        'message': 'Erro de conexão',
-        'error': e.toString(),
+        'totalAppointments': 0,
+        'totalClients': 0,
+        'totalRevenue': 0,
+        'satisfaction': 0,
       };
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
 import '../../../shared/widgets/animated_counter.dart';
+import '../../../shared/widgets/bottom_nav.dart';
 
 class LuxuryDashboard extends StatefulWidget {
   const LuxuryDashboard({super.key});
@@ -74,6 +75,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
           ),
         ),
       ),
+      bottomNavigationBar: const BottomNav(currentIndex: 0),
     );
   }
 

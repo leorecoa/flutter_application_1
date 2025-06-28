@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/luxury_theme.dart';
+import '../../../shared/widgets/luxury_card.dart';
+
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -8,162 +11,68 @@ class ClientsScreen extends StatefulWidget {
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
-  final List<Map<String, dynamic>> _clients = [
-    {
-      'id': '1',
-      'name': 'João Silva',
-      'phone': '(11) 99999-9999',
-      'email': 'joao@email.com',
-      'appointments': 5,
-      'lastAppointment': '2024-01-15',
-    },
-    {
-      'id': '2',
-      'name': 'Maria Santos',
-      'phone': '(11) 88888-8888',
-      'email': 'maria@email.com',
-      'appointments': 3,
-      'lastAppointment': '2024-01-10',
-    },
-  ];
-
-  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final filteredClients = _clients.where((client) {
-      return client['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          client['phone'].contains(_searchQuery);
-    }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Clientes'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: const InputDecoration(
-                hintText: 'Buscar cliente...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_add),
+            onPressed: () => _showAddClient(),
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [LuxuryTheme.pearl, Colors.white],
           ),
         ),
-      ),
-      body: filteredClients.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Buscar clientes...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  Icon(Icons.people, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    _searchQuery.isEmpty
-                        ? 'Nenhum cliente cadastrado'
-                        : 'Nenhum cliente encontrado',
+                  _buildClientCard(
+                    'Maria Silva',
+                    'maria@email.com',
+                    '(11) 99999-9999',
+                    '15 agendamentos',
+                    'VIP',
+                  ),
+                  _buildClientCard(
+                    'João Santos',
+                    'joao@email.com',
+                    '(11) 88888-8888',
+                    '8 agendamentos',
+                    'Regular',
+                  ),
+                  _buildClientCard(
+                    'Ana Costa',
+                    'ana@email.com',
+                    '(11) 77777-7777',
+                    '3 agendamentos',
+                    'Novo',
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredClients.length,
-              itemBuilder: (context, index) {
-                final client = filteredClients[index];
-                return _buildClientCard(client);
-              },
-            ),
-    );
-  }
-
-  Widget _buildClientCard(Map<String, dynamic> client) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  child: Text(client['name'][0].toUpperCase()),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        client['name'],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      Text(
-                        client['phone'],
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton(
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'call',
-                      child: Text('Ligar'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'whatsapp',
-                      child: Text('WhatsApp'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'history',
-                      child: Text('Histórico'),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$value em desenvolvimento')),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.email, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(client['email']),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text('${client['appointments']} agendamentos'),
-                const Spacer(),
-                Text(
-                  'Último: ${_formatDate(client['lastAppointment'])}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                ),
-              ],
             ),
           ],
         ),
@@ -171,8 +80,138 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  String _formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return '${date.day}/${date.month}/${date.year}';
+  Widget _buildClientCard(String name, String email, String phone, String visits, String category) {
+    Color categoryColor = category == 'VIP' 
+        ? LuxuryTheme.primaryGold 
+        : category == 'Regular' 
+            ? Colors.blue 
+            : Colors.green;
+
+    return LuxuryCard(
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: categoryColor.withOpacity(0.1),
+            child: Text(
+              name[0],
+              style: TextStyle(
+                color: categoryColor,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: LuxuryTheme.deepBlue,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: categoryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        category,
+                        style: TextStyle(
+                          color: categoryColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  phone,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  visits,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: LuxuryTheme.primaryGold,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () => _showClientOptions(name),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddClient() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Novo Cliente'),
+        content: const Text('Funcionalidade em desenvolvimento'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClientOptions(String name) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Editar'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Histórico'),
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Excluir', style: TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

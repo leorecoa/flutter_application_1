@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/service_provider.dart';
-import '../../../shared/models/service_model.dart';
+import '../../../core/theme/luxury_theme.dart';
+import '../../../shared/widgets/luxury_card.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -12,306 +11,186 @@ class ServicesScreen extends StatefulWidget {
 
 class _ServicesScreenState extends State<ServicesScreen> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ServiceProvider>().loadServices();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Serviços'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<ServiceProvider>().loadServices(),
+            icon: const Icon(Icons.add),
+            onPressed: () => _showAddService(),
           ),
         ],
       ),
-      body: Consumer<ServiceProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Erro: ${provider.error}'),
-                  ElevatedButton(
-                    onPressed: () => provider.loadServices(),
-                    child: const Text('Tentar novamente'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final services = provider.services;
-          if (services.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.build, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('Nenhum serviço cadastrado'),
-                  SizedBox(height: 8),
-                  Text('Toque no + para adicionar'),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: services.length,
-            itemBuilder: (context, index) {
-              final service = services[index];
-              return _buildServiceCard(service);
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showServiceDialog(),
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  Widget _buildServiceCard(ServiceModel service) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [LuxuryTheme.pearl, Colors.white],
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    service.name,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-                PopupMenuButton(
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Text('Editar'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('Excluir'),
-                    ),
-                  ],
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      _showServiceDialog(service: service);
-                    } else if (value == 'delete') {
-                      _deleteService(service.id);
-                    }
-                  },
-                ),
-              ],
+            _buildServiceCard(
+              'Corte Masculino',
+              'Corte moderno e estiloso',
+              'R\$ 35,00',
+              '45 min',
+              Icons.content_cut,
+              Colors.blue,
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.attach_money, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  'R\$ ${service.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text('${service.duration} min'),
-              ],
+            _buildServiceCard(
+              'Corte + Escova',
+              'Corte feminino com escova',
+              'R\$ 65,00',
+              '90 min',
+              Icons.brush,
+              Colors.pink,
             ),
-            if (service.description.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                service.description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-              ),
-            ],
+            _buildServiceCard(
+              'Barba + Bigode',
+              'Aparar e modelar barba',
+              'R\$ 25,00',
+              '30 min',
+              Icons.face,
+              Colors.brown,
+            ),
+            _buildServiceCard(
+              'Manicure',
+              'Cuidados com as unhas',
+              'R\$ 20,00',
+              '60 min',
+              Icons.back_hand,
+              Colors.purple,
+            ),
+            _buildServiceCard(
+              'Pedicure',
+              'Cuidados com os pés',
+              'R\$ 25,00',
+              '60 min',
+              Icons.accessibility,
+              Colors.green,
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _showServiceDialog({ServiceModel? service}) {
-    final isEditing = service != null;
-    final nameController = TextEditingController(text: service?.name ?? '');
-    final priceController = TextEditingController(
-      text: service?.price.toString() ?? '',
-    );
-    final durationController = TextEditingController(
-      text: service?.duration.toString() ?? '',
-    );
-    final descriptionController = TextEditingController(
-      text: service?.description ?? '',
-    );
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isEditing ? 'Editar Serviço' : 'Novo Serviço'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do serviço',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Preço (R\$)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: durationController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Duração (minutos)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Descrição (opcional)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
+  Widget _buildServiceCard(String name, String description, String price, String duration, IconData icon, Color color) {
+    return LuxuryCard(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 28,
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final price = double.tryParse(priceController.text) ?? 0;
-              final duration = int.tryParse(durationController.text) ?? 0;
-              final description = descriptionController.text.trim();
-
-              if (name.isEmpty || price <= 0 || duration <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Preencha todos os campos')),
-                );
-                return;
-              }
-
-              if (!mounted) return;
-              
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              final serviceProvider = context.read<ServiceProvider>();
-              
-              navigator.pop();
-
-              bool success;
-              if (isEditing) {
-                success = await serviceProvider.updateService(
-                  service.id,
-                  {
-                    'name': name,
-                    'price': price,
-                    'duration': duration,
-                    'description': description,
-                  },
-                );
-              } else {
-                success = await serviceProvider.createService({
-                  'name': name,
-                  'price': price,
-                  'duration': duration,
-                  'description': description,
-                });
-              }
-
-              if (mounted) {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(success
-                        ? '${isEditing ? 'Serviço atualizado' : 'Serviço criado'} com sucesso'
-                        : 'Erro ao ${isEditing ? 'atualizar' : 'criar'} serviço'),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: LuxuryTheme.deepBlue,
                   ),
-                );
-              }
-            },
-            child: Text(isEditing ? 'Salvar' : 'Criar'),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: LuxuryTheme.primaryGold.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        price,
+                        style: const TextStyle(
+                          color: LuxuryTheme.primaryGold,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        duration,
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showEditService(name),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _deleteService(String serviceId) async {
-    final confirmed = await showDialog<bool>(
+  void _showAddService() {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar exclusão'),
-        content: const Text('Tem certeza que deseja excluir este serviço?'),
+        title: const Text('Novo Serviço'),
+        content: const Text('Funcionalidade em desenvolvimento'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Excluir'),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
         ],
       ),
     );
+  }
 
-    if (confirmed == true && mounted) {
-      final success = await context.read<ServiceProvider>().deleteService(serviceId);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(success
-                ? 'Serviço excluído com sucesso'
-                : 'Erro ao excluir serviço'),
+  void _showEditService(String name) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Editar $name'),
+        content: const Text('Funcionalidade em desenvolvimento'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           ),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 }
