@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
-import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../../features/dashboard/screens/luxury_dashboard.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/services/screens/services_screen.dart';
 import '../../features/clients/screens/clients_screen.dart';
@@ -24,7 +24,7 @@ class AppRoutes {
       // Dashboard Routes
       GoRoute(
         path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
+        builder: (context, state) => const LuxuryDashboard(),
       ),
       
       // Appointments Routes

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/config/app_config.dart';
 import 'core/routes/app_routes.dart';
-import 'core/theme/app_theme.dart';
+import 'core/theme/luxury_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/dashboard/providers/dashboard_provider.dart';
 import 'features/appointments/providers/appointment_provider.dart';
@@ -34,8 +34,8 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp.router(
         title: 'AgendaFácil - SaaS',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
+        theme: LuxuryTheme.luxuryTheme,
+        darkTheme: LuxuryTheme.luxuryTheme,
         routerConfig: AppRoutes.router,
         debugShowCheckedModeBanner: false,
       ),
