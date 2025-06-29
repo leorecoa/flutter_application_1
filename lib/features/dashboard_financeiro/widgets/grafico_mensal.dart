@@ -121,7 +121,7 @@ class GraficoMensal extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: _getMaxValue() / 5,
                   getDrawingHorizontalLine: (value) {
-                    return FlLine(
+                    return const FlLine(
                       color: TrinksTheme.lightGray,
                       strokeWidth: 1,
                     );
