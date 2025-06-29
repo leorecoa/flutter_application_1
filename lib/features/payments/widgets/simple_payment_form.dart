@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/trinks_theme.dart';
 import '../models/payment_model.dart';
 import '../services/payment_service.dart';
 
@@ -23,7 +22,7 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
   final _servicoController = TextEditingController();
   final _valorController = TextEditingController();
   final _chavePixController = TextEditingController();
-  
+
   FormaPagamento _formaPagamento = FormaPagamento.pix;
   StatusPagamento _status = StatusPagamento.pendente;
   DateTime _data = DateTime.now();
@@ -60,7 +59,8 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
             children: [
               Text(
                 widget.payment == null ? 'Novo Pagamento' : 'Editar Pagamento',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 24),
               Row(
@@ -72,7 +72,8 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                         labelText: 'Cliente',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      validator: (value) =>
+                          value?.isEmpty == true ? 'Campo obrigatório' : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -83,7 +84,8 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                         labelText: 'Serviço',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      validator: (value) =>
+                          value?.isEmpty == true ? 'Campo obrigatório' : null,
                     ),
                   ),
                 ],
@@ -102,7 +104,8 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value?.isEmpty == true) return 'Campo obrigatório';
-                        if (double.tryParse(value!) == null) return 'Valor inválido';
+                        if (double.tryParse(value!) == null)
+                          return 'Valor inválido';
                         return null;
                       },
                     ),
@@ -116,11 +119,17 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: FormaPagamento.pix, child: Text('PIX')),
-                        DropdownMenuItem(value: FormaPagamento.cartao, child: Text('Cartão')),
-                        DropdownMenuItem(value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
+                        DropdownMenuItem(
+                            value: FormaPagamento.pix, child: Text('PIX')),
+                        DropdownMenuItem(
+                            value: FormaPagamento.cartao,
+                            child: Text('Cartão')),
+                        DropdownMenuItem(
+                            value: FormaPagamento.dinheiro,
+                            child: Text('Dinheiro')),
                       ],
-                      onChanged: (value) => setState(() => _formaPagamento = value!),
+                      onChanged: (value) =>
+                          setState(() => _formaPagamento = value!),
                     ),
                   ),
                 ],
@@ -144,9 +153,13 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                   border: OutlineInputBorder(),
                 ),
                 items: const [
-                  DropdownMenuItem(value: StatusPagamento.pendente, child: Text('Pendente')),
-                  DropdownMenuItem(value: StatusPagamento.pago, child: Text('Pago')),
-                  DropdownMenuItem(value: StatusPagamento.cancelado, child: Text('Cancelado')),
+                  DropdownMenuItem(
+                      value: StatusPagamento.pendente, child: Text('Pendente')),
+                  DropdownMenuItem(
+                      value: StatusPagamento.pago, child: Text('Pago')),
+                  DropdownMenuItem(
+                      value: StatusPagamento.cancelado,
+                      child: Text('Cancelado')),
                 ],
                 onChanged: (value) => setState(() => _status = value!),
               ),
@@ -186,7 +199,9 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
         formaPagamento: _formaPagamento,
         data: _data,
         status: _status,
-        chavePix: _formaPagamento == FormaPagamento.pix ? _chavePixController.text : null,
+        chavePix: _formaPagamento == FormaPagamento.pix
+            ? _chavePixController.text
+            : null,
       );
 
       if (widget.payment == null) {

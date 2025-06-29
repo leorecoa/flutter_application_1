@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/trinks_theme.dart';
 import '../models/payment_model.dart';
-import '../../appointments/services/agendamento_service.dart';
 
 class PaymentFormDialog extends StatefulWidget {
   final Payment? payment;
@@ -25,7 +24,7 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
   final _valorController = TextEditingController();
   final _chavePixController = TextEditingController();
   final _observacoesController = TextEditingController();
-  
+
   FormaPagamento _formaPagamento = FormaPagamento.pix;
   StatusPagamento _status = StatusPagamento.pendente;
   DateTime _data = DateTime.now();
@@ -189,7 +188,8 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
       items: const [
         DropdownMenuItem(value: FormaPagamento.pix, child: Text('PIX')),
         DropdownMenuItem(value: FormaPagamento.cartao, child: Text('Cartão')),
-        DropdownMenuItem(value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
+        DropdownMenuItem(
+            value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
       ],
       onChanged: (value) => setState(() => _formaPagamento = value!),
     );
@@ -203,9 +203,12 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
         border: OutlineInputBorder(),
       ),
       items: const [
-        DropdownMenuItem(value: StatusPagamento.pendente, child: Text('Pendente')),
-        DropdownMenuItem(value: StatusPagamento.confirmado, child: Text('Confirmado')),
-        DropdownMenuItem(value: StatusPagamento.cancelado, child: Text('Cancelado')),
+        DropdownMenuItem(
+            value: StatusPagamento.pendente, child: Text('Pendente')),
+        DropdownMenuItem(
+            value: StatusPagamento.confirmado, child: Text('Confirmado')),
+        DropdownMenuItem(
+            value: StatusPagamento.cancelado, child: Text('Cancelado')),
       ],
       onChanged: (value) => setState(() => _status = value!),
     );
@@ -244,10 +247,14 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
         formaPagamento: _formaPagamento,
         data: _data,
         status: _status,
-        chavePix: _formaPagamento == FormaPagamento.pix ? _chavePixController.text : null,
-        observacoes: _observacoesController.text.isEmpty ? null : _observacoesController.text,
+        chavePix: _formaPagamento == FormaPagamento.pix
+            ? _chavePixController.text
+            : null,
+        observacoes: _observacoesController.text.isEmpty
+            ? null
+            : _observacoesController.text,
       );
-      
+
       widget.onSave(payment);
       Navigator.pop(context);
     }

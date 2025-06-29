@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/trinks_theme.dart';
 import '../models/agendamento_model.dart';
 import '../services/agendamento_service.dart';
 
@@ -22,7 +21,7 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
   final _clienteController = TextEditingController();
   final _servicoController = TextEditingController();
   final _valorController = TextEditingController();
-  
+
   String _barbeiroSelecionado = 'barbeiro-1';
   DateTime _dataHora = DateTime.now().add(const Duration(hours: 1));
   StatusAgendamento _status = StatusAgendamento.pendente;
@@ -57,8 +56,11 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                widget.agendamento == null ? 'Novo Agendamento' : 'Editar Agendamento',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                widget.agendamento == null
+                    ? 'Novo Agendamento'
+                    : 'Editar Agendamento',
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 24),
               TextFormField(
@@ -67,7 +69,8 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                   labelText: 'Nome do Cliente',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -76,7 +79,8 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                   labelText: 'Serviço',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               Row(
@@ -94,7 +98,8 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                           child: Text(barbeiro.nome),
                         );
                       }).toList(),
-                      onChanged: (value) => setState(() => _barbeiroSelecionado = value!),
+                      onChanged: (value) =>
+                          setState(() => _barbeiroSelecionado = value!),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -106,7 +111,8 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                         border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      validator: (value) =>
+                          value?.isEmpty == true ? 'Campo obrigatório' : null,
                     ),
                   ),
                 ],
@@ -116,8 +122,10 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                 children: [
                   Expanded(
                     child: ListTile(
-                      title: Text('Data: ${_dataHora.day}/${_dataHora.month}/${_dataHora.year}'),
-                      subtitle: Text('Hora: ${_dataHora.hour}:${_dataHora.minute.toString().padLeft(2, '0')}'),
+                      title: Text(
+                          'Data: ${_dataHora.day}/${_dataHora.month}/${_dataHora.year}'),
+                      subtitle: Text(
+                          'Hora: ${_dataHora.hour}:${_dataHora.minute.toString().padLeft(2, '0')}'),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: _selectDateTime,
                     ),
@@ -130,10 +138,18 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: StatusAgendamento.pendente, child: Text('Pendente')),
-                        DropdownMenuItem(value: StatusAgendamento.confirmado, child: Text('Confirmado')),
-                        DropdownMenuItem(value: StatusAgendamento.concluido, child: Text('Concluído')),
-                        DropdownMenuItem(value: StatusAgendamento.cancelado, child: Text('Cancelado')),
+                        DropdownMenuItem(
+                            value: StatusAgendamento.pendente,
+                            child: Text('Pendente')),
+                        DropdownMenuItem(
+                            value: StatusAgendamento.confirmado,
+                            child: Text('Confirmado')),
+                        DropdownMenuItem(
+                            value: StatusAgendamento.concluido,
+                            child: Text('Concluído')),
+                        DropdownMenuItem(
+                            value: StatusAgendamento.cancelado,
+                            child: Text('Cancelado')),
                       ],
                       onChanged: (value) => setState(() => _status = value!),
                     ),
@@ -169,16 +185,17 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_dataHora),
       );
-      
+
       if (time != null) {
         setState(() {
-          _dataHora = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+          _dataHora =
+              DateTime(date.year, date.month, date.day, time.hour, time.minute);
         });
       }
     }
@@ -186,8 +203,9 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
 
   Future<void> _save() async {
     if (_formKey.currentState!.validate()) {
-      final barbeiro = AgendamentoService.getBarbeiros().firstWhere((b) => b.id == _barbeiroSelecionado);
-      
+      final barbeiro = AgendamentoService.getBarbeiros()
+          .firstWhere((b) => b.id == _barbeiroSelecionado);
+
       final agendamento = Agendamento(
         id: widget.agendamento?.id ?? '',
         clienteNome: _clienteController.text,

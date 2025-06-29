@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import '../config/aws_config.dart';
 
@@ -9,7 +8,8 @@ class AWSCognitoService {
   static String? _refreshToken;
   static Map<String, dynamic>? _userAttributes;
 
-  static Future<Map<String, dynamic>> signIn(String email, String password) async {
+  static Future<Map<String, dynamic>> signIn(
+      String email, String password) async {
     try {
       final headers = {
         'Content-Type': 'application/x-amz-json-1.1',
@@ -37,10 +37,10 @@ class AWSCognitoService {
         _accessToken = responseData['AuthenticationResult']['AccessToken'];
         _idToken = responseData['AuthenticationResult']['IdToken'];
         _refreshToken = responseData['AuthenticationResult']['RefreshToken'];
-        
+
         // Decodificar token para obter dados do usuário
         _userAttributes = _decodeJWT(_idToken!);
-        
+
         return {
           'success': true,
           'user': {
@@ -95,13 +95,13 @@ class AWSCognitoService {
 
   static Future<bool> isSignedIn() async {
     if (_accessToken == null) return false;
-    
+
     // Verificar se token ainda é válido
     try {
       final payload = _decodeJWT(_accessToken!);
       final exp = payload['exp'] as int;
       final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      
+
       return exp > now;
     } catch (e) {
       return false;
@@ -110,7 +110,7 @@ class AWSCognitoService {
 
   static Map<String, dynamic>? getCurrentUser() {
     if (_userAttributes == null) return null;
-    
+
     return {
       'id': _userAttributes!['sub'],
       'email': _userAttributes!['email'],
@@ -150,7 +150,7 @@ class AWSCognitoService {
       if (response.statusCode == 200) {
         _accessToken = responseData['AuthenticationResult']['AccessToken'];
         _idToken = responseData['AuthenticationResult']['IdToken'];
-        
+
         return {'success': true};
       } else {
         return {'success': false, 'error': _getErrorMessage(responseData)};
@@ -170,17 +170,17 @@ class AWSCognitoService {
   static Map<String, dynamic> _decodeJWT(String token) {
     final parts = token.split('.');
     if (parts.length != 3) throw Exception('Invalid JWT token');
-    
+
     final payload = parts[1];
     final normalized = base64Url.normalize(payload);
     final decoded = utf8.decode(base64Url.decode(normalized));
-    
+
     return jsonDecode(decoded);
   }
 
   static String _getErrorMessage(Map<String, dynamic> responseData) {
     final errorType = responseData['__type'] ?? '';
-    
+
     switch (errorType) {
       case 'NotAuthorizedException':
         return 'Email ou senha incorretos';

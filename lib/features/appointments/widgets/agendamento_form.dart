@@ -22,13 +22,13 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
   final _formKey = GlobalKey<FormState>();
   final _clienteController = TextEditingController();
   final _observacoesController = TextEditingController();
-  
+
   Cliente? _clienteSelecionado;
   Servico? _servicoSelecionado;
   Barbeiro? _barbeiroSelecionado;
   DateTime _dataSelecionada = DateTime.now();
   TimeOfDay _horaSelecionada = TimeOfDay.now();
-  
+
   List<Cliente> _clientes = [];
   // ignore: unused_field
   List<Cliente> _clientesFiltrados = [];
@@ -44,7 +44,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
   }
 
   void _loadData() async {
-    _clientes = await AgendamentoService.getClientes();
+    _clientes = AgendamentoService.getClientes();
     _clientesFiltrados = _clientes;
     setState(() {});
   }
@@ -89,7 +89,9 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          widget.agendamento == null ? 'Novo Agendamento' : 'Editar Agendamento',
+          widget.agendamento == null
+              ? 'Novo Agendamento'
+              : 'Editar Agendamento',
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -137,7 +139,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
     return Autocomplete<Cliente>(
       optionsBuilder: (textEditingValue) async {
         if (textEditingValue.text.isEmpty) return _clientes;
-        return await AgendamentoService.getClientes(textEditingValue.text);
+        return AgendamentoService.getClientes(textEditingValue.text);
       },
       displayStringForOption: (cliente) => cliente.nome,
       onSelected: (cliente) {
@@ -153,7 +155,8 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
             labelText: 'Cliente',
             prefixIcon: Icon(Icons.person_outline),
           ),
-          validator: (value) => value?.isEmpty == true ? 'Selecione um cliente' : null,
+          validator: (value) =>
+              value?.isEmpty == true ? 'Selecione um cliente' : null,
           onEditingComplete: onEditingComplete,
         );
       },
@@ -309,7 +312,8 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
     );
 
     final agendamento = Agendamento(
-      id: widget.agendamento?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.agendamento?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       clienteNome: _clienteSelecionado!.nome,
       clienteId: _clienteSelecionado!.id,
       servicoNome: _servicoSelecionado!.nome,
@@ -319,7 +323,9 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
       dataHora: dataHora,
       status: widget.agendamento?.status ?? StatusAgendamento.confirmado,
       valor: _servicoSelecionado!.preco,
-      observacoes: _observacoesController.text.isEmpty ? null : _observacoesController.text,
+      observacoes: _observacoesController.text.isEmpty
+          ? null
+          : _observacoesController.text,
     );
 
     try {
@@ -328,7 +334,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
       } else {
         await AgendamentoService.atualizarAgendamento(agendamento);
       }
-      
+
       widget.onSaved();
       if (mounted) Navigator.of(context).pop();
     } finally {
