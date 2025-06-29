@@ -87,7 +87,13 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
       backgroundColor: LuxuryTheme.deepBlue,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          decoration: LuxuryTheme.luxuryGradient,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+            ),
+          ),
           child: const Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

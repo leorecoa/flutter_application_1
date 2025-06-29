@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:amplify_flutter/amplify_flutter.dart';
+// import 'package:amplify_flutter/amplify_flutter.dart';
 import '../models/recibo.dart';
 import '../utils/pdf_generator.dart';
 import 'email_service.dart';
@@ -83,19 +83,7 @@ class ReciboService {
       // Simulação do upload para S3
       print('📤 Uploading PDF to S3: $fileName');
       
-      /*
-      final uploadResult = await Amplify.Storage.uploadData(
-        key: fileName,
-        data: S3DataPayload.bytes(pdfBytes),
-        options: const StorageUploadDataOptions(
-          accessLevel: StorageAccessLevel.private,
-          metadata: {
-            'content-type': 'application/pdf',
-            'recibo-id': reciboId,
-          },
-        ),
-      ).result;
-      */
+      // Simulated S3 upload - replace with actual implementation
 
       await Future.delayed(const Duration(seconds: 1)); // Simular upload
 
@@ -113,17 +101,7 @@ class ReciboService {
   static Future<String> _gerarUrlPreAssinada(String fileName) async {
     try {
       // Simulação da geração de URL pré-assinada
-      /*
-      final getUrlResult = await Amplify.Storage.getUrl(
-        key: fileName,
-        options: const StorageGetUrlOptions(
-          accessLevel: StorageAccessLevel.private,
-          expiresIn: Duration(hours: 24),
-        ),
-      ).result;
-      
-      return getUrlResult.url.toString();
-      */
+      // Simulated pre-signed URL generation
 
       // URL simulada para desenvolvimento
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -141,18 +119,7 @@ class ReciboService {
       print('📧 Email enviado: $emailEnviado');
       print('📱 WhatsApp enviado: $whatsappEnviado');
 
-      /*
-      await Amplify.DataStore.save(ReciboModel(
-        id: recibo.id,
-        clienteId: recibo.clienteId,
-        paymentId: payment.id,
-        pdfUrl: recibo.pdfUrl,
-        codigoAutenticacao: recibo.codigoAutenticacao,
-        emailEnviado: emailEnviado,
-        whatsappEnviado: whatsappEnviado,
-        criadoEm: DateTime.now(),
-      ));
-      */
+      // Simulated database save
 
       await Future.delayed(const Duration(milliseconds: 100));
       print('✅ Registro salvo com sucesso!');

@@ -30,7 +30,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
   TimeOfDay _horaSelecionada = TimeOfDay.now();
   
   List<Cliente> _clientes = [];
-  List<Cliente> _clientesFiltrados = [];
+  // List<Cliente> _clientesFiltrados = [];
   bool _isLoading = false;
 
   @override
@@ -44,7 +44,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
 
   void _loadData() async {
     _clientes = await AgendamentoService.getClientes();
-    _clientesFiltrados = _clientes;
+    // _clientesFiltrados = _clientes;
     setState(() {});
   }
 
@@ -329,7 +329,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
       }
       
       widget.onSaved();
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } finally {
       setState(() => _isLoading = false);
     }

@@ -17,26 +17,7 @@ class WhatsAppService {
       print('📱 PDF URL: $pdfUrl');
 
       // Simulação do envio via WhatsApp API
-      /*
-      final response = await http.post(
-        Uri.parse('$_apiUrl/instances/$_instanceId/token/$_token/send-text'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'phone': phoneNumber,
-          'message': message,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        print('✅ WhatsApp enviado com sucesso!');
-        return true;
-      } else {
-        print('❌ Erro ao enviar WhatsApp: ${response.statusCode}');
-        return false;
-      }
-      */
+      // Simulated WhatsApp API call
 
       await Future.delayed(const Duration(seconds: 1)); // Simular delay
       print('✅ WhatsApp enviado com sucesso!');
@@ -94,24 +75,7 @@ Obrigado pela preferência! 🙏
       print('📱 PDF URL: $pdfUrl');
 
       // Envio de documento via WhatsApp API
-      /*
-      final response = await http.post(
-        Uri.parse('$_apiUrl/instances/$_instanceId/token/$_token/send-document'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'phone': phoneNumber,
-          'document': pdfUrl,
-          'caption': 'Recibo - GAP Barber & Studio',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        print('✅ Documento WhatsApp enviado com sucesso!');
-        return true;
-      }
-      */
+      // Simulated WhatsApp document sending
 
       await Future.delayed(const Duration(seconds: 1));
       print('✅ Documento WhatsApp enviado com sucesso!');

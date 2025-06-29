@@ -318,7 +318,7 @@ class _PaymentFormState extends State<PaymentForm> {
       }
       
       widget.onSaved();
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
     } finally {
       setState(() => _isLoading = false);
     }

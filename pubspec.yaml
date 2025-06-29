@@ -44,13 +44,15 @@ dependencies:
   
   # PDF Generation
   pdf: ^3.10.7
-  printing: ^5.12.0
   
-  # AWS Services
-  aws_ses_api: ^1.0.1
-  
-  # HTTP for WhatsApp API
+  # File handling
   path_provider: ^2.1.2
+  
+  # Email sending
+  mailer: ^6.0.1
+  
+  # Logging
+  logger: ^2.0.2+1
 
 dev_dependencies:
   flutter_test:

@@ -1,56 +1,57 @@
 import 'dart:typed_data';
+import 'dart:io';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:logger/logger.dart';
 import 'package:intl/intl.dart';
 import '../models/recibo.dart';
 
 class EmailService {
-  static const String _sesRegion = 'us-east-1';
-  static const String _fromEmail = 'noreply@gapbarber.com.br';
+  static final Logger _logger = Logger();
+  
+  // AWS SES Configuration - Replace with your actual values
+  static const String _smtpHost = 'email-smtp.us-east-1.amazonaws.com';
+  static const int _smtpPort = 587;
+  static const String _username = 'YOUR_SES_SMTP_USERNAME'; // Replace with actual SES SMTP username
+  static const String _password = 'YOUR_SES_SMTP_PASSWORD'; // Replace with actual SES SMTP password
+  static const String _fromEmail = 'noreply@gapbarber.com.br'; // Replace with verified SES email
   static const String _fromName = 'GAP Barber & Studio';
 
   static Future<bool> enviarReciboEmail(Recibo recibo, Uint8List pdfBytes) async {
     try {
-      final subject = 'Recibo do seu atendimento - GAP Barber & Studio';
+      _logger.i('Iniciando envio de email para: ${recibo.clienteEmail}');
+      
+      const subject = 'Recibo do seu atendimento - GAP Barber & Studio';
       final htmlBody = _buildEmailBody(recibo);
       final textBody = _buildTextBody(recibo);
-
-      // Simulação do envio via AWS SES
-      print('📧 Enviando email para: ${recibo.clienteEmail}');
-      print('📧 Assunto: $subject');
-      print('📧 PDF anexado: ${pdfBytes.length} bytes');
-
-      // Aqui seria a integração real com AWS SES
-      /*
-      final sesClient = SesClient(
-        region: _sesRegion,
-        credentials: AwsClientCredentials(
-          accessKey: 'YOUR_ACCESS_KEY',
-          secretKey: 'YOUR_SECRET_KEY',
-        ),
+      
+      // Configure SMTP server for AWS SES
+      final smtpServer = SmtpServer(
+        _smtpHost,
+        port: _smtpPort,
+        username: _username,
+        password: _password,
+        ssl: false, // SES uses STARTTLS
+        allowInsecure: false,
       );
-
-      final message = Message(
-        subject: Content(data: subject),
-        body: Body(
-          html: Content(data: htmlBody),
-          text: Content(data: textBody),
-        ),
-      );
-
-      final destination = Destination(toAddresses: [recibo.clienteEmail]);
-
-      await sesClient.sendEmail(
-        source: '$_fromName <$_fromEmail>',
-        destination: destination,
-        message: message,
-        // Anexar PDF aqui
-      );
-      */
-
-      await Future.delayed(const Duration(seconds: 1)); // Simular delay
-      print('✅ Email enviado com sucesso!');
+      
+      // Create message with PDF attachment
+      final message = Message()
+        ..from = Address(_fromEmail, _fromName)
+        ..recipients.add(recibo.clienteEmail)
+        ..subject = subject
+        ..html = htmlBody
+        ..text = textBody
+        ..attachments.add(await _createPDFAttachment(pdfBytes, recibo.id));
+      
+      // Send email via SMTP
+      final sendReport = await send(message, smtpServer);
+      
+      _logger.i('Email enviado com sucesso: ${sendReport.toString()}');
       return true;
-    } catch (e) {
-      print('❌ Erro ao enviar email: $e');
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao enviar email', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -135,5 +136,25 @@ class EmailService {
     Rua Esmeraldino Bandeira, 68, Graças - Brasil
     Tel: (81) 99999-9999
     ''';
+  }
+  
+  /// Creates a temporary PDF file attachment for email
+  static Future<FileAttachment> _createPDFAttachment(Uint8List pdfBytes, String reciboId) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/recibo_$reciboId.pdf');
+      await file.writeAsBytes(pdfBytes);
+      
+      _logger.d('PDF temporário criado: ${file.path}');
+      
+      return const FileAttachment(
+        file,
+        fileName: 'recibo_$reciboId.pdf',
+        contentType: 'application/pdf',
+      );
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao criar anexo PDF', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
   }
 }
