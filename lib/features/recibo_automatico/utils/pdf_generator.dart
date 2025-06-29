@@ -172,9 +172,9 @@ class PDFGenerator {
   static pw.Widget _buildTotal(Recibo recibo) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(15),
-      decoration: pw.BoxDecoration(
+      decoration: const pw.BoxDecoration(
         color: PdfColors.grey200,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
