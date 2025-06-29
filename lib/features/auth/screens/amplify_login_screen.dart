@@ -70,7 +70,7 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                           gradient: LuxuryTheme.goldGradient,
                           boxShadow: [
                             BoxShadow(
-                              color: LuxuryTheme.primaryGold.withOpacity(0.3),
+                              color: LuxuryTheme.primaryGold.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -174,7 +174,7 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 8,
-                            shadowColor: LuxuryTheme.darkGold.withOpacity(0.5),
+                            shadowColor: LuxuryTheme.darkGold.withValues(alpha: 0.5),
                           ),
                           child: authState.isLoading
                               ? const SizedBox(
@@ -201,7 +201,7 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: LuxuryTheme.lightGold.withOpacity(0.2),
+                            color: LuxuryTheme.lightGold.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(

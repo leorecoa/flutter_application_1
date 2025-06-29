@@ -114,11 +114,13 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: LuxuryTheme.primaryGold),
+          icon: const Icon(Icons.notifications_outlined,
+              color: LuxuryTheme.primaryGold),
           onPressed: () {},
         ),
         IconButton(
-          icon: const Icon(Icons.account_circle_outlined, color: LuxuryTheme.primaryGold),
+          icon: const Icon(Icons.account_circle_outlined,
+              color: LuxuryTheme.primaryGold),
           onPressed: () {},
         ),
       ],
@@ -184,7 +186,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
       crossAxisSpacing: 16,
       childAspectRatio: 1.2,
       children: [
-        LuxuryCard(
+        const LuxuryCard(
           child: AnimatedCounter(
             value: 127,
             label: 'Agendamentos',
@@ -280,7 +282,8 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+      String title, IconData icon, Color color, VoidCallback onTap) {
     return LuxuryCard(
       onTap: onTap,
       child: Column(
@@ -296,7 +299,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
           const SizedBox(height: 12),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: LuxuryTheme.deepBlue,
@@ -354,7 +357,8 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
     );
   }
 
-  Widget _buildActivityItem(String title, String subtitle, String time, IconData icon, Color color) {
+  Widget _buildActivityItem(
+      String title, String subtitle, String time, IconData icon, Color color) {
     return Row(
       children: [
         Container(

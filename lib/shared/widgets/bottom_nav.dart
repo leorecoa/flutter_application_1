@@ -11,7 +11,9 @@ class BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: LuxuryTheme.luxuryGradient.gradient,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A237E), Color(0xFF2C2C2C)],
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),

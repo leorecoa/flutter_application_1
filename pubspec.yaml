@@ -38,6 +38,19 @@ dependencies:
   
   # Utils
   uuid: ^4.2.1
+  
+  # Charts
+  fl_chart: ^0.68.0
+  
+  # PDF Generation
+  pdf: ^3.10.7
+  printing: ^5.12.0
+  
+  # AWS Services
+  aws_ses_api: ^1.0.1
+  
+  # HTTP for WhatsApp API
+  path_provider: ^2.1.2
 
 dev_dependencies:
   flutter_test:

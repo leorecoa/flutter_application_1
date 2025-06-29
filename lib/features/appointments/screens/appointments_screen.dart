@@ -109,7 +109,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: LuxuryTheme.primaryGold.withOpacity(0.1),
+            backgroundColor: LuxuryTheme.primaryGold.withValues(alpha: 0.1),
             child: Text(
               name[0],
               style: const TextStyle(
@@ -152,7 +152,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

@@ -26,7 +26,6 @@ class AmplifyService {
     }
   }
 
-  // Auth Methods
   static Future<bool> isSignedIn() async {
     try {
       final result = await Amplify.Auth.fetchAuthSession();
@@ -91,21 +90,12 @@ class AmplifyService {
     required String email,
     required String password,
     required String name,
-    String? tenantId,
-    String? plan,
   }) async {
     try {
       final userAttributes = <AuthUserAttributeKey, String>{
         AuthUserAttributeKey.email: email,
         AuthUserAttributeKey.name: name,
       };
-
-      if (tenantId != null) {
-        userAttributes[const AuthUserAttributeKey.custom('tenantId')] = tenantId;
-      }
-      if (plan != null) {
-        userAttributes[const AuthUserAttributeKey.custom('plan')] = plan;
-      }
 
       return await Amplify.Auth.signUp(
         username: email,
