@@ -1,199 +1,136 @@
 import '../models/payment_model.dart';
-import '../../appointments/models/agendamento_model.dart';
-import '../../recibo_automatico/services/recibo_service.dart';
 
 class PaymentService {
   static final List<Payment> _payments = [
     Payment(
-      id: '1',
+      id: 'pay-1',
+      clienteId: 'cliente-1',
       clienteNome: 'João Silva',
-      clienteId: '1',
-      servicoNome: 'Corte + Barba',
-      servicoId: '1',
+      servicoId: 'servico-1',
+      servicoNome: 'Corte Masculino',
+      barbeiroId: 'barbeiro-1',
       barbeiroNome: 'Carlos',
-      barbeiroId: '1',
-      valor: 55.0,
-      formaPagamento: FormaPagamento.pix,
-      status: StatusPagamento.pago,
-      data: DateTime.now().subtract(const Duration(hours: 2)),
-      chavePix: 'carlos@barbearia.com',
-    ),
-    Payment(
-      id: '2',
-      clienteNome: 'Pedro Costa',
-      clienteId: '2',
-      servicoNome: 'Corte',
-      servicoId: '2',
-      barbeiroNome: 'Roberto',
-      barbeiroId: '2',
       valor: 35.0,
-      formaPagamento: FormaPagamento.dinheiro,
-      status: StatusPagamento.pago,
-      data: DateTime.now().subtract(const Duration(hours: 4)),
-    ),
-    Payment(
-      id: '3',
-      clienteNome: 'Maria Santos',
-      clienteId: '3',
-      servicoNome: 'Sobrancelha',
-      servicoId: '3',
-      barbeiroNome: 'Ana',
-      barbeiroId: '3',
-      valor: 15.0,
-      formaPagamento: FormaPagamento.cartao,
-      status: StatusPagamento.pendente,
-      data: DateTime.now().subtract(const Duration(minutes: 30)),
-    ),
-    Payment(
-      id: '4',
-      clienteNome: 'Carlos Oliveira',
-      clienteId: '4',
-      servicoNome: 'Barba',
-      servicoId: '4',
-      barbeiroNome: 'Carlos',
-      barbeiroId: '1',
-      valor: 25.0,
       formaPagamento: FormaPagamento.pix,
-      status: StatusPagamento.cancelado,
-      data: DateTime.now().subtract(const Duration(days: 1)),
+      data: DateTime.now().subtract(const Duration(hours: 2)),
+      status: StatusPagamento.pago,
+      chavePix: 'joao@email.com',
+    ),
+    Payment(
+      id: 'pay-2',
+      clienteId: 'cliente-2',
+      clienteNome: 'Maria Santos',
+      servicoId: 'servico-2',
+      servicoNome: 'Corte + Escova',
+      barbeiroId: 'barbeiro-2',
+      barbeiroNome: 'Ana',
+      valor: 65.0,
+      formaPagamento: FormaPagamento.cartao,
+      data: DateTime.now().subtract(const Duration(hours: 4)),
+      status: StatusPagamento.pendente,
     ),
   ];
 
   static Future<List<Payment>> getPayments({
     String? filtroCliente,
-    String? filtroBarbeiro,
     FormaPagamento? filtroFormaPagamento,
     StatusPagamento? filtroStatus,
-    DateTime? filtroDataInicio,
-    DateTime? filtroDataFim,
-  }) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    
-    var result = List<Payment>.from(_payments);
-    
-    if (filtroCliente != null && filtroCliente.isNotEmpty) {
-      result = result.where((p) => p.clienteNome.toLowerCase().contains(filtroCliente.toLowerCase())).toList();
-    }
-    
-    if (filtroBarbeiro != null && filtroBarbeiro.isNotEmpty) {
-      result = result.where((p) => p.barbeiroId == filtroBarbeiro).toList();
-    }
-    
-    if (filtroFormaPagamento != null) {
-      result = result.where((p) => p.formaPagamento == filtroFormaPagamento).toList();
-    }
-    
-    if (filtroStatus != null) {
-      result = result.where((p) => p.status == filtroStatus).toList();
-    }
-    
-    if (filtroDataInicio != null) {
-      result = result.where((p) => p.data.isAfter(filtroDataInicio.subtract(const Duration(days: 1)))).toList();
-    }
-    
-    if (filtroDataFim != null) {
-      result = result.where((p) => p.data.isBefore(filtroDataFim.add(const Duration(days: 1)))).toList();
-    }
-    
-    return result..sort((a, b) => b.data.compareTo(a.data));
-  }
-
-  static Future<void> criarPagamento(Payment payment) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    _payments.add(payment);
-    
-    // Se o pagamento já foi criado como pago, enviar recibo
-    if (payment.status == StatusPagamento.pago) {
-      ReciboService.processarPagamentoConfirmado(payment);
-    }
-  }
-
-  static Future<void> atualizarPagamento(Payment payment) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final index = _payments.indexWhere((p) => p.id == payment.id);
-    if (index != -1) {
-      final paymentAnterior = _payments[index];
-      _payments[index] = payment;
-      
-      // Se o pagamento foi confirmado (mudou de pendente para pago)
-      if (paymentAnterior.status != StatusPagamento.pago && 
-          payment.status == StatusPagamento.pago) {
-        // Enviar recibo automaticamente
-        ReciboService.processarPagamentoConfirmado(payment);
-      }
-    }
-  }
-
-  static Future<void> cancelarPagamento(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _payments.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      _payments[index] = _payments[index].copyWith(status: StatusPagamento.cancelado);
-    }
-  }
-
-  static Future<RelatorioFinanceiro> getRelatorioFinanceiro({
     DateTime? dataInicio,
     DateTime? dataFim,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 500));
+    var payments = List<Payment>.from(_payments);
     
-    var payments = _payments;
+    if (filtroCliente?.isNotEmpty == true) {
+      payments = payments.where((p) => 
+        p.clienteNome.toLowerCase().contains(filtroCliente!.toLowerCase())
+      ).toList();
+    }
+    
+    if (filtroFormaPagamento != null) {
+      payments = payments.where((p) => p.formaPagamento == filtroFormaPagamento).toList();
+    }
+    
+    if (filtroStatus != null) {
+      payments = payments.where((p) => p.status == filtroStatus).toList();
+    }
     
     if (dataInicio != null) {
-      payments = payments.where((p) => p.data.isAfter(dataInicio.subtract(const Duration(days: 1)))).toList();
+      payments = payments.where((p) => p.data.isAfter(dataInicio)).toList();
     }
     
     if (dataFim != null) {
       payments = payments.where((p) => p.data.isBefore(dataFim.add(const Duration(days: 1)))).toList();
     }
+    
+    return payments..sort((a, b) => b.data.compareTo(a.data));
+  }
 
-    final pagoPayments = payments.where((p) => p.status == StatusPagamento.pago).toList();
-    final pendentePayments = payments.where((p) => p.status == StatusPagamento.pendente).toList();
-    
-    final totalRecebido = pagoPayments.fold(0.0, (sum, p) => sum + p.valor);
-    final totalPendente = pendentePayments.fold(0.0, (sum, p) => sum + p.valor);
-    
-    final receitaPorBarbeiro = <String, double>{};
-    final receitaPorFormaPagamento = <FormaPagamento, double>{};
-    
-    for (final payment in pagoPayments) {
-      receitaPorBarbeiro[payment.barbeiroNome] = (receitaPorBarbeiro[payment.barbeiroNome] ?? 0) + payment.valor;
-      receitaPorFormaPagamento[payment.formaPagamento] = (receitaPorFormaPagamento[payment.formaPagamento] ?? 0) + payment.valor;
-    }
-    
-    return RelatorioFinanceiro(
-      totalRecebido: totalRecebido,
-      totalPendente: totalPendente,
-      receitaPorBarbeiro: receitaPorBarbeiro,
-      receitaPorFormaPagamento: receitaPorFormaPagamento,
-      totalTransacoes: payments.length,
+  static Future<Payment> criarPagamento(Payment payment) async {
+    await Future.delayed(const Duration(milliseconds: 800));
+    final novoPayment = payment.copyWith(
+      id: 'pay-${DateTime.now().millisecondsSinceEpoch}',
     );
+    _payments.add(novoPayment);
+    return novoPayment;
   }
 
-  static List<Cliente> getClientes() {
-    return [
-      const Cliente(id: '1', nome: 'João Silva', telefone: '(11) 99999-9999', email: 'joao@email.com'),
-      const Cliente(id: '2', nome: 'Pedro Costa', telefone: '(11) 88888-8888', email: 'pedro@email.com'),
-      const Cliente(id: '3', nome: 'Maria Santos', telefone: '(11) 77777-7777', email: 'maria@email.com'),
-      const Cliente(id: '4', nome: 'Carlos Oliveira', telefone: '(11) 66666-6666', email: 'carlos@email.com'),
-    ];
+  static Future<Payment> atualizarPagamento(Payment payment) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _payments.indexWhere((p) => p.id == payment.id);
+    if (index != -1) {
+      _payments[index] = payment;
+    }
+    return payment;
   }
 
-  static List<Servico> getServicos() {
-    return [
-      const Servico(id: '1', nome: 'Corte + Barba', preco: 55.0, duracaoMinutos: 60),
-      const Servico(id: '2', nome: 'Corte', preco: 35.0, duracaoMinutos: 45),
-      const Servico(id: '3', nome: 'Barba', preco: 25.0, duracaoMinutos: 30),
-      const Servico(id: '4', nome: 'Sobrancelha', preco: 15.0, duracaoMinutos: 15),
-    ];
+  static Future<void> confirmarPagamento(String id) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _payments.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _payments[index] = _payments[index].copyWith(
+        status: StatusPagamento.pago,
+      );
+    }
   }
 
-  static List<Barbeiro> getBarbeiros() {
-    return [
-      const Barbeiro(id: '1', nome: 'Carlos', especialidade: 'Corte Masculino'),
-      const Barbeiro(id: '2', nome: 'Roberto', especialidade: 'Barba'),
-      const Barbeiro(id: '3', nome: 'Ana', especialidade: 'Sobrancelha'),
-    ];
+  static Future<void> cancelarPagamento(String id) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _payments.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _payments[index] = _payments[index].copyWith(
+        status: StatusPagamento.cancelado,
+      );
+    }
+  }
+
+  static Future<Map<String, double>> getResumoFinanceiro() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    final hoje = DateTime.now();
+    final inicioMes = DateTime(hoje.year, hoje.month, 1);
+    
+    final pagamentosHoje = _payments.where((p) => 
+      p.data.day == hoje.day && 
+      p.data.month == hoje.month && 
+      p.data.year == hoje.year &&
+      p.status == StatusPagamento.pago
+    );
+    
+    final pagamentosMes = _payments.where((p) => 
+      p.data.isAfter(inicioMes) &&
+      p.status == StatusPagamento.pago
+    );
+    
+    final pendentes = _payments.where((p) => p.status == StatusPagamento.pendente);
+    
+    return {
+      'receitaHoje': pagamentosHoje.fold(0.0, (sum, p) => sum + p.valor),
+      'receitaMes': pagamentosMes.fold(0.0, (sum, p) => sum + p.valor),
+      'pendentes': pendentes.fold(0.0, (sum, p) => sum + p.valor),
+      'ticketMedio': pagamentosMes.isNotEmpty 
+        ? pagamentosMes.fold(0.0, (sum, p) => sum + p.valor) / pagamentosMes.length
+        : 0.0,
+    };
   }
 }

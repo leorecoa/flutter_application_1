@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../middleware/auth_guard.dart';
 import '../../features/auth/screens/modern_login.dart';
 import '../../features/dashboard/screens/modern_dashboard.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
@@ -16,7 +17,8 @@ import '../../features/recibo_automatico/screens/teste_recibo_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/admin',
+  initialLocation: '/dashboard',
+  redirect: AuthGuard.redirectLogic,
   routes: [
     GoRoute(
       path: '/login',

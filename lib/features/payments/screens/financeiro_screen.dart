@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../shared/widgets/admin_layout.dart';
+import '../../appointments/services/agendamento_service.dart';
 import '../../../shared/widgets/dashboard_card.dart';
 import '../../../core/theme/trinks_theme.dart';
 import '../models/payment_model.dart';
 import '../services/payment_service.dart';
 import '../widgets/pagamentos_table.dart';
-import '../widgets/payment_form.dart';
+import '../widgets/simple_payment_form.dart';
 import '../widgets/recibo_modal.dart';
 
 class FinanceiroScreen extends StatefulWidget {
@@ -57,11 +58,10 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
     
     final payments = await PaymentService.getPayments(
       filtroCliente: _buscaController.text,
-      filtroBarbeiro: _filtroBarbeiro,
       filtroFormaPagamento: _filtroFormaPagamento,
       filtroStatus: _filtroStatus,
-      filtroDataInicio: _filtroDataInicio,
-      filtroDataFim: _filtroDataFim,
+      dataInicio: _filtroDataInicio,
+      dataFim: _filtroDataFim,
     );
     
     setState(() {
@@ -71,12 +71,19 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
   }
 
   Future<void> _carregarRelatorio() async {
-    final relatorio = await PaymentService.getRelatorioFinanceiro(
-      dataInicio: _filtroDataInicio,
-      dataFim: _filtroDataFim,
-    );
+    final resumo = await PaymentService.getResumoFinanceiro();
     
-    setState(() => _relatorio = relatorio);
+    setState(() => _relatorio = RelatorioFinanceiro(
+      totalRecebido: resumo['receitaMes'] ?? 0.0,
+      totalPendente: resumo['pendentes'] ?? 0.0,
+      totalTransacoes: _payments.length,
+      receitaPorBarbeiro: {},
+      receitaPorFormaPagamento: {
+        FormaPagamento.pix: (resumo['receitaMes'] ?? 0.0) * 0.6,
+        FormaPagamento.dinheiro: (resumo['receitaMes'] ?? 0.0) * 0.3,
+        FormaPagamento.cartao: (resumo['receitaMes'] ?? 0.0) * 0.1,
+      },
+    ));
   }
 
   @override
@@ -278,7 +285,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
       ),
       items: [
         const DropdownMenuItem(value: null, child: Text('Todos os barbeiros')),
-        ...PaymentService.getBarbeiros().map((barbeiro) {
+        ...AgendamentoService.getBarbeiros().map((barbeiro) {
           return DropdownMenuItem(
             value: barbeiro.id,
             child: Text(barbeiro.nome),
@@ -361,7 +368,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
   void _novoPayment() {
     showDialog(
       context: context,
-      builder: (context) => PaymentForm(
+      builder: (context) => SimplePaymentForm(
         onSaved: _carregarDados,
       ),
     );
@@ -370,7 +377,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
   void _editarPayment(Payment payment) {
     showDialog(
       context: context,
-      builder: (context) => PaymentForm(
+      builder: (context) => SimplePaymentForm(
         payment: payment,
         onSaved: _carregarDados,
       ),

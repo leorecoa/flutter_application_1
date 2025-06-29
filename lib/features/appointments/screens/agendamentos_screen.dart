@@ -5,7 +5,7 @@ import '../../../core/theme/trinks_theme.dart';
 import '../models/agendamento_model.dart';
 import '../services/agendamento_service.dart';
 import '../widgets/agendamento_table.dart';
-import '../widgets/agendamento_form.dart';
+import '../widgets/simple_agendamento_form.dart';
 
 class AgendamentosScreen extends StatefulWidget {
   const AgendamentosScreen({super.key});
@@ -225,7 +225,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   void _novoAgendamento() {
     showDialog(
       context: context,
-      builder: (context) => AgendamentoForm(
+      builder: (context) => SimpleAgendamentoForm(
         onSaved: _carregarAgendamentos,
       ),
     );
@@ -234,7 +234,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   void _editarAgendamento(Agendamento agendamento) {
     showDialog(
       context: context,
-      builder: (context) => AgendamentoForm(
+      builder: (context) => SimpleAgendamentoForm(
         agendamento: agendamento,
         onSaved: _carregarAgendamentos,
       ),

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
 import '../../../shared/widgets/bottom_nav.dart';
+import '../services/agendamento_service.dart';
+import '../models/agendamento_model.dart';
+import '../widgets/add_appointment_dialog.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key});
@@ -11,6 +14,27 @@ class AppointmentsScreen extends StatefulWidget {
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
+  List<Agendamento> _agendamentos = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgendamentos();
+  }
+
+  Future<void> _loadAgendamentos() async {
+    try {
+      final agendamentos = await AgendamentoService.getAgendamentos();
+      setState(() {
+        _agendamentos = agendamentos;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -29,14 +53,16 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             colors: [LuxuryTheme.pearl, Colors.white],
           ),
         ),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildTodaySection(),
-            const SizedBox(height: 24),
-            _buildUpcomingSection(),
-          ],
-        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  _buildTodaySection(),
+                  const SizedBox(height: 24),
+                  _buildUpcomingSection(),
+                ],
+              ),
       ),
       bottomNavigationBar: const BottomNav(currentIndex: 1),
     );
@@ -172,15 +198,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   void _showAddAppointment() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Novo Agendamento'),
-        content: const Text('Funcionalidade em desenvolvimento'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+      builder: (context) => AddAppointmentDialog(
+        onSave: (agendamento) async {
+          setState(() => _isLoading = true);
+          await AgendamentoService.criarAgendamento(agendamento);
+          await _loadAgendamentos();
+          setState(() => _isLoading = false);
+        },
       ),
     );
   }

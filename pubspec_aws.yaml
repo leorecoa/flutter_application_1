@@ -1,0 +1,8 @@
+# Adicionar estas dependências ao pubspec.yaml para AWS
+
+dependencies:
+  # AWS
+  crypto: ^3.0.3
+  
+  # Já existentes
+  http: ^1.1.0
