@@ -104,8 +104,8 @@ Resources:
         DashboardApi:
           Type: Api
           Properties:
-            Path: /dashboard/{proxy+}
-            Method: ANY
+            Path: /dashboard
+            Method: GET
             Auth:
               Authorizer: AWS_IAM
 
