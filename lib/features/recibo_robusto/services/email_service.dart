@@ -34,7 +34,7 @@ class EmailService {
       );
 
       final message = Message()
-        ..from = Address(_fromEmail, _fromName)
+        ..from = const Address(_fromEmail, _fromName)
         ..recipients.add(recibo.clienteEmail)
         ..subject = 'Recibo do seu atendimento - GAP Barber & Studio'
         ..html = _buildHtmlBody(recibo)

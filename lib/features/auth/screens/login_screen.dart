@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           gradient: LuxuryTheme.goldGradient,
                           boxShadow: [
                             BoxShadow(
-                              color: LuxuryTheme.primaryGold.withOpacity(0.3),
+                              color: LuxuryTheme.primaryGold.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 8,
-                            shadowColor: LuxuryTheme.darkGold.withOpacity(0.5),
+                            shadowColor: LuxuryTheme.darkGold.withValues(alpha: 0.5),
                           ),
                           child: _isLoading
                               ? const SizedBox(

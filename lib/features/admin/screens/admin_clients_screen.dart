@@ -28,9 +28,9 @@ class AdminClientsScreen extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        Expanded(
+        const Expanded(
           child: TextField(
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'Buscar clientes...',
               prefixIcon: Icon(Icons.search),
             ),

@@ -257,16 +257,19 @@ class ReciboModal extends StatelessWidget {
 
   void _compartilharWhatsApp() {
     // Implementar compartilhamento via WhatsApp
+    // ignore: avoid_print
     print('Compartilhar via WhatsApp');
   }
 
   void _enviarEmail() {
     // Implementar envio por e-mail
+    // ignore: avoid_print
     print('Enviar por e-mail');
   }
 
   void _imprimirPDF() {
     // Implementar impressão em PDF
+    // ignore: avoid_print
     print('Imprimir PDF');
   }
 }

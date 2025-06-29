@@ -326,10 +326,12 @@ class ReciboDialog extends StatelessWidget {
   }
 
   void _compartilharWhatsApp() {
+    // ignore: avoid_print
     print('Compartilhar recibo via WhatsApp');
   }
 
   void _baixarPDF() {
+    // ignore: avoid_print
     print('Baixar recibo em PDF');
   }
 }

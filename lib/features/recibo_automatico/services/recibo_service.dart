@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 // import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:logger/logger.dart';
 import '../models/recibo.dart';
 import '../utils/pdf_generator.dart';
 import 'email_service.dart';
@@ -7,13 +8,14 @@ import 'whatsapp_service.dart';
 import '../../payments/models/payment_model.dart';
 
 class ReciboService {
+  static final Logger _logger = Logger();
   static const String _s3Bucket = 'agendafacil-recibos';
   static const String _s3Region = 'us-east-1';
 
   /// Processa pagamento confirmado e envia recibo automaticamente
   static Future<bool> processarPagamentoConfirmado(Payment payment) async {
     try {
-      print('🔄 Processando pagamento confirmado: ${payment.id}');
+      _logger.i('Processando pagamento confirmado: ${payment.id}');
 
       // 1. Criar objeto Recibo
       final recibo = await _criarRecibo(payment);
@@ -47,10 +49,10 @@ class ReciboService {
       // 6. Salvar registro do recibo
       await _salvarRegistroRecibo(reciboComUrl, emailEnviado, whatsappEnviado);
 
-      print('✅ Recibo processado com sucesso!');
+      _logger.i('Recibo processado com sucesso!');
       return true;
-    } catch (e) {
-      print('❌ Erro ao processar recibo: $e');
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao processar recibo', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -81,7 +83,7 @@ class ReciboService {
       final fileName = 'recibos/$reciboId.pdf';
       
       // Simulação do upload para S3
-      print('📤 Uploading PDF to S3: $fileName');
+      _logger.i('Uploading PDF to S3: $fileName');
       
       // Simulated S3 upload - replace with actual implementation
 
@@ -90,11 +92,11 @@ class ReciboService {
       // Gerar URL pré-assinada com expiração de 24h
       final preSignedUrl = await _gerarUrlPreAssinada(fileName);
       
-      print('✅ PDF uploaded successfully: $preSignedUrl');
+      _logger.i('PDF uploaded successfully: $preSignedUrl');
       return preSignedUrl;
-    } catch (e) {
-      print('❌ Erro ao fazer upload do PDF: $e');
-      throw e;
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao fazer upload do PDF', error: e, stackTrace: stackTrace);
+      rethrow;
     }
   }
 
@@ -106,25 +108,25 @@ class ReciboService {
       // URL simulada para desenvolvimento
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       return 'https://$_s3Bucket.s3.$_s3Region.amazonaws.com/$fileName?expires=$timestamp';
-    } catch (e) {
-      print('❌ Erro ao gerar URL pré-assinada: $e');
-      throw e;
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao gerar URL pré-assinada', error: e, stackTrace: stackTrace);
+      rethrow;
     }
   }
 
   static Future<void> _salvarRegistroRecibo(Recibo recibo, bool emailEnviado, bool whatsappEnviado) async {
     try {
       // Salvar no banco de dados (simulado)
-      print('💾 Salvando registro do recibo: ${recibo.id}');
-      print('📧 Email enviado: $emailEnviado');
-      print('📱 WhatsApp enviado: $whatsappEnviado');
+      _logger.i('Salvando registro do recibo: ${recibo.id}');
+      _logger.i('Email enviado: $emailEnviado');
+      _logger.i('WhatsApp enviado: $whatsappEnviado');
 
       // Simulated database save
 
       await Future.delayed(const Duration(milliseconds: 100));
-      print('✅ Registro salvo com sucesso!');
-    } catch (e) {
-      print('❌ Erro ao salvar registro: $e');
+      _logger.i('Registro salvo com sucesso!');
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao salvar registro', error: e, stackTrace: stackTrace);
     }
   }
 

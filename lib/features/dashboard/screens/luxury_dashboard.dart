@@ -297,7 +297,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 28),
@@ -370,7 +370,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -471,7 +471,7 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: LuxuryTheme.lightGold.withOpacity(0.3),
+                  color: LuxuryTheme.lightGold.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Row(

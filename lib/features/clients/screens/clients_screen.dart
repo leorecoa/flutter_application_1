@@ -92,7 +92,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         children: [
           CircleAvatar(
             radius: 25,
-            backgroundColor: categoryColor.withOpacity(0.1),
+            backgroundColor: categoryColor.withValues(alpha: 0.1),
             child: Text(
               name[0],
               style: TextStyle(
@@ -121,7 +121,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: categoryColor.withOpacity(0.1),
+                        color: categoryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

@@ -38,7 +38,7 @@ class EmailService {
       
       // Create message with PDF attachment
       final message = Message()
-        ..from = Address(_fromEmail, _fromName)
+        ..from = const Address(_fromEmail, _fromName)
         ..recipients.add(recibo.clienteEmail)
         ..subject = subject
         ..html = htmlBody

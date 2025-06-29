@@ -35,29 +35,29 @@ class AdminFinancialScreen extends StatelessWidget {
       crossAxisCount: 4,
       crossAxisSpacing: 16,
       childAspectRatio: 1.2,
-      children: [
-        const DashboardCard(
+      children: const [
+        DashboardCard(
           title: 'Receita Hoje',
           value: 'R\$ 850',
           icon: Icons.trending_up,
           iconColor: TrinksTheme.success,
           subtitle: '+12% vs ontem',
         ),
-        const DashboardCard(
+        DashboardCard(
           title: 'Receita Mês',
           value: 'R\$ 15.420',
           icon: Icons.calendar_month,
           iconColor: TrinksTheme.lightBlue,
           subtitle: 'Meta: R\$ 20.000',
         ),
-        const DashboardCard(
+        DashboardCard(
           title: 'Pendentes',
           value: 'R\$ 180',
           icon: Icons.pending_actions,
           iconColor: TrinksTheme.warning,
           subtitle: '3 pagamentos',
         ),
-        const DashboardCard(
+        DashboardCard(
           title: 'Ticket Médio',
           value: 'R\$ 42',
           icon: Icons.receipt_long,

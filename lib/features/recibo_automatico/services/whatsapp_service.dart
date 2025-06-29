@@ -2,9 +2,11 @@
 import 'dart:convert';
 // ignore: unused_import
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 import '../models/recibo.dart';
 
 class WhatsAppService {
+  static final Logger _logger = Logger();
   // ignore: unused_field
   static const String _apiUrl = 'https://api.z-api.io'; // ou Twilio
   // ignore: unused_field
@@ -17,18 +19,18 @@ class WhatsAppService {
       final phoneNumber = _formatPhoneNumber(recibo.clienteTelefone);
       final message = _buildWhatsAppMessage(recibo, pdfUrl);
 
-      print('📱 Enviando WhatsApp para: $phoneNumber');
-      print('📱 Mensagem: $message');
-      print('📱 PDF URL: $pdfUrl');
+      _logger.i('Enviando WhatsApp para: $phoneNumber');
+      _logger.d('Mensagem: $message');
+      _logger.d('PDF URL: $pdfUrl');
 
       // Simulação do envio via WhatsApp API
       // Simulated WhatsApp API call
 
       await Future.delayed(const Duration(seconds: 1)); // Simular delay
-      print('✅ WhatsApp enviado com sucesso!');
+      _logger.i('WhatsApp enviado com sucesso!');
       return true;
-    } catch (e) {
-      print('❌ Erro ao enviar WhatsApp: $e');
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao enviar WhatsApp', error: e, stackTrace: stackTrace);
       return false;
     }
   }
@@ -76,17 +78,17 @@ Obrigado pela preferência! 🙏
     try {
       final phoneNumber = _formatPhoneNumber(recibo.clienteTelefone);
       
-      print('📱 Enviando documento WhatsApp para: $phoneNumber');
-      print('📱 PDF URL: $pdfUrl');
+      _logger.i('Enviando documento WhatsApp para: $phoneNumber');
+      _logger.d('PDF URL: $pdfUrl');
 
       // Envio de documento via WhatsApp API
       // Simulated WhatsApp document sending
 
       await Future.delayed(const Duration(seconds: 1));
-      print('✅ Documento WhatsApp enviado com sucesso!');
+      _logger.i('Documento WhatsApp enviado com sucesso!');
       return true;
-    } catch (e) {
-      print('❌ Erro ao enviar documento WhatsApp: $e');
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao enviar documento WhatsApp', error: e, stackTrace: stackTrace);
       return false;
     }
   }
