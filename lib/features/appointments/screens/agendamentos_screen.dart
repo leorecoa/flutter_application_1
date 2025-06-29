@@ -77,6 +77,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
               onEdit: _editarAgendamento,
               onCancel: _cancelarAgendamento,
               onComplete: _concluirAgendamento,
+              onDelete: _excluirAgendamento,
             ),
           ),
         ],
@@ -271,5 +272,30 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     final agendamentoAtualizado = agendamento.copyWith(status: StatusAgendamento.concluido);
     await AgendamentoService.atualizarAgendamento(agendamentoAtualizado);
     _carregarAgendamentos();
+  }
+
+  void _excluirAgendamento(String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir Agendamento'),
+        content: const Text('Tem certeza que deseja excluir este agendamento permanentemente?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await AgendamentoService.excluirAgendamento(id);
+              _carregarAgendamentos();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: TrinksTheme.error),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
   }
 }

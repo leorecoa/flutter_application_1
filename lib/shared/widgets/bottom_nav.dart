@@ -49,8 +49,8 @@ class BottomNav extends StatelessWidget {
             label: 'Serviços',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Relatórios',
+            icon: Icon(Icons.settings),
+            label: 'Config',
           ),
         ],
       ),
@@ -72,7 +72,7 @@ class BottomNav extends StatelessWidget {
         context.go('/services');
         break;
       case 4:
-        context.go('/reports');
+        context.go('/settings');
         break;
     }
   }

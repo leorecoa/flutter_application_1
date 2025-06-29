@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
+import '../../../shared/models/service_model.dart';
+import '../widgets/add_service_dialog.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -10,6 +12,27 @@ class ServicesScreen extends StatefulWidget {
 }
 
 class _ServicesScreenState extends State<ServicesScreen> {
+  List<ServiceModel> services = [
+    ServiceModel(
+      id: '1',
+      name: 'Corte Masculino',
+      description: 'Corte tradicional masculino',
+      price: 25.0,
+      duration: 30,
+      category: 'Corte',
+      isActive: true,
+    ),
+    ServiceModel(
+      id: '2',
+      name: 'Barba Completa',
+      description: 'Aparar e modelar barba',
+      price: 20.0,
+      duration: 20,
+      category: 'Barba',
+      isActive: true,
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +41,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddService(),
+            onPressed: () => _showAddServiceDialog(),
           ),
         ],
       ),
@@ -28,68 +51,31 @@ class _ServicesScreenState extends State<ServicesScreen> {
             colors: [LuxuryTheme.pearl, Colors.white],
           ),
         ),
-        child: ListView(
+        child: ListView.builder(
           padding: const EdgeInsets.all(16),
-          children: [
-            _buildServiceCard(
-              'Corte Masculino',
-              'Corte moderno e estiloso',
-              'R\$ 35,00',
-              '45 min',
-              Icons.content_cut,
-              Colors.blue,
-            ),
-            _buildServiceCard(
-              'Corte + Escova',
-              'Corte feminino com escova',
-              'R\$ 65,00',
-              '90 min',
-              Icons.brush,
-              Colors.pink,
-            ),
-            _buildServiceCard(
-              'Barba + Bigode',
-              'Aparar e modelar barba',
-              'R\$ 25,00',
-              '30 min',
-              Icons.face,
-              Colors.brown,
-            ),
-            _buildServiceCard(
-              'Manicure',
-              'Cuidados com as unhas',
-              'R\$ 20,00',
-              '60 min',
-              Icons.back_hand,
-              Colors.purple,
-            ),
-            _buildServiceCard(
-              'Pedicure',
-              'Cuidados com os pés',
-              'R\$ 25,00',
-              '60 min',
-              Icons.accessibility,
-              Colors.green,
-            ),
-          ],
+          itemCount: services.length,
+          itemBuilder: (context, index) {
+            final service = services[index];
+            return _buildServiceCard(service);
+          },
         ),
       ),
     );
   }
 
-  Widget _buildServiceCard(String name, String description, String price, String duration, IconData icon, Color color) {
+  Widget _buildServiceCard(ServiceModel service) {
     return LuxuryCard(
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: _getCategoryColor(service.category).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              icon,
-              color: color,
+              _getServiceIcon(service.category),
+              color: _getCategoryColor(service.category),
               size: 28,
             ),
           ),
@@ -99,7 +85,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  service.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -108,7 +94,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  service.description,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -124,7 +110,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        price,
+                        'R\$ ${service.price.toStringAsFixed(2)}',
                         style: const TextStyle(
                           color: LuxuryTheme.primaryGold,
                           fontSize: 14,
@@ -140,7 +126,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        duration,
+                        '${service.duration} min',
                         style: TextStyle(
                           color: Colors.grey[700],
                           fontSize: 12,
@@ -153,44 +139,115 @@ class _ServicesScreenState extends State<ServicesScreen> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => _showEditService(name),
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: const [
+                    Icon(Icons.edit, size: 16),
+                    SizedBox(width: 8),
+                    Text('Editar'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete, size: 16, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Excluir', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) => _handleServiceAction(value, service),
           ),
         ],
       ),
     );
   }
 
-  void _showAddService() {
+  void _showAddServiceDialog([ServiceModel? service]) {
+    showDialog(
+      context: context,
+      builder: (context) => AddServiceDialog(
+        service: service,
+        onSave: (newService) {
+          setState(() {
+            if (service != null) {
+              final index = services.indexWhere((s) => s.id == service.id);
+              if (index != -1) services[index] = newService;
+            } else {
+              services.add(newService);
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  void _handleServiceAction(String action, ServiceModel service) {
+    switch (action) {
+      case 'edit':
+        _showAddServiceDialog(service);
+        break;
+      case 'delete':
+        _showDeleteConfirmation(service);
+        break;
+    }
+  }
+
+  void _showDeleteConfirmation(ServiceModel service) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Novo Serviço'),
-        content: const Text('Funcionalidade em desenvolvimento'),
+        title: const Text('Confirmar Exclusão'),
+        content: Text('Deseja realmente excluir o serviço "${service.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                services.removeWhere((s) => s.id == service.id);
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir'),
           ),
         ],
       ),
     );
   }
 
-  void _showEditService(String name) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Editar $name'),
-        content: const Text('Funcionalidade em desenvolvimento'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+  IconData _getServiceIcon(String category) {
+    switch (category) {
+      case 'Corte':
+        return Icons.content_cut;
+      case 'Barba':
+        return Icons.face;
+      case 'Combo':
+        return Icons.star;
+      default:
+        return Icons.room_service;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Corte':
+        return Colors.blue;
+      case 'Barba':
+        return Colors.orange;
+      case 'Combo':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
   }
 }

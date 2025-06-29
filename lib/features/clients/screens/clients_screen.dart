@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
+import '../widgets/add_client_dialog.dart';
 
 
 class ClientsScreen extends StatefulWidget {
@@ -12,6 +13,23 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   final _searchController = TextEditingController();
+  
+  List<ClientModel> clients = [
+    ClientModel(
+      id: '1',
+      name: 'Maria Silva',
+      email: 'maria@email.com',
+      phone: '(11) 99999-9999',
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+    ),
+    ClientModel(
+      id: '2',
+      name: 'João Santos',
+      email: 'joao@email.com',
+      phone: '(11) 88888-8888',
+      createdAt: DateTime.now().subtract(const Duration(days: 15)),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +39,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.person_add),
-            onPressed: () => _showAddClient(),
+            onPressed: () => _showAddClientDialog(),
           ),
         ],
       ),
@@ -47,31 +65,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
               ),
             ),
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildClientCard(
-                    'Maria Silva',
-                    'maria@email.com',
-                    '(11) 99999-9999',
-                    '15 agendamentos',
-                    'VIP',
-                  ),
-                  _buildClientCard(
-                    'João Santos',
-                    'joao@email.com',
-                    '(11) 88888-8888',
-                    '8 agendamentos',
-                    'Regular',
-                  ),
-                  _buildClientCard(
-                    'Ana Costa',
-                    'ana@email.com',
-                    '(11) 77777-7777',
-                    '3 agendamentos',
-                    'Novo',
-                  ),
-                ],
+                itemCount: clients.length,
+                itemBuilder: (context, index) {
+                  final client = clients[index];
+                  return _buildClientCard(client);
+                },
               ),
             ),
           ],
@@ -80,23 +80,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _buildClientCard(String name, String email, String phone, String visits, String category) {
-    Color categoryColor = category == 'VIP' 
-        ? LuxuryTheme.primaryGold 
-        : category == 'Regular' 
-            ? Colors.blue 
-            : Colors.green;
-
+  Widget _buildClientCard(ClientModel client) {
+    final color = _getClientColor(client.name);
+    
     return LuxuryCard(
       child: Row(
         children: [
           CircleAvatar(
             radius: 25,
-            backgroundColor: categoryColor.withValues(alpha: 0.1),
+            backgroundColor: color.withValues(alpha: 0.1),
             child: Text(
-              name[0],
+              client.name[0],
               style: TextStyle(
-                color: categoryColor,
+                color: color,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
@@ -110,7 +106,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 Row(
                   children: [
                     Text(
-                      name,
+                      client.name,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -121,13 +117,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: categoryColor.withValues(alpha: 0.1),
+                        color: client.isActive 
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        category,
+                        client.isActive ? 'Ativo' : 'Inativo',
                         style: TextStyle(
-                          color: categoryColor,
+                          color: client.isActive ? Colors.green : Colors.red,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -137,81 +135,123 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  email,
+                  client.email,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
                   ),
                 ),
                 Text(
-                  phone,
+                  client.phone,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  visits,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: LuxuryTheme.primaryGold,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () => _showClientOptions(name),
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: const [
+                    Icon(Icons.edit, size: 16),
+                    SizedBox(width: 8),
+                    Text('Editar'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'phone',
+                child: Row(
+                  children: const [
+                    Icon(Icons.phone, size: 16, color: Colors.green),
+                    SizedBox(width: 8),
+                    Text('Ligar'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete, size: 16, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Excluir', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) => _handleClientAction(value, client),
           ),
         ],
       ),
     );
   }
 
-  void _showAddClient() {
+  void _showAddClientDialog([ClientModel? client]) {
+    showDialog(
+      context: context,
+      builder: (context) => AddClientDialog(
+        client: client,
+        onSave: (newClient) {
+          setState(() {
+            if (client != null) {
+              final index = clients.indexWhere((c) => c.id == client.id);
+              if (index != -1) clients[index] = newClient;
+            } else {
+              clients.add(newClient);
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  void _handleClientAction(String action, ClientModel client) {
+    switch (action) {
+      case 'edit':
+        _showAddClientDialog(client);
+        break;
+      case 'phone':
+        // Implementar ligação
+        break;
+      case 'delete':
+        _showDeleteConfirmation(client);
+        break;
+    }
+  }
+
+  void _showDeleteConfirmation(ClientModel client) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Novo Cliente'),
-        content: const Text('Funcionalidade em desenvolvimento'),
+        title: const Text('Confirmar Exclusão'),
+        content: Text('Deseja realmente excluir o cliente "${client.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                clients.removeWhere((c) => c.id == client.id);
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir'),
           ),
         ],
       ),
     );
   }
 
-  void _showClientOptions(String name) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Editar'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Histórico'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Excluir', style: TextStyle(color: Colors.red)),
-              onTap: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-      ),
-    );
+  Color _getClientColor(String name) {
+    final colors = [Colors.blue, Colors.pink, Colors.green, Colors.orange, Colors.purple];
+    return colors[name.hashCode % colors.length];
   }
 }
