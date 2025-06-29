@@ -1,283 +1,186 @@
-const DynamoDBService = require('../shared/dynamodb');
-const ResponseHelper = require('../shared/response');
-const AuthHelper = require('../shared/auth');
-const { v4: uuidv4 } = require('uuid');
+const AWS = require('aws-sdk');
+const ResponseHelper = require('./shared/response');
 
-exports.handler = async (event) => {
-  console.log('Appointments Event:', JSON.stringify(event, null, 2));
+const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+exports.handler = async (event, context) => {
+  context.log('AppointmentsFunction Event:', JSON.stringify(event, null, 2));
 
   if (event.httpMethod === 'OPTIONS') {
     return ResponseHelper.cors();
   }
 
-  const user = AuthHelper.extractUserFromEvent(event);
-  if (!user) {
-    return ResponseHelper.unauthorized();
-  }
-
   try {
-    const { httpMethod, pathParameters, body, queryStringParameters } = event;
-    const appointmentId = pathParameters?.proxy;
+    const { httpMethod, pathParameters, body, requestContext } = event;
+    const path = pathParameters?.proxy || '';
     const requestBody = body ? JSON.parse(body) : {};
-    const queryParams = queryStringParameters || {};
+    
+    const userId = requestContext?.authorizer?.claims?.sub;
+    const tenantId = requestContext?.authorizer?.claims?.['custom:tenantId'];
+    
+    if (!userId || !tenantId) {
+      return ResponseHelper.unauthorized('User not authenticated or tenant not found');
+    }
 
-    switch (httpMethod) {
-      case 'GET':
-        return appointmentId ? 
-          await getAppointment(user.userId, appointmentId) : 
-          await getAppointments(user.userId, queryParams);
-      
-      case 'POST':
-        return await createAppointment(user.userId, requestBody);
-      
-      case 'PUT':
-        return await updateAppointment(user.userId, appointmentId, requestBody);
-      
-      case 'DELETE':
-        return await deleteAppointment(user.userId, appointmentId);
-      
+    switch (`${httpMethod}:${path}`) {
+      case 'POST:':
+        return await createAppointment(requestBody, tenantId);
+      case 'GET:':
+        return await listAppointments(tenantId, event.queryStringParameters);
+      case 'PUT:':
+        return await updateAppointment(requestBody, tenantId);
+      case 'DELETE:':
+        return await cancelAppointment(requestBody.appointmentId, tenantId);
+      case 'GET:health':
+        return ResponseHelper.success({ status: 'healthy', service: 'appointments' });
       default:
-        return ResponseHelper.error('Method not allowed', 405);
+        return ResponseHelper.notFound('Endpoint not found');
     }
   } catch (error) {
-    console.error('Appointments Handler Error:', error);
+    context.log('AppointmentsFunction Error:', error);
     return ResponseHelper.serverError(error.message);
   }
 };
 
-async function getAppointments(userId, queryParams) {
-  try {
-    const { date, status, limit } = queryParams;
-    let appointments;
+async function createAppointment(body, tenantId) {
+  const { serviceId, clientName, clientPhone, clientEmail, appointmentDate, appointmentTime, notes } = body;
 
-    if (date) {
-      // Query appointments for specific date
-      appointments = await DynamoDBService.query(
-        `USER#${userId}`,
-        `APPOINTMENT#${date}`
-      );
-    } else {
-      // Get all appointments
-      appointments = await DynamoDBService.query(`USER#${userId}`, 'APPOINTMENT#');
-    }
-
-    // Filter by status if provided
-    if (status) {
-      appointments = appointments.filter(apt => apt.status === status);
-    }
-
-    // Limit results if provided
-    if (limit) {
-      appointments = appointments.slice(0, parseInt(limit));
-    }
-
-    // Sort by date and time
-    appointments.sort((a, b) => {
-      const dateTimeA = new Date(`${a.appointmentDate}T${a.appointmentTime}`);
-      const dateTimeB = new Date(`${b.appointmentDate}T${b.appointmentTime}`);
-      return dateTimeA - dateTimeB;
-    });
-
-    return ResponseHelper.success(appointments);
-  } catch (error) {
-    console.error('Get appointments error:', error);
-    return ResponseHelper.serverError('Failed to get appointments');
+  if (!serviceId || !clientName || !appointmentDate || !appointmentTime) {
+    return ResponseHelper.error('Missing required fields: serviceId, clientName, appointmentDate, appointmentTime');
   }
-}
 
-async function getAppointment(userId, appointmentId) {
-  try {
-    const appointment = await DynamoDBService.getItem(`USER#${userId}`, `APPOINTMENT#${appointmentId}`);
-    
-    if (!appointment) {
-      return ResponseHelper.notFound('Appointment not found');
-    }
-
-    return ResponseHelper.success(appointment);
-  } catch (error) {
-    console.error('Get appointment error:', error);
-    return ResponseHelper.serverError('Failed to get appointment');
-  }
-}
-
-async function createAppointment(userId, body) {
-  const {
-    clientName,
-    clientPhone,
-    clientEmail,
+  const appointmentId = `appointment_${Date.now()}`;
+  const appointment = {
+    PK: `TENANT#${tenantId}`,
+    SK: `APPOINTMENT#${appointmentId}`,
+    GSI1PK: `TENANT#${tenantId}#DATE`,
+    GSI1SK: `${appointmentDate}#${appointmentTime}`,
+    appointmentId,
     serviceId,
-    serviceName,
-    servicePrice,
+    clientName,
+    clientPhone: clientPhone || '',
+    clientEmail: clientEmail || '',
     appointmentDate,
     appointmentTime,
-    notes,
-    paymentMethod = 'cash'
-  } = body;
+    notes: notes || '',
+    status: 'scheduled',
+    createdAt: new Date().toISOString()
+  };
 
-  if (!clientName || !clientPhone || !serviceId || !appointmentDate || !appointmentTime) {
-    return ResponseHelper.error('Missing required fields');
-  }
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Item: appointment
+  };
 
-  try {
-    // Check if time slot is available
-    const existingAppointments = await DynamoDBService.query(
-      `USER#${userId}`,
-      `APPOINTMENT#${appointmentDate}`
-    );
+  await dynamodb.put(params).promise();
+  return ResponseHelper.success(appointment, 201);
+}
 
-    const timeSlotTaken = existingAppointments.some(apt => 
-      apt.appointmentTime === appointmentTime && 
-      apt.status !== 'cancelled'
-    );
-
-    if (timeSlotTaken) {
-      return ResponseHelper.error('Time slot is not available');
-    }
-
-    const appointmentId = uuidv4();
-    const appointment = {
-      PK: `USER#${userId}`,
-      SK: `APPOINTMENT#${appointmentId}`,
-      appointmentId,
-      userId,
-      clientName,
-      clientPhone,
-      clientEmail: clientEmail || '',
-      serviceId,
-      serviceName,
-      servicePrice: parseFloat(servicePrice),
-      appointmentDate,
-      appointmentTime,
-      status: 'scheduled',
-      paymentStatus: 'pending',
-      paymentMethod,
-      notes: notes || '',
-      GSI1PK: `DATE#${appointmentDate}`,
-      GSI1SK: `TIME#${appointmentTime}#${appointmentId}`
+async function listAppointments(tenantId, queryParams) {
+  const { date, status } = queryParams || {};
+  
+  let params;
+  
+  if (date) {
+    // Query by date using GSI
+    params = {
+      TableName: process.env.MAIN_TABLE,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :gsi1pk AND begins_with(GSI1SK, :date)',
+      ExpressionAttributeValues: {
+        ':gsi1pk': `TENANT#${tenantId}#DATE`,
+        ':date': date
+      }
     };
-
-    await DynamoDBService.putItem(appointment);
-
-    // TODO: Send WhatsApp confirmation
-    // await sendWhatsAppConfirmation(appointment);
-
-    return ResponseHelper.success(appointment, 201);
-
-  } catch (error) {
-    console.error('Create appointment error:', error);
-    return ResponseHelper.serverError('Failed to create appointment');
+    
+    if (status) {
+      params.FilterExpression = '#status = :status';
+      params.ExpressionAttributeNames = { '#status': 'status' };
+      params.ExpressionAttributeValues[':status'] = status;
+    }
+    
+    const result = await dynamodb.query(params).promise();
+    return ResponseHelper.success(result.Items);
+  } else {
+    // Query all appointments for tenant
+    params = {
+      TableName: process.env.MAIN_TABLE,
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+      ExpressionAttributeValues: {
+        ':pk': `TENANT#${tenantId}`,
+        ':sk': 'APPOINTMENT#'
+      }
+    };
+    
+    if (status) {
+      params.FilterExpression = '#status = :status';
+      params.ExpressionAttributeNames = { '#status': 'status' };
+      params.ExpressionAttributeValues[':status'] = status;
+    }
+    
+    const result = await dynamodb.query(params).promise();
+    return ResponseHelper.success(result.Items);
   }
 }
 
-async function updateAppointment(userId, appointmentId, body) {
+async function updateAppointment(body, tenantId) {
+  const { appointmentId, status, notes, appointmentDate, appointmentTime } = body;
+
   if (!appointmentId) {
-    return ResponseHelper.error('Appointment ID is required');
+    return ResponseHelper.error('appointmentId is required');
   }
 
-  try {
-    const existingAppointment = await DynamoDBService.getItem(`USER#${userId}`, `APPOINTMENT#${appointmentId}`);
-    
-    if (!existingAppointment) {
-      return ResponseHelper.notFound('Appointment not found');
-    }
-
-    const {
-      clientName,
-      clientPhone,
-      clientEmail,
-      appointmentDate,
-      appointmentTime,
-      status,
-      paymentStatus,
-      paymentMethod,
-      notes
-    } = body;
-
-    let updateExpression = 'SET updatedAt = :updatedAt';
-    const expressionAttributeValues = {
-      ':updatedAt': new Date().toISOString()
-    };
-
-    if (clientName !== undefined) {
-      updateExpression += ', clientName = :clientName';
-      expressionAttributeValues[':clientName'] = clientName;
-    }
-
-    if (clientPhone !== undefined) {
-      updateExpression += ', clientPhone = :clientPhone';
-      expressionAttributeValues[':clientPhone'] = clientPhone;
-    }
-
-    if (clientEmail !== undefined) {
-      updateExpression += ', clientEmail = :clientEmail';
-      expressionAttributeValues[':clientEmail'] = clientEmail;
-    }
-
-    if (appointmentDate !== undefined) {
-      updateExpression += ', appointmentDate = :appointmentDate';
-      expressionAttributeValues[':appointmentDate'] = appointmentDate;
-    }
-
-    if (appointmentTime !== undefined) {
-      updateExpression += ', appointmentTime = :appointmentTime';
-      expressionAttributeValues[':appointmentTime'] = appointmentTime;
-    }
-
-    if (status !== undefined) {
-      updateExpression += ', #status = :status';
-      expressionAttributeValues[':status'] = status;
-    }
-
-    if (paymentStatus !== undefined) {
-      updateExpression += ', paymentStatus = :paymentStatus';
-      expressionAttributeValues[':paymentStatus'] = paymentStatus;
-    }
-
-    if (paymentMethod !== undefined) {
-      updateExpression += ', paymentMethod = :paymentMethod';
-      expressionAttributeValues[':paymentMethod'] = paymentMethod;
-    }
-
-    if (notes !== undefined) {
-      updateExpression += ', notes = :notes';
-      expressionAttributeValues[':notes'] = notes;
-    }
-
-    const expressionAttributeNames = status !== undefined ? { '#status': 'status' } : {};
-
-    const updatedAppointment = await DynamoDBService.updateItem(
-      `USER#${userId}`,
-      `APPOINTMENT#${appointmentId}`,
-      updateExpression,
-      expressionAttributeValues,
-      expressionAttributeNames
-    );
-
-    return ResponseHelper.success(updatedAppointment);
-
-  } catch (error) {
-    console.error('Update appointment error:', error);
-    return ResponseHelper.serverError('Failed to update appointment');
+  const updateExpression = [];
+  const expressionValues = {};
+  
+  if (status) {
+    updateExpression.push('#status = :status');
+    expressionValues[':status'] = status;
   }
+  if (notes !== undefined) {
+    updateExpression.push('notes = :notes');
+    expressionValues[':notes'] = notes;
+  }
+  if (appointmentDate && appointmentTime) {
+    updateExpression.push('appointmentDate = :date, appointmentTime = :time, GSI1SK = :gsi1sk');
+    expressionValues[':date'] = appointmentDate;
+    expressionValues[':time'] = appointmentTime;
+    expressionValues[':gsi1sk'] = `${appointmentDate}#${appointmentTime}`;
+  }
+
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Key: {
+      PK: `TENANT#${tenantId}`,
+      SK: `APPOINTMENT#${appointmentId}`
+    },
+    UpdateExpression: `SET ${updateExpression.join(', ')}`,
+    ExpressionAttributeValues: expressionValues,
+    ExpressionAttributeNames: status ? { '#status': 'status' } : undefined,
+    ReturnValues: 'ALL_NEW'
+  };
+
+  const result = await dynamodb.update(params).promise();
+  return ResponseHelper.success(result.Attributes);
 }
 
-async function deleteAppointment(userId, appointmentId) {
+async function cancelAppointment(appointmentId, tenantId) {
   if (!appointmentId) {
-    return ResponseHelper.error('Appointment ID is required');
+    return ResponseHelper.error('appointmentId is required');
   }
 
-  try {
-    const existingAppointment = await DynamoDBService.getItem(`USER#${userId}`, `APPOINTMENT#${appointmentId}`);
-    
-    if (!existingAppointment) {
-      return ResponseHelper.notFound('Appointment not found');
-    }
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Key: {
+      PK: `TENANT#${tenantId}`,
+      SK: `APPOINTMENT#${appointmentId}`
+    },
+    UpdateExpression: 'SET #status = :status',
+    ExpressionAttributeNames: { '#status': 'status' },
+    ExpressionAttributeValues: { ':status': 'cancelled' },
+    ReturnValues: 'ALL_NEW'
+  };
 
-    await DynamoDBService.deleteItem(`USER#${userId}`, `APPOINTMENT#${appointmentId}`);
-    return ResponseHelper.success({ message: 'Appointment deleted successfully' });
-
-  } catch (error) {
-    console.error('Delete appointment error:', error);
-    return ResponseHelper.serverError('Failed to delete appointment');
-  }
+  const result = await dynamodb.update(params).promise();
+  return ResponseHelper.success(result.Attributes);
 }

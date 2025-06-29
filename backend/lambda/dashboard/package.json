@@ -1,7 +1,7 @@
 {
-  "name": "agenda-facil-tenant",
+  "name": "agenda-facil-dashboard",
   "version": "1.0.0",
-  "description": "Tenant management Lambda function",
+  "description": "Dashboard Lambda function",
   "main": "index.js",
   "dependencies": {
     "aws-sdk": "^2.1490.0",

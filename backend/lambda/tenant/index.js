@@ -1,256 +1,82 @@
 const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
-const MultiTenantMiddleware = require('../shared/multi-tenant');
-const ResponseHelper = require('../shared/response');
+const ResponseHelper = require('./shared/response');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-const cognito = new AWS.CognitoIdentityServiceProvider();
-const s3 = new AWS.S3();
 
-const handler = async (event) => {
-  const { httpMethod, pathParameters, body } = event;
-  const path = pathParameters?.proxy || '';
-  const requestBody = body ? JSON.parse(body) : {};
+exports.handler = async (event, context) => {
+  context.log('TenantFunction Event:', JSON.stringify(event, null, 2));
 
-  switch (`${httpMethod}:${path}`) {
-    case 'POST:create':
-      return await createTenant(event, requestBody);
+  if (event.httpMethod === 'OPTIONS') {
+    return ResponseHelper.cors();
+  }
+
+  try {
+    const { httpMethod, pathParameters, body, requestContext } = event;
+    const path = pathParameters?.proxy || '';
+    const requestBody = body ? JSON.parse(body) : {};
     
-    case 'GET:config':
-      return await getTenantConfig(event);
-    
-    case 'PUT:config':
-      return await updateTenantConfig(event, requestBody);
-    
-    case 'POST:upload-logo':
-      return await uploadLogo(event, requestBody);
-    
-    default:
-      return ResponseHelper.notFound('Endpoint not found');
+    // Extract user from Cognito
+    const userId = requestContext?.authorizer?.claims?.sub;
+    if (!userId) {
+      return ResponseHelper.unauthorized('User not authenticated');
+    }
+
+    switch (`${httpMethod}:${path}`) {
+      case 'POST:':
+        return await createTenant(requestBody, userId);
+      case 'GET:':
+        return await listTenants(userId);
+      case 'GET:health':
+        return ResponseHelper.success({ status: 'healthy', service: 'tenant' });
+      default:
+        return ResponseHelper.notFound('Endpoint not found');
+    }
+  } catch (error) {
+    context.log('TenantFunction Error:', error);
+    return ResponseHelper.serverError(error.message);
   }
 };
 
-async function createTenant(event, body) {
-  const { name, businessType } = body;
-  const { userId, email } = event.tenant;
+async function createTenant(body, userId) {
+  const { businessName, businessType, email, phone } = body;
 
-  if (!name || !businessType) {
-    return ResponseHelper.error('Missing required fields: name, businessType');
+  if (!businessName || !businessType || !email) {
+    return ResponseHelper.error('Missing required fields: businessName, businessType, email');
   }
 
-  try {
-    const tenantId = uuidv4();
-    const now = new Date().toISOString();
+  const tenantId = `tenant_${Date.now()}`;
+  const tenant = {
+    PK: `TENANT#${tenantId}`,
+    SK: 'PROFILE',
+    tenantId,
+    businessName,
+    businessType,
+    email,
+    phone,
+    ownerId: userId,
+    createdAt: new Date().toISOString(),
+    isActive: true
+  };
 
-    // Create tenant record
-    const tenantRecord = {
-      PK: `TENANT#${tenantId}`,
-      SK: 'CONFIG',
-      tenantId,
-      name,
-      businessType,
-      createdAt: now,
-      isActive: true,
-      theme: {
-        primaryColor: '#007bff',
-        logoUrl: null
-      },
-      settings: {
-        workingHours: {
-          monday: { start: '09:00', end: '18:00', enabled: true },
-          tuesday: { start: '09:00', end: '18:00', enabled: true },
-          wednesday: { start: '09:00', end: '18:00', enabled: true },
-          thursday: { start: '09:00', end: '18:00', enabled: true },
-          friday: { start: '09:00', end: '18:00', enabled: true },
-          saturday: { start: '09:00', end: '14:00', enabled: true },
-          sunday: { start: '09:00', end: '14:00', enabled: false }
-        }
-      }
-    };
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Item: tenant
+  };
 
-    // Create user-tenant association
-    const userTenantRecord = {
-      PK: `TENANT#${tenantId}`,
-      SK: `USER#${userId}`,
-      userId,
-      email,
-      role: 'admin',
-      joinedAt: now,
-      GSI1PK: `USER#${userId}`,
-      GSI1SK: `TENANT#${tenantId}`
-    };
-
-    // Batch write
-    await dynamodb.batchWrite({
-      RequestItems: {
-        [process.env.MAIN_TABLE]: [
-          { PutRequest: { Item: tenantRecord } },
-          { PutRequest: { Item: userTenantRecord } }
-        ]
-      }
-    }).promise();
-
-    // Update user's Cognito attributes
-    await cognito.adminUpdateUserAttributes({
-      UserPoolId: process.env.COGNITO_USER_POOL_ID,
-      Username: userId,
-      UserAttributes: [
-        { Name: 'custom:tenantId', Value: tenantId },
-        { Name: 'custom:plan', Value: 'free' }
-      ]
-    }).promise();
-
-    return ResponseHelper.success({
-      tenant: tenantRecord,
-      message: 'Tenant created successfully'
-    });
-
-  } catch (error) {
-    console.error('Create tenant error:', error);
-    return ResponseHelper.serverError('Failed to create tenant');
-  }
+  await dynamodb.put(params).promise();
+  return ResponseHelper.success(tenant, 201);
 }
 
-async function getTenantConfig(event) {
-  const { id: tenantId } = event.tenant;
-
-  if (!tenantId) {
-    return ResponseHelper.error('Tenant ID required');
-  }
-
-  try {
-    const params = {
-      TableName: process.env.MAIN_TABLE,
-      Key: {
-        PK: `TENANT#${tenantId}`,
-        SK: 'CONFIG'
-      }
-    };
-
-    const result = await dynamodb.get(params).promise();
-    
-    if (!result.Item) {
-      return ResponseHelper.notFound('Tenant not found');
+async function listTenants(userId) {
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    FilterExpression: 'ownerId = :userId AND begins_with(PK, :pk)',
+    ExpressionAttributeValues: {
+      ':userId': userId,
+      ':pk': 'TENANT#'
     }
+  };
 
-    return ResponseHelper.success(result.Item);
-
-  } catch (error) {
-    console.error('Get tenant config error:', error);
-    return ResponseHelper.serverError('Failed to get tenant config');
-  }
+  const result = await dynamodb.scan(params).promise();
+  return ResponseHelper.success(result.Items);
 }
-
-async function updateTenantConfig(event, body) {
-  const { id: tenantId } = event.tenant;
-  const { name, theme, settings } = body;
-
-  if (!tenantId) {
-    return ResponseHelper.error('Tenant ID required');
-  }
-
-  try {
-    const updateExpression = [];
-    const expressionAttributeValues = {};
-    const expressionAttributeNames = {};
-
-    if (name) {
-      updateExpression.push('#name = :name');
-      expressionAttributeNames['#name'] = 'name';
-      expressionAttributeValues[':name'] = name;
-    }
-
-    if (theme) {
-      updateExpression.push('#theme = :theme');
-      expressionAttributeNames['#theme'] = 'theme';
-      expressionAttributeValues[':theme'] = theme;
-    }
-
-    if (settings) {
-      updateExpression.push('#settings = :settings');
-      expressionAttributeNames['#settings'] = 'settings';
-      expressionAttributeValues[':settings'] = settings;
-    }
-
-    updateExpression.push('updatedAt = :updatedAt');
-    expressionAttributeValues[':updatedAt'] = new Date().toISOString();
-
-    const params = {
-      TableName: process.env.MAIN_TABLE,
-      Key: {
-        PK: `TENANT#${tenantId}`,
-        SK: 'CONFIG'
-      },
-      UpdateExpression: `SET ${updateExpression.join(', ')}`,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ReturnValues: 'ALL_NEW'
-    };
-
-    const result = await dynamodb.update(params).promise();
-
-    return ResponseHelper.success({
-      tenant: result.Attributes,
-      message: 'Tenant updated successfully'
-    });
-
-  } catch (error) {
-    console.error('Update tenant config error:', error);
-    return ResponseHelper.serverError('Failed to update tenant config');
-  }
-}
-
-async function uploadLogo(event, body) {
-  const { id: tenantId } = event.tenant;
-  const { fileName, fileType, fileContent } = body;
-
-  if (!tenantId || !fileName || !fileContent) {
-    return ResponseHelper.error('Missing required fields');
-  }
-
-  try {
-    const key = `tenants/${tenantId}/logo/${fileName}`;
-    const buffer = Buffer.from(fileContent, 'base64');
-
-    // Upload to S3
-    await s3.putObject({
-      Bucket: process.env.S3_BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: fileType || 'image/png',
-      ACL: 'private'
-    }).promise();
-
-    // Generate presigned URL
-    const logoUrl = s3.getSignedUrl('getObject', {
-      Bucket: process.env.S3_BUCKET,
-      Key: key,
-      Expires: 3600 * 24 * 7 // 7 days
-    });
-
-    // Update tenant config with logo URL
-    await dynamodb.update({
-      TableName: process.env.MAIN_TABLE,
-      Key: {
-        PK: `TENANT#${tenantId}`,
-        SK: 'CONFIG'
-      },
-      UpdateExpression: 'SET theme.logoUrl = :logoUrl, updatedAt = :updatedAt',
-      ExpressionAttributeValues: {
-        ':logoUrl': logoUrl,
-        ':updatedAt': new Date().toISOString()
-      }
-    }).promise();
-
-    return ResponseHelper.success({
-      logoUrl,
-      message: 'Logo uploaded successfully'
-    });
-
-  } catch (error) {
-    console.error('Upload logo error:', error);
-    return ResponseHelper.serverError('Failed to upload logo');
-  }
-}
-
-exports.handler = MultiTenantMiddleware.withMultiTenant(handler);

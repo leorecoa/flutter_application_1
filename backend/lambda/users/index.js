@@ -1,102 +1,181 @@
-const DynamoDBService = require('../shared/dynamodb');
-const ResponseHelper = require('../shared/response');
-const AuthHelper = require('../shared/auth');
+const AWS = require('aws-sdk');
+const ResponseHelper = require('./shared/response');
 
-exports.handler = async (event) => {
-  console.log('Users Event:', JSON.stringify(event, null, 2));
+const dynamodb = new AWS.DynamoDB.DocumentClient();
+
+exports.handler = async (event, context) => {
+  context.log('UsersFunction Event:', JSON.stringify(event, null, 2));
 
   if (event.httpMethod === 'OPTIONS') {
     return ResponseHelper.cors();
   }
 
-  const user = AuthHelper.extractUserFromEvent(event);
-  if (!user) {
-    return ResponseHelper.unauthorized();
-  }
-
   try {
-    const { httpMethod, pathParameters, body } = event;
+    const { httpMethod, pathParameters, body, requestContext } = event;
+    const path = pathParameters?.proxy || '';
     const requestBody = body ? JSON.parse(body) : {};
+    
+    const userId = requestContext?.authorizer?.claims?.sub;
+    const tenantId = requestContext?.authorizer?.claims?.['custom:tenantId'];
+    
+    if (!userId || !tenantId) {
+      return ResponseHelper.unauthorized('User not authenticated or tenant not found');
+    }
 
-    switch (httpMethod) {
-      case 'GET':
-        return await getUserProfile(user.userId);
-      
-      case 'PUT':
-        return await updateUserProfile(user.userId, requestBody);
-      
+    switch (`${httpMethod}:${path}`) {
+      case 'POST:':
+        return await createUser(requestBody, tenantId);
+      case 'GET:':
+        return await listUsers(tenantId);
+      case 'PUT:':
+        return await updateUser(requestBody, tenantId);
+      case 'DELETE:':
+        return await deactivateUser(requestBody.userId, tenantId);
+      case 'GET:profile':
+        return await getUserProfile(userId, tenantId);
+      case 'GET:health':
+        return ResponseHelper.success({ status: 'healthy', service: 'users' });
       default:
-        return ResponseHelper.error('Method not allowed', 405);
+        return ResponseHelper.notFound('Endpoint not found');
     }
   } catch (error) {
-    console.error('Users Handler Error:', error);
+    context.log('UsersFunction Error:', error);
     return ResponseHelper.serverError(error.message);
   }
 };
 
-async function getUserProfile(userId) {
-  try {
-    const userProfile = await DynamoDBService.getItem(`USER#${userId}`, 'PROFILE');
-    
-    if (!userProfile) {
-      return ResponseHelper.notFound('User profile not found');
-    }
+async function createUser(body, tenantId) {
+  const { name, email, phone, role, permissions } = body;
 
-    return ResponseHelper.success(userProfile);
-  } catch (error) {
-    console.error('Get user profile error:', error);
-    return ResponseHelper.serverError('Failed to get user profile');
+  if (!name || !email || !role) {
+    return ResponseHelper.error('Missing required fields: name, email, role');
   }
+
+  const userId = `user_${Date.now()}`;
+  const user = {
+    PK: `TENANT#${tenantId}`,
+    SK: `USER#${userId}`,
+    userId,
+    name,
+    email,
+    phone: phone || '',
+    role, // 'admin', 'staff', 'viewer'
+    permissions: permissions || [],
+    isActive: true,
+    createdAt: new Date().toISOString()
+  };
+
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Item: user
+  };
+
+  await dynamodb.put(params).promise();
+  return ResponseHelper.success(user, 201);
 }
 
-async function updateUserProfile(userId, updates) {
-  try {
-    const existingProfile = await DynamoDBService.getItem(`USER#${userId}`, 'PROFILE');
-    
-    if (!existingProfile) {
-      return ResponseHelper.notFound('User profile not found');
+async function listUsers(tenantId) {
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+    ExpressionAttributeValues: {
+      ':pk': `TENANT#${tenantId}`,
+      ':sk': 'USER#'
     }
+  };
 
-    const { name, phone, businessName, settings } = updates;
-    
-    let updateExpression = 'SET updatedAt = :updatedAt';
-    const expressionAttributeValues = {
-      ':updatedAt': new Date().toISOString()
-    };
+  const result = await dynamodb.query(params).promise();
+  return ResponseHelper.success(result.Items);
+}
 
-    if (name !== undefined) {
-      updateExpression += ', #name = :name';
-      expressionAttributeValues[':name'] = name;
-    }
+async function updateUser(body, tenantId) {
+  const { userId, name, email, phone, role, permissions, isActive } = body;
 
-    if (phone !== undefined) {
-      updateExpression += ', phone = :phone';
-      expressionAttributeValues[':phone'] = phone;
-    }
-
-    if (businessName !== undefined) {
-      updateExpression += ', businessName = :businessName';
-      expressionAttributeValues[':businessName'] = businessName;
-    }
-
-    if (settings !== undefined) {
-      updateExpression += ', settings = :settings';
-      expressionAttributeValues[':settings'] = settings;
-    }
-
-    const expressionAttributeNames = name !== undefined ? { '#name': 'name' } : {};
-
-    const updatedProfile = await DynamoDBService.updateItem(
-      `USER#${userId}`,
-      'PROFILE',
-      updateExpression,
-      expressionAttributeValues,
-      expressionAttributeNames
-    );
-
-    return ResponseHelper.success(updatedProfile);
-  } catch (error) {
-    console.error('Update user profile error:', error);
-    return ResponseHelper.serverError('Failed to update user profile');
+  if (!userId) {
+    return ResponseHelper.error('userId is required');
   }
+
+  const updateExpression = [];
+  const expressionValues = {};
+  
+  if (name) {
+    updateExpression.push('name = :name');
+    expressionValues[':name'] = name;
+  }
+  if (email) {
+    updateExpression.push('email = :email');
+    expressionValues[':email'] = email;
+  }
+  if (phone !== undefined) {
+    updateExpression.push('phone = :phone');
+    expressionValues[':phone'] = phone;
+  }
+  if (role) {
+    updateExpression.push('#role = :role');
+    expressionValues[':role'] = role;
+  }
+  if (permissions) {
+    updateExpression.push('permissions = :permissions');
+    expressionValues[':permissions'] = permissions;
+  }
+  if (isActive !== undefined) {
+    updateExpression.push('isActive = :isActive');
+    expressionValues[':isActive'] = isActive;
+  }
+
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Key: {
+      PK: `TENANT#${tenantId}`,
+      SK: `USER#${userId}`
+    },
+    UpdateExpression: `SET ${updateExpression.join(', ')}`,
+    ExpressionAttributeValues: expressionValues,
+    ExpressionAttributeNames: role ? { '#role': 'role' } : undefined,
+    ReturnValues: 'ALL_NEW'
+  };
+
+  const result = await dynamodb.update(params).promise();
+  return ResponseHelper.success(result.Attributes);
+}
+
+async function deactivateUser(userId, tenantId) {
+  if (!userId) {
+    return ResponseHelper.error('userId is required');
+  }
+
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    Key: {
+      PK: `TENANT#${tenantId}`,
+      SK: `USER#${userId}`
+    },
+    UpdateExpression: 'SET isActive = :isActive',
+    ExpressionAttributeValues: { ':isActive': false },
+    ReturnValues: 'ALL_NEW'
+  };
+
+  const result = await dynamodb.update(params).promise();
+  return ResponseHelper.success(result.Attributes);
+}
+
+async function getUserProfile(cognitoUserId, tenantId) {
+  const params = {
+    TableName: process.env.MAIN_TABLE,
+    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+    FilterExpression: 'cognitoUserId = :cognitoUserId',
+    ExpressionAttributeValues: {
+      ':pk': `TENANT#${tenantId}`,
+      ':sk': 'USER#',
+      ':cognitoUserId': cognitoUserId
+    }
+  };
+
+  const result = await dynamodb.query(params).promise();
+  
+  if (result.Items.length === 0) {
+    return ResponseHelper.notFound('User profile not found');
+  }
+  
+  return ResponseHelper.success(result.Items[0]);
 }

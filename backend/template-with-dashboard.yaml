@@ -1,0 +1,258 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: AgendaFácil SaaS - Complete Multi-Tenant Platform with Dashboard
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+
+Resources:
+  # DynamoDB Table with GSI
+  MainTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-main"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  # S3 Bucket
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-files-${AWS::AccountId}"
+
+  # Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${AWS::StackName}-users"
+      AutoVerifiedAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+        - Name: tenantId
+          AttributeDataType: String
+          Mutable: true
+        - Name: role
+          AttributeDataType: String
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+
+  # Lambda Functions
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/auth/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          COGNITO_USER_POOL_ID: !Ref UserPool
+          ENVIRONMENT: !Ref Environment
+          S3_BUCKET: !Ref FilesBucket
+          COGNITO_CLIENT_ID: "temp-client-id"
+      Events:
+        AuthApi:
+          Type: Api
+          Properties:
+            Path: /auth/{proxy+}
+            Method: ANY
+
+  DashboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/dashboard/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        DashboardApi:
+          Type: Api
+          Properties:
+            Path: /dashboard/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  TenantFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/tenant/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        TenantApi:
+          Type: Api
+          Properties:
+            Path: /tenants/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  ServicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/services/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        ServicesApi:
+          Type: Api
+          Properties:
+            Path: /services/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  AppointmentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/appointments/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        AppointmentsApi:
+          Type: Api
+          Properties:
+            Path: /appointments/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/users/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        UsersApi:
+          Type: Api
+          Properties:
+            Path: /users/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  BookingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/booking/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        BookingApi:
+          Type: Api
+          Properties:
+            Path: /booking/{proxy+}
+            Method: ANY
+
+  RelatorioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/relatorio/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        RelatorioApi:
+          Type: Api
+          Properties:
+            Path: /relatorios/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+  AdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/admin/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Events:
+        AdminApi:
+          Type: Api
+          Properties:
+            Path: /admin/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: AWS_IAM
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+
+  MainTableName:
+    Description: Main DynamoDB Table Name
+    Value: !Ref MainTable
+
+  FilesBucketName:
+    Description: S3 Files Bucket Name
+    Value: !Ref FilesBucket
