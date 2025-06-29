@@ -1,7 +1,7 @@
 import '../models/agendamento_model.dart';
 
 class AgendamentoService {
-  static List<Agendamento> _agendamentos = [
+  static final List<Agendamento> _agendamentos = [
     Agendamento(
       id: '1',
       clienteNome: 'João Silva',
@@ -40,21 +40,21 @@ class AgendamentoService {
     ),
   ];
 
-  static List<Cliente> _clientes = [
+  static final List<Cliente> _clientes = [
     const Cliente(id: '1', nome: 'João Silva', telefone: '(11) 99999-9999', email: 'joao@email.com'),
     const Cliente(id: '2', nome: 'Pedro Costa', telefone: '(11) 88888-8888', email: 'pedro@email.com'),
     const Cliente(id: '3', nome: 'Maria Santos', telefone: '(11) 77777-7777', email: 'maria@email.com'),
     const Cliente(id: '4', nome: 'Carlos Oliveira', telefone: '(11) 66666-6666', email: 'carlos@email.com'),
   ];
 
-  static List<Servico> _servicos = [
+  static final List<Servico> _servicos = [
     const Servico(id: '1', nome: 'Corte + Barba', preco: 55.0, duracaoMinutos: 60),
     const Servico(id: '2', nome: 'Corte', preco: 35.0, duracaoMinutos: 45),
     const Servico(id: '3', nome: 'Barba', preco: 25.0, duracaoMinutos: 30),
     const Servico(id: '4', nome: 'Sobrancelha', preco: 15.0, duracaoMinutos: 15),
   ];
 
-  static List<Barbeiro> _barbeiros = [
+  static final List<Barbeiro> _barbeiros = [
     const Barbeiro(id: '1', nome: 'Carlos', especialidade: 'Corte Masculino'),
     const Barbeiro(id: '2', nome: 'Roberto', especialidade: 'Barba'),
     const Barbeiro(id: '3', nome: 'Ana', especialidade: 'Sobrancelha'),

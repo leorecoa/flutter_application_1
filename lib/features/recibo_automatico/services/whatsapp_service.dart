@@ -1,10 +1,15 @@
+// ignore: unused_import
 import 'dart:convert';
+// ignore: unused_import
 import 'package:http/http.dart' as http;
 import '../models/recibo.dart';
 
 class WhatsAppService {
+  // ignore: unused_field
   static const String _apiUrl = 'https://api.z-api.io'; // ou Twilio
+  // ignore: unused_field
   static const String _instanceId = 'YOUR_INSTANCE_ID';
+  // ignore: unused_field
   static const String _token = 'YOUR_TOKEN';
 
   static Future<bool> enviarReciboWhatsApp(Recibo recibo, String pdfUrl) async {

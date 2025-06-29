@@ -147,7 +147,7 @@ class EmailService {
       
       _logger.d('PDF temporário criado: ${file.path}');
       
-      return const FileAttachment(
+      return FileAttachment(
         file,
         fileName: 'recibo_$reciboId.pdf',
         contentType: 'application/pdf',

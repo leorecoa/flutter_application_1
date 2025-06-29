@@ -3,7 +3,7 @@ import '../../appointments/models/agendamento_model.dart';
 import '../../recibo_automatico/services/recibo_service.dart';
 
 class PaymentService {
-  static List<Payment> _payments = [
+  static final List<Payment> _payments = [
     Payment(
       id: '1',
       clienteNome: 'João Silva',

@@ -30,7 +30,8 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
   TimeOfDay _horaSelecionada = TimeOfDay.now();
   
   List<Cliente> _clientes = [];
-  // List<Cliente> _clientesFiltrados = [];
+  // ignore: unused_field
+  List<Cliente> _clientesFiltrados = [];
   bool _isLoading = false;
 
   @override
@@ -44,7 +45,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
 
   void _loadData() async {
     _clientes = await AgendamentoService.getClientes();
-    // _clientesFiltrados = _clientes;
+    _clientesFiltrados = _clientes;
     setState(() {});
   }
 
