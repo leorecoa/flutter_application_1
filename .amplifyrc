@@ -1,0 +1,11 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-agendafacil-dev-authRole",
+      "UnauthRoleName": "amplify-agendafacil-dev-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::400621361850:role/amplify-agendafacil-dev-authRole",
+      "UnauthRoleArn": "arn:aws:iam::400621361850:role/amplify-agendafacil-dev-unauthRole",
+      "Region": "us-east-1"
+    }
+  }
+}
