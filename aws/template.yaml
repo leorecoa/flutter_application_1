@@ -58,7 +58,6 @@ Resources:
       ExplicitAuthFlows:
         - ADMIN_NO_SRP_AUTH
         - USER_PASSWORD_AUTH
-        - ALLOW_REFRESH_TOKEN_AUTH
 
   # DynamoDB Tables
   AgendamentosTable:
