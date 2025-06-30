@@ -21,6 +21,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
       duration: 30,
       category: 'Corte',
       isActive: true,
+      userId: 'user1',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ),
     ServiceModel(
       id: '2',
@@ -30,6 +33,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
       duration: 20,
       category: 'Barba',
       isActive: true,
+      userId: 'user1',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     ),
   ];
 

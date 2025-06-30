@@ -137,7 +137,7 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                 title: const Text('Serviço Ativo'),
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),
-                activeColor: LuxuryTheme.gold,
+                activeColor: LuxuryTheme.primaryGold,
               ),
               const SizedBox(height: 24),
               Row(
@@ -171,6 +171,9 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
         duration: int.tryParse(_durationController.text) ?? 30,
         category: _category,
         isActive: _isActive,
+        userId: 'user1',
+        createdAt: widget.service?.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       
       widget.onSave(service);

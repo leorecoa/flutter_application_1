@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -201,6 +202,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: const Text('Editar informações pessoais'),
             trailing: const Icon(Icons.arrow_forward_ios),
             onTap: () => _showProfileDialog(),
+          ),
+          ListTile(
+            leading: const Icon(Icons.star, color: LuxuryTheme.primaryGold),
+            title: const Text('Assinatura'),
+            subtitle: const Text('Gerenciar plano e pagamentos'),
+            trailing: const Icon(Icons.arrow_forward_ios),
+            onTap: () => context.push('/subscription'),
           ),
           ListTile(
             leading: const Icon(Icons.security, color: Colors.orange),

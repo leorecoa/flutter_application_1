@@ -16,6 +16,7 @@ import '../../features/area_cliente/screens/area_cliente_screen.dart';
 import '../../features/recibo_automatico/screens/teste_recibo_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/subscription/screens/subscription_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -85,6 +86,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/subscription',
+      builder: (context, state) => const SubscriptionScreen(),
     ),
   ],
 );

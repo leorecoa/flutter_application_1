@@ -225,6 +225,22 @@ Resources:
             Auth:
               Authorizer: CognitoAuthorizer
 
+  SubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/subscription/
+      Handler: index.handler
+      Role: !GetAtt SubscriptionFunctionRole.Arn
+      Events:
+        SubscriptionApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /subscription
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAuthorizer
+
   # DynamoDB Table
   MainTable:
     Type: AWS::DynamoDB::Table
@@ -566,6 +582,34 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:*
+                Resource: 
+                  - !GetAtt MainTable.Arn
+                  - !Sub "${MainTable.Arn}/index/*"
+
+  SubscriptionFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: SubscriptionFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
                 Resource: 
                   - !GetAtt MainTable.Arn
                   - !Sub "${MainTable.Arn}/index/*"

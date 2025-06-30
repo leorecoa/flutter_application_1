@@ -161,7 +161,7 @@ class _AddClientDialogState extends State<AddClientDialog> {
                   title: const Text('Cliente Ativo'),
                   value: _isActive,
                   onChanged: (value) => setState(() => _isActive = value),
-                  activeColor: LuxuryTheme.gold,
+                  activeColor: LuxuryTheme.primaryGold,
                 ),
                 const SizedBox(height: 24),
                 Row(
