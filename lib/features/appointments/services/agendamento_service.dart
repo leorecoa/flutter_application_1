@@ -37,6 +37,10 @@ class AgendamentoService {
     StatusAgendamento? filtroStatus,
     DateTime? filtroData,
   }) async {
+    if (!AuthService.isAuthenticated) {
+      return List.from(_agendamentos);
+    }
+    
     try {
       final response = await ApiClient.get(AWSConfig.agendamentosEndpoint);
       if (response.statusCode == 200) {
@@ -71,17 +75,23 @@ class AgendamentoService {
   }
 
   static Future<Agendamento> criarAgendamento(Agendamento agendamento) async {
-    try {
-      final response = await ApiClient.post(
-        AWSConfig.agendamentosEndpoint,
-        agendamento.toJson(),
-      );
-      if (response.statusCode == 201) {
-        return Agendamento.fromJson(json.decode(response.body));
+    if (AuthService.isAuthenticated) {
+      try {
+        final agendamentoData = agendamento.toJson();
+        agendamentoData['userId'] = AuthService.userId;
+        
+        final response = await ApiClient.post(
+          AWSConfig.agendamentosEndpoint,
+          agendamentoData,
+        );
+        if (response.statusCode == 201) {
+          return Agendamento.fromJson(json.decode(response.body));
+        }
+      } catch (e) {
+        // Fallback para dados locais
       }
-    } catch (e) {
-      // Fallback para dados locais
     }
+    
     final novoAgendamento = agendamento.copyWith(
       id: 'agend-${DateTime.now().millisecondsSinceEpoch}',
     );

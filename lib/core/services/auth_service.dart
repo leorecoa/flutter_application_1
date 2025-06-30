@@ -26,7 +26,7 @@ class AuthService {
         final data = json.decode(response.body);
         _accessToken = data['accessToken'];
         _refreshToken = data['refreshToken'];
-        _userId = data['userId'];
+        _userId = _decodeJWT(data['idToken'])['sub'];
         return true;
       }
       return false;
@@ -51,6 +51,17 @@ class AuthService {
     } catch (e) {
       return false;
     }
+  }
+
+  static Map<String, dynamic> _decodeJWT(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) return {};
+    
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final decoded = utf8.decode(base64Url.decode(normalized));
+    
+    return json.decode(decoded);
   }
 
   static Future<void> logout() async {
