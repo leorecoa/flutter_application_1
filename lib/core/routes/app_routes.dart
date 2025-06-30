@@ -13,7 +13,7 @@ import '../../features/admin/screens/admin_services_screen.dart';
 import '../../features/payments/screens/financeiro_screen.dart';
 import '../../features/dashboard_financeiro/screens/dashboard_financeiro_screen.dart';
 import '../../features/area_cliente/screens/area_cliente_screen.dart';
-import '../../features/recibo_automatico/screens/teste_recibo_screen.dart';
+// import '../../features/recibo_automatico/screens/teste_recibo_screen.dart'; // Removido
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
@@ -79,10 +79,10 @@ final appRouter = GoRouter(
       path: '/cliente',
       builder: (context, state) => const AreaClienteScreen(),
     ),
-    GoRoute(
-      path: '/admin/teste-recibo',
-      builder: (context, state) => const TesteReciboScreen(),
-    ),
+    // GoRoute(
+    //   path: '/admin/teste-recibo',
+    //   builder: (context, state) => const TesteReciboScreen(),
+    // ), // Removido
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsScreen(),

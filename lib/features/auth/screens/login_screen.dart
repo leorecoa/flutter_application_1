@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/services/cognito_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
 
@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final result = await CognitoService.signIn(
+      final result = await AuthService().signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
