@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AgendaFácil SaaS - Multi-Tenant Serverless Platform
+Description: AgendaFácil SaaS - Multi-Tenant Serverless Platform (FIXED)
 
 Parameters:
   Environment:
@@ -19,19 +19,16 @@ Mappings:
     dev:
       MemorySize: 256
       Timeout: 30
-      ProvisionedConcurrency: 0
       DynamoDBReadCapacity: 5
       DynamoDBWriteCapacity: 5
     staging:
       MemorySize: 512
       Timeout: 30
-      ProvisionedConcurrency: 5
       DynamoDBReadCapacity: 10
       DynamoDBWriteCapacity: 10
     prod:
       MemorySize: 1024
       Timeout: 30
-      ProvisionedConcurrency: 10
       DynamoDBReadCapacity: 25
       DynamoDBWriteCapacity: 25
 
@@ -49,7 +46,7 @@ Globals:
       Variables:
         MAIN_TABLE: !Ref MainTable
         COGNITO_USER_POOL_ID: !Ref UserPool
-        COGNITO_CLIENT_ID: "temp-client-id"
+        COGNITO_CLIENT_ID: !Ref UserPoolClient
         ENVIRONMENT: !Ref Environment
         S3_BUCKET: !Ref FilesBucket
         LOG_LEVEL: !If [IsProduction, info, debug]
@@ -58,43 +55,36 @@ Globals:
       Environment: !Ref Environment
       ManagedBy: SAM
 
-  Api:
-    Cors:
-      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'"
-      AllowOrigin: "'*'"
-      MaxAge: "'600'"
-    GatewayResponses:
-      DEFAULT_4XX:
-        ResponseParameters:
-          Headers:
-            Access-Control-Allow-Origin: "'*'"
-            Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-      DEFAULT_5XX:
-        ResponseParameters:
-          Headers:
-            Access-Control-Allow-Origin: "'*'"
-            Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-
 Resources:
-  # API Gateway
+  # API Gateway com Cognito Authorizer CORRIGIDO
   ApiGateway:
-    Type: AWS::ApiGateway::RestApi
+    Type: AWS::Serverless::Api
     Properties:
       Name: !Sub "${AWS::StackName}-api"
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-
-  ApiGatewayDeployment:
-    Type: AWS::ApiGateway::Deployment
-    DependsOn:
-      - AuthFunction
-    Properties:
-      RestApiId: !Ref ApiGateway
       StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Correlation-Id'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
 
-  # Lambda Functions
+  # Lambda Functions CORRIGIDAS
   AuthFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -108,6 +98,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /auth/{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: NONE
 
   TenantFunction:
     Type: AWS::Serverless::Function
@@ -115,12 +107,6 @@ Resources:
       CodeUri: lambda/tenant/
       Handler: index.handler
       Role: !GetAtt TenantFunctionRole.Arn
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-          - IsNotDev
-          - ProvisionedConcurrencyUnits: !FindInMap [EnvironmentMap, !Ref Environment, ProvisionedConcurrency]
-          - !Ref AWS::NoValue
       Events:
         TenantApi:
           Type: Api
@@ -128,8 +114,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /tenants/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   ServicesFunction:
     Type: AWS::Serverless::Function
@@ -144,8 +128,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /services/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   AppointmentsFunction:
     Type: AWS::Serverless::Function
@@ -160,8 +142,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /appointments/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   UsersFunction:
     Type: AWS::Serverless::Function
@@ -176,8 +156,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /users/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   BookingFunction:
     Type: AWS::Serverless::Function
@@ -192,6 +170,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /booking/{proxy+}
             Method: ANY
+            Auth:
+              Authorizer: NONE
 
   RelatorioFunction:
     Type: AWS::Serverless::Function
@@ -206,8 +186,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /relatorios/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   AdminFunction:
     Type: AWS::Serverless::Function
@@ -222,8 +200,6 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /admin/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   SubscriptionFunction:
     Type: AWS::Serverless::Function
@@ -236,20 +212,15 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /subscription
+            Path: /subscription/{proxy+}
             Method: ANY
-            Auth:
-              Authorizer: CognitoAuthorizer
 
   # DynamoDB Table
   MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "${AWS::StackName}-main"
-      BillingMode: PROVISIONED
-      ProvisionedThroughput:
-        ReadCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
-        WriteCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
+      BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
           AttributeType: S
@@ -273,9 +244,6 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
-          ProvisionedThroughput:
-            ReadCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
-            WriteCapacityUnits: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [IsProduction, true, false]
       DeletionProtectionEnabled: !If [IsProduction, true, false]
@@ -284,29 +252,6 @@ Resources:
           Value: AgendaFacil
         - Key: Environment
           Value: !Ref Environment
-
-  # Auto Scaling
-  MainTableReadCapacityScalableTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: IsNotDev
-    Properties:
-      MaxCapacity: 1000
-      MinCapacity: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBReadCapacity]
-      ResourceId: !Sub "table/${MainTable}"
-      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
-      ScalableDimension: dynamodb:table:ReadCapacityUnits
-      ServiceNamespace: dynamodb
-
-  MainTableWriteCapacityScalableTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: IsNotDev
-    Properties:
-      MaxCapacity: 1000
-      MinCapacity: !FindInMap [EnvironmentMap, !Ref Environment, DynamoDBWriteCapacity]
-      ResourceId: !Sub "table/${MainTable}"
-      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
-      ScalableDimension: dynamodb:table:WriteCapacityUnits
-      ServiceNamespace: dynamodb
 
   # S3 Bucket
   FilesBucket:
@@ -327,7 +272,7 @@ Resources:
             AllowedOrigins: ['*']
             MaxAge: 3600
 
-  # Cognito User Pool
+  # Cognito User Pool CORRIGIDO
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -350,17 +295,30 @@ Resources:
           RequireUppercase: true
           RequireLowercase: true
           RequireNumbers: true
-          RequireSymbols: true
+          RequireSymbols: false
       UserPoolAddOns:
         AdvancedSecurityMode: "OFF"
+
+  # UserPoolClient ADICIONADO (estava faltando)
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub "${AWS::StackName}-client"
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
 
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Sub "${CognitoDomainPrefix}-${Environment}-unique"
+      Domain: !Sub "${CognitoDomainPrefix}-${Environment}-${AWS::AccountId}"
       UserPoolId: !Ref UserPool
 
-  # IAM Roles (Simplified - only showing AuthFunctionRole)
+  # IAM Roles
   AuthFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -390,7 +348,6 @@ Resources:
                   - cognito-idp:*
                 Resource: !GetAtt UserPool.Arn
 
-  # Additional IAM Roles (TenantFunction, ServicesFunction, etc.)
   TenantFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -421,10 +378,6 @@ Resources:
                 Resource: 
                   - !GetAtt FilesBucket.Arn
                   - !Sub "${FilesBucket.Arn}/*"
-              - Effect: Allow
-                Action:
-                  - cognito-idp:AdminUpdateUserAttributes
-                Resource: !GetAtt UserPool.Arn
 
   ServicesFunctionRole:
     Type: AWS::IAM::Role
@@ -627,7 +580,11 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-UserPoolId"
 
-
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub "${AWS::StackName}-UserPoolClientId"
 
   MainTableName:
     Description: Main DynamoDB Table Name
@@ -640,4 +597,3 @@ Outputs:
     Value: !Ref FilesBucket
     Export:
       Name: !Sub "${AWS::StackName}-FilesBucket"
-
