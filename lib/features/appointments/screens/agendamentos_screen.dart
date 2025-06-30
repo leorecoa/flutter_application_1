@@ -43,12 +43,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   void _carregarAgendamentos() async {
     setState(() => _isLoading = true);
     
-    final agendamentos = await AgendamentoService.getAgendamentos(
-      filtroCliente: _buscaController.text,
-      filtroBarbeiro: _filtroBarbeiro,
-      filtroStatus: _filtroStatus,
-      filtroData: _filtroData,
-    );
+    final agendamentos = await AgendamentoService.getAgendamentos();
     
     setState(() {
       _agendamentos = agendamentos;

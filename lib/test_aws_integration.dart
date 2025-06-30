@@ -49,9 +49,9 @@ class _TestAWSIntegrationState extends State<TestAWSIntegration> {
 
     try {
       // Teste de login (vai falhar pois não temos API real)
-      final success = await AuthService.login('test@test.com', 'password123');
+      final result = await AuthService().login('test@test.com', 'password123');
       setState(() {
-        _status = success 
+        _status = result['success'] == true
           ? '✅ Auth: Login simulado com sucesso' 
           : '⚠️ Auth: Fallback funcionando (API não disponível)';
       });
