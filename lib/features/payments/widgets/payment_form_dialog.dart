@@ -206,7 +206,7 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
         DropdownMenuItem(
             value: StatusPagamento.pendente, child: Text('Pendente')),
         DropdownMenuItem(
-            value: StatusPagamento.confirmado, child: Text('Confirmado')),
+            value: StatusPagamento.pago, child: Text('Pago')),
         DropdownMenuItem(
             value: StatusPagamento.cancelado, child: Text('Cancelado')),
       ],
@@ -239,10 +239,13 @@ class _PaymentFormDialogState extends State<PaymentFormDialog> {
   void _savePayment() {
     if (_formKey.currentState!.validate()) {
       final payment = Payment(
-        id: widget.payment?.id ?? '',
+        id: widget.payment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         clienteNome: _clienteController.text,
+        clienteId: widget.payment?.clienteId ?? 'cliente-${DateTime.now().millisecondsSinceEpoch}',
         servicoNome: _servicoController.text,
+        servicoId: widget.payment?.servicoId ?? 'servico-${DateTime.now().millisecondsSinceEpoch}',
         barbeiroNome: _barbeiroController.text,
+        barbeiroId: widget.payment?.barbeiroId ?? 'barbeiro-${DateTime.now().millisecondsSinceEpoch}',
         valor: double.parse(_valorController.text),
         formaPagamento: _formaPagamento,
         data: _data,

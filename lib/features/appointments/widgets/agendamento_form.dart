@@ -44,7 +44,13 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
   }
 
   void _loadData() async {
-    _clientes = AgendamentoService.getClientes();
+    final clientesData = AgendamentoService.getClientes();
+    _clientes = clientesData.map((c) => Cliente(
+      id: c.id,
+      nome: c.nome,
+      telefone: '',
+      email: '',
+    )).toList();
     _clientesFiltrados = _clientes;
     setState(() {});
   }
@@ -139,7 +145,17 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
     return Autocomplete<Cliente>(
       optionsBuilder: (textEditingValue) async {
         if (textEditingValue.text.isEmpty) return _clientes;
-        return AgendamentoService.getClientes(textEditingValue.text);
+        final clientesData = AgendamentoService.getClientes();
+        final clientesFiltrados = clientesData
+            .where((c) => c.nome.toLowerCase().contains(textEditingValue.text.toLowerCase()))
+            .map((c) => Cliente(
+              id: c.id,
+              nome: c.nome,
+              telefone: '',
+              email: '',
+            ))
+            .toList();
+        return clientesFiltrados;
       },
       displayStringForOption: (cliente) => cliente.nome,
       onSelected: (cliente) {
@@ -170,7 +186,13 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
         labelText: 'Serviço',
         prefixIcon: Icon(Icons.content_cut_outlined),
       ),
-      items: AgendamentoService.getServicos().map((servico) {
+      items: AgendamentoService.getServicos().map((servicoData) {
+        final servico = Servico(
+          id: servicoData.id,
+          nome: servicoData.nome,
+          preco: servicoData.valor,
+          duracaoMinutos: 30, // valor padrão
+        );
         return DropdownMenuItem(
           value: servico,
           child: Column(
@@ -197,7 +219,12 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
         labelText: 'Barbeiro',
         prefixIcon: Icon(Icons.person_pin_outlined),
       ),
-      items: AgendamentoService.getBarbeiros().map((barbeiro) {
+      items: AgendamentoService.getBarbeiros().map((barbeiroData) {
+        final barbeiro = Barbeiro(
+          id: barbeiroData.id,
+          nome: barbeiroData.nome,
+          especialidade: 'Especialista', // valor padrão
+        );
         return DropdownMenuItem(
           value: barbeiro,
           child: Column(

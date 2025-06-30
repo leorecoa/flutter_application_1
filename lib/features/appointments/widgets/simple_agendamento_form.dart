@@ -186,7 +186,7 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
-    if (date != null) {
+    if (date != null && mounted) {
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_dataHora),
@@ -226,7 +226,7 @@ class _SimpleAgendamentoFormState extends State<SimpleAgendamentoForm> {
       }
 
       widget.onSaved();
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     }
   }
 }

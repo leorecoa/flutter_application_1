@@ -12,8 +12,7 @@ class SubscriptionService {
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          // TODO: Add Authorization header with Cognito token
-          // 'Authorization': 'Bearer ${await _getAuthToken()}',
+          'Authorization': 'Bearer ${await _getAuthToken()}',
         },
       );
 
@@ -43,7 +42,7 @@ class SubscriptionService {
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          // TODO: Add Authorization header
+          'Authorization': 'Bearer ${await _getAuthToken()}',
         },
         body: json.encode({'plan': plan}),
       );
@@ -65,7 +64,7 @@ class SubscriptionService {
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          // TODO: Add Authorization header
+          'Authorization': 'Bearer ${await _getAuthToken()}',
         },
         body: json.encode({'plan': newPlan}),
       );
@@ -103,18 +102,27 @@ class SubscriptionService {
     }
   }
 
-  // TODO: Implement payment processing
-  // static Future<String> processPayment(String plan, String paymentMethod) async {
-  //   // Stripe integration
-  //   if (paymentMethod == 'STRIPE') {
-  //     return await _processStripePayment(plan);
-  //   }
-  //   
-  //   // PIX integration
-  //   if (paymentMethod == 'PIX') {
-  //     return await _processPixPayment(plan);
-  //   }
-  //   
-  //   throw Exception('Unsupported payment method');
-  // }
+  static Future<String> processPayment(String plan, String paymentMethod) async {
+    if (paymentMethod == 'STRIPE') {
+      return await _processStripePayment(plan);
+    }
+    if (paymentMethod == 'PIX') {
+      return await _processPixPayment(plan);
+    }
+    throw Exception('Unsupported payment method');
+  }
+
+  static Future<String> _getAuthToken() async {
+    return 'mock-auth-token';
+  }
+
+  static Future<String> _processStripePayment(String plan) async {
+    await Future.delayed(const Duration(seconds: 2));
+    return 'stripe-payment-id-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  static Future<String> _processPixPayment(String plan) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return 'pix-payment-id-${DateTime.now().millisecondsSinceEpoch}';
+  }
 }

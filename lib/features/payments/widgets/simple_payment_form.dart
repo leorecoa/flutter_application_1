@@ -106,8 +106,9 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                         if (value?.isEmpty == true) {
       return 'Campo obrigatório';
     }
-                        if (double.tryParse(value!) == null)
+                        if (double.tryParse(value!) == null) {
                           return 'Valor inválido';
+                        }
                         return null;
                       },
                     ),
@@ -213,7 +214,7 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
       }
 
       widget.onSaved();
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
     }
   }
 }

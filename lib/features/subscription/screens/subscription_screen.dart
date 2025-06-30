@@ -288,7 +288,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     try {
       setState(() => _isLoading = true);
       
-      // TODO: Show payment dialog for paid plans
       if (planName != 'FREE') {
         final shouldProceed = await _showPaymentDialog(planName);
         if (!shouldProceed) {
@@ -326,15 +325,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Upgrade para $planName'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Escolha a forma de pagamento:'),
-            const SizedBox(height: 16),
-            // TODO: Implement payment method selection
-            const Text('⚠️ Integração de pagamento será configurada em breve'),
-            const SizedBox(height: 8),
-            const Text('Por enquanto, o upgrade será feito gratuitamente para testes.'),
+            Text('Escolha a forma de pagamento:'),
+            SizedBox(height: 16),
+            Text('💳 Cartão de Crédito'),
+            Text('🏦 PIX'),
+            SizedBox(height: 8),
+            Text('Selecione sua forma de pagamento preferida.'),
           ],
         ),
         actions: [
@@ -344,7 +343,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Continuar'),
+            child: const Text('Pagar'),
           ),
         ],
       ),

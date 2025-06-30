@@ -3,6 +3,7 @@ import '../../../core/theme/trinks_theme.dart';
 import '../models/payment_model.dart';
 import '../services/payment_service.dart';
 import '../../appointments/models/agendamento_model.dart';
+import '../../appointments/services/agendamento_service.dart';
 
 class PaymentForm extends StatefulWidget {
   final Payment? payment;
@@ -43,7 +44,13 @@ class _PaymentFormState extends State<PaymentForm> {
   }
 
   void _loadData() {
-    _clientes = PaymentService.getClientes();
+    final clientesData = AgendamentoService.getClientes();
+    _clientes = clientesData.map((c) => Cliente(
+      id: c.id,
+      nome: c.nome,
+      telefone: '',
+      email: '',
+    )).toList();
     setState(() {});
   }
 
@@ -172,7 +179,13 @@ class _PaymentFormState extends State<PaymentForm> {
         labelText: 'Serviço',
         prefixIcon: Icon(Icons.content_cut_outlined),
       ),
-      items: PaymentService.getServicos().map((servico) {
+      items: AgendamentoService.getServicos().map((servicoData) {
+        final servico = Servico(
+          id: servicoData.id,
+          nome: servicoData.nome,
+          preco: servicoData.valor,
+          duracaoMinutos: 30,
+        );
         return DropdownMenuItem(
           value: servico,
           child: Column(
@@ -199,7 +212,12 @@ class _PaymentFormState extends State<PaymentForm> {
         labelText: 'Barbeiro',
         prefixIcon: Icon(Icons.person_pin_outlined),
       ),
-      items: PaymentService.getBarbeiros().map((barbeiro) {
+      items: AgendamentoService.getBarbeiros().map((barbeiroData) {
+        final barbeiro = Barbeiro(
+          id: barbeiroData.id,
+          nome: barbeiroData.nome,
+          especialidade: 'Especialista',
+        );
         return DropdownMenuItem(
           value: barbeiro,
           child: Text(barbeiro.nome),

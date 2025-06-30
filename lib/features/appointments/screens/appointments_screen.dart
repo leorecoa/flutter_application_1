@@ -26,8 +26,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   Future<void> _loadAgendamentos() async {
     try {
       final agendamentos = await AgendamentoService.getAgendamentos();
+      // Use agendamentos for future implementation
+      debugPrint('Loaded ${agendamentos.length} agendamentos');
       setState(() {
-        // _agendamentos = agendamentos; // Commented out unused field
         _isLoading = false;
       });
     } catch (e) {
@@ -199,7 +200,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     showDialog(
       context: context,
       builder: (context) => AddAppointmentDialog(
-        onSave: (agendamento) async {
+        onSave: (Agendamento agendamento) async {
           setState(() => _isLoading = true);
           await AgendamentoService.criarAgendamento(agendamento);
           await _loadAgendamentos();
