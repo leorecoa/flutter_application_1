@@ -1,0 +1,14 @@
+{
+  "name": "agendafacil-saas",
+  "description": "Flutter SaaS - AgendaFácil",
+  "platform": "WEB",
+  "buildSpec": "version: 1\nfrontend:\n  phases:\n    build:\n      commands:\n        - git clone https://github.com/flutter/flutter.git -b stable\n        - export PATH=\"$PATH:`pwd`/flutter/bin\"\n        - flutter pub get\n        - flutter build web\n  artifacts:\n    baseDirectory: build/web\n    files:\n      - '**/*'\n  cache:\n    paths:\n      - .pub-cache/**/*",
+  "customRules": [
+    {
+      "source": "/<*>",
+      "target": "/index.html",
+      "status": "200"
+    }
+  ],
+  "enableBranchAutoBuild": true
+}

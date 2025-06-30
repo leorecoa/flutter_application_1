@@ -1,0 +1,18 @@
+runtime: custom
+env: flex
+
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 10
+
+handlers:
+- url: /.*
+  static_files: build/web/index.html
+  upload: build/web/index.html
+  secure: always
+  redirect_http_response_code: 301
+
+- url: /(.*)
+  static_files: build/web/\1
+  upload: build/web/(.*)
+  secure: always
