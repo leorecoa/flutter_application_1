@@ -103,7 +103,9 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                       ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value?.isEmpty == true) return 'Campo obrigatório';
+                        if (value?.isEmpty == true) {
+      return 'Campo obrigatório';
+    }
                         if (double.tryParse(value!) == null)
                           return 'Valor inválido';
                         return null;

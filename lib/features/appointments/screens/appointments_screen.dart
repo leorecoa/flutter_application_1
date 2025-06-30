@@ -14,7 +14,7 @@ class AppointmentsScreen extends StatefulWidget {
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
-  List<Agendamento> _agendamentos = [];
+  // List<Agendamento> _agendamentos = []; // Unused field
   bool _isLoading = true;
 
   @override
@@ -27,7 +27,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     try {
       final agendamentos = await AgendamentoService.getAgendamentos();
       setState(() {
-        _agendamentos = agendamentos;
+        // _agendamentos = agendamentos; // Commented out unused field
         _isLoading = false;
       });
     } catch (e) {

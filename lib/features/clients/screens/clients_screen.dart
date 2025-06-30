@@ -156,30 +156,30 @@ class _ClientsScreenState extends State<ClientsScreen> {
               PopupMenuItem(
                 value: 'edit',
                 child: Row(
-                  children: const [
-                    Icon(Icons.edit, size: 16),
-                    SizedBox(width: 8),
-                    Text('Editar'),
+                  children: [
+                    const Icon(Icons.edit, size: 16),
+                    const SizedBox(width: 8),
+                    const Text('Editar'),
                   ],
                 ),
               ),
               PopupMenuItem(
                 value: 'phone',
                 child: Row(
-                  children: const [
-                    Icon(Icons.phone, size: 16, color: Colors.green),
-                    SizedBox(width: 8),
-                    Text('Ligar'),
+                  children: [
+                    const Icon(Icons.phone, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    const Text('Ligar'),
                   ],
                 ),
               ),
               PopupMenuItem(
                 value: 'delete',
                 child: Row(
-                  children: const [
-                    Icon(Icons.delete, size: 16, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Excluir', style: TextStyle(color: Colors.red)),
+                  children: [
+                    const Icon(Icons.delete, size: 16, color: Colors.red),
+                    const SizedBox(width: 8),
+                    const Text('Excluir', style: TextStyle(color: Colors.red)),
                   ],
                 ),
               ),
