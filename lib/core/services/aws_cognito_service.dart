@@ -18,7 +18,7 @@ class AWSCognitoService {
 
       final body = {
         'AuthFlow': 'USER_PASSWORD_AUTH',
-        'ClientId': AWSConfig.clientId,
+        'ClientId': AWSConfig.cognitoClientId,
         'AuthParameters': {
           'USERNAME': email,
           'PASSWORD': password,
@@ -26,7 +26,7 @@ class AWSCognitoService {
       };
 
       final response = await http.post(
-        Uri.parse(AWSConfig.cognitoEndpoint),
+        Uri.parse('https://cognito-idp.${AWSConfig.region}.amazonaws.com/'),
         headers: headers,
         body: jsonEncode(body),
       );
@@ -38,7 +38,6 @@ class AWSCognitoService {
         _idToken = responseData['AuthenticationResult']['IdToken'];
         _refreshToken = responseData['AuthenticationResult']['RefreshToken'];
 
-        // Decodificar token para obter dados do usuário
         _userAttributes = _decodeJWT(_idToken!);
 
         return {
@@ -81,7 +80,7 @@ class AWSCognitoService {
         };
 
         await http.post(
-          Uri.parse(AWSConfig.cognitoEndpoint),
+          Uri.parse('https://cognito-idp.${AWSConfig.region}.amazonaws.com/'),
           headers: headers,
           body: jsonEncode(body),
         );
@@ -96,7 +95,6 @@ class AWSCognitoService {
   static Future<bool> isSignedIn() async {
     if (_accessToken == null) return false;
 
-    // Verificar se token ainda é válido
     try {
       final payload = _decodeJWT(_accessToken!);
       final exp = payload['exp'] as int;
@@ -133,14 +131,14 @@ class AWSCognitoService {
 
       final body = {
         'AuthFlow': 'REFRESH_TOKEN_AUTH',
-        'ClientId': AWSConfig.clientId,
+        'ClientId': AWSConfig.cognitoClientId,
         'AuthParameters': {
           'REFRESH_TOKEN': _refreshToken,
         },
       };
 
       final response = await http.post(
-        Uri.parse(AWSConfig.cognitoEndpoint),
+        Uri.parse('https://cognito-idp.${AWSConfig.region}.amazonaws.com/'),
         headers: headers,
         body: jsonEncode(body),
       );

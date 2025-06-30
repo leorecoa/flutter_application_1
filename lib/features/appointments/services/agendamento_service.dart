@@ -1,4 +1,7 @@
+import 'dart:convert';
 import '../models/agendamento_model.dart';
+import '../../../core/services/api_client.dart';
+import '../../../core/config/aws_config.dart';
 
 class AgendamentoService {
   static final List<Agendamento> _agendamentos = [
@@ -34,7 +37,15 @@ class AgendamentoService {
     StatusAgendamento? filtroStatus,
     DateTime? filtroData,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final response = await ApiClient.get(AWSConfig.agendamentosEndpoint);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Agendamento.fromJson(json)).toList();
+      }
+    } catch (e) {
+      // Fallback para dados locais
+    }
     return List.from(_agendamentos);
   }
 
@@ -60,7 +71,17 @@ class AgendamentoService {
   }
 
   static Future<Agendamento> criarAgendamento(Agendamento agendamento) async {
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      final response = await ApiClient.post(
+        AWSConfig.agendamentosEndpoint,
+        agendamento.toJson(),
+      );
+      if (response.statusCode == 201) {
+        return Agendamento.fromJson(json.decode(response.body));
+      }
+    } catch (e) {
+      // Fallback para dados locais
+    }
     final novoAgendamento = agendamento.copyWith(
       id: 'agend-${DateTime.now().millisecondsSinceEpoch}',
     );
@@ -69,7 +90,17 @@ class AgendamentoService {
   }
 
   static Future<Agendamento> atualizarAgendamento(Agendamento agendamento) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final response = await ApiClient.put(
+        '${AWSConfig.agendamentosEndpoint}/${agendamento.id}',
+        agendamento.toJson(),
+      );
+      if (response.statusCode == 200) {
+        return Agendamento.fromJson(json.decode(response.body));
+      }
+    } catch (e) {
+      // Fallback para dados locais
+    }
     final index = _agendamentos.indexWhere((a) => a.id == agendamento.id);
     if (index != -1) {
       _agendamentos[index] = agendamento;

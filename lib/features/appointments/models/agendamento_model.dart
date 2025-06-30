@@ -54,6 +54,41 @@ class Agendamento {
       observacoes: observacoes ?? this.observacoes,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'clienteNome': clienteNome,
+      'clienteId': clienteId,
+      'servicoNome': servicoNome,
+      'servicoId': servicoId,
+      'barbeiroNome': barbeiroNome,
+      'barbeiroId': barbeiroId,
+      'dataHora': dataHora.toIso8601String(),
+      'status': status.name,
+      'valor': valor,
+      'observacoes': observacoes,
+    };
+  }
+
+  factory Agendamento.fromJson(Map<String, dynamic> json) {
+    return Agendamento(
+      id: json['id'],
+      clienteNome: json['clienteNome'],
+      clienteId: json['clienteId'],
+      servicoNome: json['servicoNome'],
+      servicoId: json['servicoId'],
+      barbeiroNome: json['barbeiroNome'],
+      barbeiroId: json['barbeiroId'],
+      dataHora: DateTime.parse(json['dataHora']),
+      status: StatusAgendamento.values.firstWhere(
+        (e) => e.name == json['status'],
+        orElse: () => StatusAgendamento.pendente,
+      ),
+      valor: json['valor'].toDouble(),
+      observacoes: json['observacoes'],
+    );
+  }
 }
 
 class Cliente {
