@@ -1,0 +1,368 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'AgendaFácil SaaS - Backend Serverless'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Environment name
+  
+  AppName:
+    Type: String
+    Default: agendafacil
+    Description: Application name
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        COGNITO_USER_POOL_ID: !Ref UserPool
+        COGNITO_CLIENT_ID: !Ref UserPoolClient
+        AGENDAMENTOS_TABLE: !Ref AgendamentosTable
+        PAGAMENTOS_TABLE: !Ref PagamentosTable
+        CLIENTES_TABLE: !Ref ClientesTable
+        SERVICOS_TABLE: !Ref ServicosTable
+
+Resources:
+  # Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${AppName}-${Environment}-users'
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub '${AppName}-${Environment}-client'
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ADMIN_NO_SRP_AUTH
+        - USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  # DynamoDB Tables
+  AgendamentosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-${Environment}-agendamentos'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: dataHora
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: dataHora
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+  PagamentosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-${Environment}-pagamentos'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  ClientesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-${Environment}-clientes'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  ServicosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-${Environment}-servicos'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub '${AppName}-${Environment}-api'
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt UserPool.Arn
+
+  # Lambda Functions
+  AgendamentosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-${Environment}-agendamentos'
+      CodeUri: lambda/
+      Handler: agendamentos.handler
+      Events:
+        GetAgendamentos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agendamentos
+            Method: GET
+        CreateAgendamento:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agendamentos
+            Method: POST
+        UpdateAgendamento:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agendamentos/{id}
+            Method: PUT
+        DeleteAgendamento:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /agendamentos/{id}
+            Method: DELETE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AgendamentosTable
+
+  PagamentosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-${Environment}-pagamentos'
+      CodeUri: lambda/
+      Handler: pagamentos.handler
+      Events:
+        GetPagamentos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /pagamentos
+            Method: GET
+        CreatePagamento:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /pagamentos
+            Method: POST
+        UpdatePagamento:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /pagamentos/{id}
+            Method: PUT
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PagamentosTable
+
+  ClientesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-${Environment}-clientes'
+      CodeUri: lambda/
+      Handler: clientes.handler
+      Events:
+        GetClientes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /clientes
+            Method: GET
+        CreateCliente:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /clientes
+            Method: POST
+        UpdateCliente:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /clientes/{id}
+            Method: PUT
+        DeleteCliente:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /clientes/{id}
+            Method: DELETE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ClientesTable
+
+  ServicosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-${Environment}-servicos'
+      CodeUri: lambda/
+      Handler: servicos.handler
+      Events:
+        GetServicos:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /servicos
+            Method: GET
+        CreateServico:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /servicos
+            Method: POST
+        UpdateServico:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /servicos/{id}
+            Method: PUT
+        DeleteServico:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /servicos/{id}
+            Method: DELETE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ServicosTable
+
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-${Environment}-auth'
+      CodeUri: lambda/
+      Handler: auth.handler
+      Events:
+        Login:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        Register:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/register
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        RefreshToken:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/refresh
+            Method: POST
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminInitiateAuth
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminSetUserPassword
+                - cognito-idp:AdminGetUser
+              Resource: !GetAtt UserPool.Arn
+
+Outputs:
+  ApiGatewayUrl:
+    Description: API Gateway URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${AppName}-${Environment}-ApiUrl'
+
+  UserPoolId:
+    Description: Cognito User Pool ID
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub '${AppName}-${Environment}-UserPoolId'
+
+  UserPoolClientId:
+    Description: Cognito User Pool Client ID
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub '${AppName}-${Environment}-UserPoolClientId'
+
+  AgendamentosTableName:
+    Description: Agendamentos Table Name
+    Value: !Ref AgendamentosTable
+    Export:
+      Name: !Sub '${AppName}-${Environment}-AgendamentosTable'

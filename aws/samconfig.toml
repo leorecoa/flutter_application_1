@@ -1,0 +1,28 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "agendafacil-dev"
+s3_prefix = "agendafacil-dev"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=dev AppName=agendafacil"
+confirm_changeset = true
+resolve_s3 = true
+
+[staging.deploy.parameters]
+stack_name = "agendafacil-staging"
+s3_prefix = "agendafacil-staging"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=staging AppName=agendafacil"
+confirm_changeset = true
+resolve_s3 = true
+
+[prod.deploy.parameters]
+stack_name = "agendafacil-prod"
+s3_prefix = "agendafacil-prod"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=prod AppName=agendafacil"
+confirm_changeset = true
+resolve_s3 = true
