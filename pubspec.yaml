@@ -42,14 +42,10 @@ dependencies:
   # Charts
   fl_chart: ^0.68.0
   
-  # PDF Generation
-  pdf: ^3.10.7
-  
-  # File handling
-  path_provider: ^2.1.2
-  
-  # Email sending
-  mailer: ^6.0.1
+  # Web-compatible alternatives
+  # pdf: ^3.10.7 # Removed for web compatibility
+  # path_provider: ^2.1.2 # Removed for web compatibility  
+  # mailer: ^6.0.1 # Removed for web compatibility
   
   # Logging
   logger: ^2.0.2+1
