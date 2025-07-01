@@ -31,6 +31,11 @@ Mappings:
       Timeout: 30
       DynamoDBReadCapacity: 25
       DynamoDBWriteCapacity: 25
+    main:
+      MemorySize: 512
+      Timeout: 30
+      DynamoDBReadCapacity: 10
+      DynamoDBWriteCapacity: 10
 
 Conditions:
   IsProduction: !Equals [!Ref Environment, prod]
