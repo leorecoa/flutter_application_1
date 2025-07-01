@@ -1,4 +1,4 @@
-const { gerarQrCodePix } = require('./services/pixService');
+const { gerarQrCodePix, verificarStatusPix } = require('./services/pixService');
 const { formatPixPayload } = require('./utils/formatPixPayload');
 
 exports.handler = async (event) => {
@@ -18,9 +18,9 @@ exports.handler = async (event) => {
 
         switch (proxy) {
             case 'create':
-                return await createPixPayment(body);
+                return await createPixPayment(body, headers);
             case 'status':
-                return await checkPixStatus(body);
+                return await checkPixStatus(body, headers);
             default:
                 return {
                     statusCode: 400,
@@ -29,6 +29,7 @@ exports.handler = async (event) => {
                 };
         }
     } catch (error) {
+        console.error('Error:', error);
         return {
             statusCode: 500,
             headers,
@@ -37,18 +38,13 @@ exports.handler = async (event) => {
     }
 };
 
-async function createPixPayment(data) {
-    const { nome, valor, cpf, email } = data;
-    
-    const pixData = formatPixPayload({ nome, valor, cpf, email });
+async function createPixPayment(data, headers) {
+    const pixData = formatPixPayload(data);
     const resultado = await gerarQrCodePix(pixData);
 
     return {
         statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
             paymentId: resultado.paymentId,
             status: 'pending',
@@ -58,18 +54,13 @@ async function createPixPayment(data) {
     };
 }
 
-async function checkPixStatus(data) {
+async function checkPixStatus(data, headers) {
     const { paymentId } = data;
-    
-    // Simular verificação de status
-    const status = Math.random() > 0.7 ? 'approved' : 'pending';
+    const status = await verificarStatusPix(paymentId);
     
     return {
         statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
             paymentId,
             status

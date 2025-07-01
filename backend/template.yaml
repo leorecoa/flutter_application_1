@@ -50,7 +50,7 @@ Globals:
         ENVIRONMENT: !Ref Environment
         S3_BUCKET: !Ref FilesBucket
         LOG_LEVEL: !If [IsProduction, info, debug]
-        PIX_KEY: chave-pix-agendafacil@email.com
+        PIX_KEY: agendafacil@pix.com.br
     Tags:
       Project: AgendaFacil
       Environment: !Ref Environment
@@ -642,3 +642,9 @@ Outputs:
     Value: !Ref FilesBucket
     Export:
       Name: !Sub "${AWS::StackName}-FilesBucket"
+
+  PixPaymentFunctionUrl:
+    Description: "PIX Payment Function API URL"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/pix"
+    Export:
+      Name: !Sub "${AWS::StackName}-PixPaymentUrl"
