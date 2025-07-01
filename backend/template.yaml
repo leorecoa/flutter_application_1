@@ -50,6 +50,7 @@ Globals:
         ENVIRONMENT: !Ref Environment
         S3_BUCKET: !Ref FilesBucket
         LOG_LEVEL: !If [IsProduction, info, debug]
+        PIX_KEY: chave-pix-agendafacil@email.com
     Tags:
       Project: AgendaFacil
       Environment: !Ref Environment
@@ -215,6 +216,22 @@ Resources:
             Path: /subscription/{proxy+}
             Method: ANY
 
+  PixPaymentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/payment/
+      Handler: index.handler
+      Role: !GetAtt PixPaymentFunctionRole.Arn
+      Events:
+        PixPaymentApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /pix/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: NONE
+
   # DynamoDB Table
   MainTable:
     Type: AWS::DynamoDB::Table
@@ -252,6 +269,34 @@ Resources:
           Value: AgendaFacil
         - Key: Environment
           Value: !Ref Environment
+
+  # PIX Payment Function Role
+  PixPaymentFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: PixPaymentFunctionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                Resource: 
+                  - !GetAtt MainTable.Arn
+                  - !Sub "${MainTable.Arn}/index/*"
 
   # S3 Bucket
   FilesBucket:

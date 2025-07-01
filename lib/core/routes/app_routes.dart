@@ -17,6 +17,7 @@ import '../../features/area_cliente/screens/area_cliente_screen.dart';
 import '../../features/admin/screens/admin_settings_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/subscription/screens/subscription_screen.dart';
+import '../../features/payments/screens/pix_payment_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/dashboard',
@@ -90,6 +91,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/subscription',
       builder: (context, state) => const SubscriptionScreen(),
+    ),
+    GoRoute(
+      path: '/pix-payment',
+      builder: (context, state) {
+        final amount = double.parse(state.uri.queryParameters['amount'] ?? '0');
+        final description = state.uri.queryParameters['description'] ?? 'Pagamento';
+        return PixPaymentScreen(amount: amount, description: description);
+      },
     ),
   ],
 );

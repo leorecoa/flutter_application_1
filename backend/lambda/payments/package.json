@@ -1,0 +1,8 @@
+{
+  "name": "agendafacil-payments",
+  "version": "1.0.0",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "aws-sdk": "^2.1490.0"
+  }
+}
