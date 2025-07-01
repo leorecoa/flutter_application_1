@@ -7,15 +7,15 @@ backend:
         - pip3 install aws-sam-cli
         - sam --version
         - echo "Validating SAM template..."
-        - cd backend && sam validate --template template.yaml
+        - sam validate --template backend/template.yaml
     build:
       commands:
         - echo "Building SAM application..."
-        - cd backend && sam build --template template.yaml
+        - sam build --template backend/template.yaml
     postBuild:
       commands:
         - echo "Deploying SAM application..."
-        - cd backend && sam deploy --template template.yaml --stack-name agendafacil-$AWS_BRANCH --capabilities CAPABILITY_IAM --parameter-overrides Environment=$AWS_BRANCH CognitoDomainPrefix=agenda-facil-$AWS_BRANCH --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
+        - sam deploy --template backend/template.yaml --stack-name agendafacil-$AWS_BRANCH --capabilities CAPABILITY_IAM --parameter-overrides Environment=$AWS_BRANCH CognitoDomainPrefix=agenda-facil-$AWS_BRANCH --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
         - echo "SAM deployment completed successfully"
 frontend:
   phases:
