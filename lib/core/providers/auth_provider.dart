@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
-import '../services/amplify_service.dart';
+import '../services/auth_service.dart';
 
 class AuthState {
   final bool isLoading;
   final bool isSignedIn;
-  final AuthUser? user;
+  final Map<String, dynamic>? user;
   final Map<String, dynamic>? userAttributes;
   final String? error;
 
@@ -20,7 +19,7 @@ class AuthState {
   AuthState copyWith({
     bool? isLoading,
     bool? isSignedIn,
-    AuthUser? user,
+    Map<String, dynamic>? user,
     Map<String, dynamic>? userAttributes,
     String? error,
   }) {
@@ -43,10 +42,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true);
     
     try {
-      final isSignedIn = await AmplifyService.isSignedIn();
+      final isSignedIn = await AuthService().isSignedIn();
       if (isSignedIn) {
-        final user = await AmplifyService.getCurrentUser();
-        final attributes = await AmplifyService.getUserAttributes();
+        final user = AuthService.getCurrentUser();
+        final attributes = <String, dynamic>{'email': 'mock@email.com'};
         state = state.copyWith(
           isLoading: false,
           isSignedIn: true,
@@ -65,11 +64,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
-      final result = await AmplifyService.signIn(email, password);
+      final result = await AuthService().signIn(email, password);
       
-      if (result.isSignedIn) {
-        final user = await AmplifyService.getCurrentUser();
-        final attributes = await AmplifyService.getUserAttributes();
+      if (result['success'] == true) {
+        final user = AuthService.getCurrentUser();
+        final attributes = <String, dynamic>{'email': email};
         state = state.copyWith(
           isLoading: false,
           isSignedIn: true,
@@ -87,7 +86,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> signOut() async {
     try {
-      await AmplifyService.signOut();
+      // await AuthService().signOut(); // Mock implementation
       state = const AuthState();
     } catch (e) {
       state = state.copyWith(error: e.toString());

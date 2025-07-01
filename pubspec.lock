@@ -85,18 +85,18 @@ packages:
     dependency: transitive
     description:
       name: amplify_secure_storage
-      sha256: "41698b09be7ad1d73ab83e9c16ef398e9c27533f6940b305c7a021f71c181b2f"
+      sha256: "14fd2b92de13d099891cb87deb7f5738a5c0b9d02eb1afcf331ef5e9fcaf2bbd"
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.10"
+    version: "0.5.11"
   amplify_secure_storage_dart:
     dependency: transitive
     description:
       name: amplify_secure_storage_dart
-      sha256: "6e3eb705870b54ad760640d4b5216d131435108b76fc48c85c13c03fb3b8bf65"
+      sha256: df7a1092250db759074a18652fde96d1562108e87799dee7170fd01541e99e27
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.6"
+    version: "0.5.7"
   amplify_storage_s3:
     dependency: "direct main"
     description:
@@ -133,18 +133,18 @@ packages:
     dependency: transitive
     description:
       name: aws_common
-      sha256: eebeefcb82603e0fd50adec3f916817c373e8347a3e195d8d7ee51aa94599eec
+      sha256: "5e7749d878d50ed3bd9f4f8bf54e8ee2e6b5a944fb7775b28956317e693bac63"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.8"
+    version: "0.7.9"
   aws_signature_v4:
     dependency: transitive
     description:
       name: aws_signature_v4
-      sha256: "857b37ca4d963548bf92917cfe5a30e59b56a35de0e2d482626b74f9df393d4c"
+      sha256: "6f9530fa6849b7136f43b98c5475a34e57aa62b66412e43910318647b3072345"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.6"
+    version: "0.6.7"
   boolean_selector:
     dependency: transitive
     description:
@@ -929,10 +929,10 @@ packages:
     dependency: transitive
     description:
       name: worker_bee
-      sha256: bfb779cc0db49bf4462fe606914090849ada7c9bb0bcb4eb7315be92172c19e5
+      sha256: deff480b1521b3fac4023c6a1007206d7fc44a67daa7a48c4da393a8015f64d2
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.6"
+    version: "0.3.7"
   xdg_directories:
     dependency: transitive
     description:
@@ -951,4 +951,4 @@ packages:
     version: "6.5.0"
 sdks:
   dart: ">=3.8.0 <4.0.0"
-  flutter: ">=3.29.0"
+  flutter: ">=3.32.0"
