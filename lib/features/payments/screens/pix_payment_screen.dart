@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import 'dart:typed_data';
+// ...existing code...
+// import 'dart:typed_data';
+// ...existing code...import 'dart:typed_data';
 import '../models/pix_payment_model.dart';
 import '../services/pix_service.dart';
 
@@ -68,8 +70,9 @@ class _PixPaymentScreenState extends State<PixPaymentScreen> {
     setState(() => _isCheckingStatus = true);
 
     try {
-      final status = await PixService.checkPaymentStatus(_pixPayment!.paymentId);
-      
+      final status =
+          await PixService.checkPaymentStatus(_pixPayment!.paymentId);
+
       if (status == 'approved') {
         _showSuccess();
       } else if (mounted) {
@@ -135,11 +138,13 @@ class _PixPaymentScreenState extends State<PixPaymentScreen> {
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
-                              const Icon(Icons.pix, size: 48, color: Colors.green),
+                              const Icon(Icons.pix,
+                                  size: 48, color: Colors.green),
                               const SizedBox(height: 16),
                               Text(
                                 'R\$ ${widget.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontSize: 24, fontWeight: FontWeight.bold),
                               ),
                               Text(widget.description),
                               const SizedBox(height: 16),
@@ -167,7 +172,8 @@ class _PixPaymentScreenState extends State<PixPaymentScreen> {
                                   ),
                                   child: Text(
                                     _pixPayment!.pixCode!,
-                                    style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                                    style: const TextStyle(
+                                        fontSize: 12, fontFamily: 'monospace'),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
@@ -190,7 +196,8 @@ class _PixPaymentScreenState extends State<PixPaymentScreen> {
                                     SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
                                     ),
                                     SizedBox(width: 8),
                                     Text('Verificando pagamento...'),
@@ -207,7 +214,9 @@ class _PixPaymentScreenState extends State<PixPaymentScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Como pagar:', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Como pagar:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                               SizedBox(height: 8),
                               Text('1. Abra o app do seu banco'),
                               Text('2. Escolha a opção PIX'),
