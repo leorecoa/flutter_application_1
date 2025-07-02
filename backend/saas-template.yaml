@@ -25,7 +25,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub "/agendafacil/${Environment}/pix-key"
-      Type: SecureString
+      Type: String
       Value: "05359566493"
       Description: "Chave PIX principal para recebimento"
 
@@ -73,7 +73,7 @@ Resources:
   QRCodePixFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./lambda/payment/
+      CodeUri: ./lambda/saas-payment/
       Handler: generatePix.handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -92,7 +92,7 @@ Resources:
   UpdatePaymentStatusFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./lambda/payment/
+      CodeUri: ./lambda/saas-payment/
       Handler: updatePaymentStatus.handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -109,7 +109,7 @@ Resources:
   GetActiveClientsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./lambda/clientes/
+      CodeUri: ./lambda/saas-clientes/
       Handler: listActiveClients.handler
       Policies:
         - DynamoDBReadPolicy:
@@ -126,7 +126,7 @@ Resources:
   RecurringChargeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./lambda/billing/
+      CodeUri: ./lambda/saas-billing/
       Handler: recurringCharge.handler
       Policies:
         - DynamoDBCrudPolicy:
@@ -144,7 +144,7 @@ Resources:
   PixWebhookFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./lambda/webhook/
+      CodeUri: ./lambda/saas-webhook/
       Handler: pixWebhook.handler
       Policies:
         - DynamoDBCrudPolicy:

@@ -82,9 +82,14 @@ exports.handler = async (event) => {
 
         console.log(`Status da transação ${transaction_id} atualizado para ${newStatus}`);
 
-        // TODO: Enviar notificação por email/WhatsApp
+        // Enviar notificação por email/WhatsApp
         if (newStatus === 'PAGO') {
-            await sendPaymentNotification(transaction.empresa_id, amount);
+            const NotificationService = require('./notificationService');
+            await NotificationService.sendPaymentConfirmation(
+                transaction.empresa_id, 
+                amount || transaction.valor, 
+                transaction_id
+            );
         }
 
         return {
@@ -108,12 +113,3 @@ exports.handler = async (event) => {
     }
 };
 
-async function sendPaymentNotification(empresaId, amount) {
-    // TODO: Implementar notificação via SNS/SES
-    console.log(`Pagamento confirmado para empresa ${empresaId}: R$ ${amount}`);
-    
-    // Exemplo de integração futura:
-    // - Enviar email via SES
-    // - Enviar WhatsApp via API
-    // - Notificar via SNS
-}

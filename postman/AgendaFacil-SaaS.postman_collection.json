@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "AgendaFácil SaaS - PIX API",
+    "description": "Coleção para testar endpoints do sistema SaaS multicliente",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://gtglq5x0rj.execute-api.us-east-1.amazonaws.com/prod"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Gerar QR Code PIX",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empresa_id\": \"clinica-abc-123\",\n  \"valor\": 99.90,\n  \"descricao\": \"Mensalidade Julho 2025\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/pix/generate",
+          "host": ["{{base_url}}"],
+          "path": ["pix", "generate"]
+        }
+      }
+    },
+    {
+      "name": "2. Atualizar Status Pagamento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empresa_id\": \"clinica-abc-123\",\n  \"transaction_id\": \"TRANSACTION_ID_AQUI\",\n  \"status\": \"PAGO\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/payment/status",
+          "host": ["{{base_url}}"],
+          "path": ["payment", "status"]
+        }
+      }
+    },
+    {
+      "name": "3. Listar Clientes Ativos",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/clientes/ativos",
+          "host": ["{{base_url}}"],
+          "path": ["clientes", "ativos"]
+        }
+      }
+    }
+  ]
+}
