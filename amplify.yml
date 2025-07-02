@@ -1,97 +1,14 @@
 version: 1
-backend:
+frontend:
   phases:
     preBuild:
       commands:
-        - echo "Installing SAM CLI..."
-        - pip3 install aws-sam-cli
-        - sam --version
-        - echo "Validating SAM template..."
-        - sam validate --template backend/template.yaml
+        - echo "Installing Flutter dependencies..."
+        - flutter pub get
     build:
       commands:
-        - echo "Building SAM application..."
-        - sam build --template backend/template.yaml
-    postBuild:
-      commands:
-        - echo "Deploying SAM application..."
-        - sam deploy --template backend/template.yaml --stack-name agendafacil-$AWS_BRANCH --capabilities CAPABILITY_IAM --parameter-overrides Environment=$AWS_BRANCH CognitoDomainPrefix=agenda-facil-$AWS_BRANCH --region us-east-1 --no-confirm-changeset --no-fail-on-empty-changeset
-        - echo "SAM deployment completed successfully"
-frontend:
-  phases:
-    build:
-      commands:
-        - echo "Building frontend..."
-        - mkdir -p build/web
-        - |
-          cat > build/web/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <meta charset="UTF-8">
-              <title>AgendaFácil SaaS - Sistema PIX</title>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                  * { margin: 0; padding: 0; box-sizing: border-box; }
-                  body {
-                      font-family: Arial, sans-serif;
-                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      color: white;
-                      min-height: 100vh;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                  }
-                  .container {
-                      text-align: center;
-                      background: rgba(255,255,255,0.1);
-                      padding: 40px;
-                      border-radius: 20px;
-                      backdrop-filter: blur(10px);
-                      max-width: 800px;
-                  }
-                  h1 { font-size: 3em; margin-bottom: 20px; }
-                  .status {
-                      background: rgba(0,255,0,0.2);
-                      padding: 20px;
-                      border-radius: 10px;
-                      margin: 20px 0;
-                      text-align: left;
-                  }
-                  .feature { margin: 10px 0; }
-                  .feature::before { content: "✅ "; }
-                  button {
-                      background: linear-gradient(45deg, #FFD700, #FFA500);
-                      color: #333;
-                      border: none;
-                      padding: 12px 24px;
-                      border-radius: 8px;
-                      cursor: pointer;
-                      font-weight: bold;
-                      margin: 10px;
-                  }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <h1>🚀 AgendaFácil SaaS</h1>
-                  <p>Sistema Completo de Agendamento Online</p>
-                  <div class="status">
-                      <h3>🎯 Status do Sistema</h3>
-                      <div class="feature">Backend SAM deployado com sucesso</div>
-                      <div class="feature">Sistema PIX implementado e ativo</div>
-                      <div class="feature">API Gateway funcionando</div>
-                      <div class="feature">Lambda functions operacionais</div>
-                      <div class="feature">DynamoDB configurado</div>
-                      <div class="feature">Cognito para autenticação</div>
-                  </div>
-                  <button onclick="window.open('https://oovjqmref8.execute-api.us-east-1.amazonaws.com/dev/auth/health','_blank')">🧪 Testar API</button>
-                  <button onclick="alert('Sistema PIX pronto para integração!')">💳 Info PIX</button>
-                  <p><small>Infraestrutura serverless completa na AWS</small></p>
-              </div>
-          </body>
-          </html>
-          EOF
+        - echo "Building Flutter Web app..."
+        - flutter build web --release --web-renderer html
   artifacts:
     baseDirectory: build/web
     files:

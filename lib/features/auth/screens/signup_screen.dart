@@ -6,43 +6,55 @@ import '../../../core/routes/app_routes.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/input_field.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
+  final _cnpjController = TextEditingController();
+  final _pixKeyController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nomeController.dispose();
     _emailController.dispose();
+    _cnpjController.dispose();
+    _pixKeyController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Simular login
+      // Simular cadastro
       await Future.delayed(const Duration(seconds: 2));
       
       if (mounted) {
-        context.go(AppRoutes.dashboard);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cadastro realizado com sucesso!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        context.go(AppRoutes.login);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao fazer login: $e'),
+            content: Text('Erro ao cadastrar: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -68,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Container(
-              width: isDesktop ? 400 : double.infinity,
+              width: isDesktop ? 500 : double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
                 color: AppColors.white,
@@ -86,36 +98,43 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Logo
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today,
-                        color: AppColors.white,
-                        size: 40,
-                      ),
+                    // Header
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => context.go(AppRoutes.login),
+                          icon: const Icon(Icons.arrow_back),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Criar Conta',
+                            style: AppTextStyles.h3,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 48),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    
-                    // Título
-                    Text('AgendeMais', style: AppTextStyles.logo),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Seu tempo, seu agendamento. Simplificado com PIX.',
-                      style: AppTextStyles.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     
                     // Campos
                     InputField(
+                      label: 'Nome da Empresa',
+                      hint: 'Ex: Clínica Bella Vista',
+                      controller: _nomeController,
+                      prefixIcon: Icons.business,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Nome da empresa é obrigatório';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    InputField(
                       label: 'E-mail',
-                      hint: 'Digite seu e-mail',
+                      hint: 'contato@empresa.com',
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: Icons.email_outlined,
@@ -132,8 +151,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                     
                     InputField(
+                      label: 'CNPJ',
+                      hint: '00.000.000/0001-00',
+                      controller: _cnpjController,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.badge,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'CNPJ é obrigatório';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    InputField(
+                      label: 'Chave PIX',
+                      hint: 'CPF, CNPJ, e-mail ou telefone',
+                      controller: _pixKeyController,
+                      prefixIcon: Icons.pix,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Chave PIX é obrigatória';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    InputField(
                       label: 'Senha',
-                      hint: 'Digite sua senha',
+                      hint: 'Mínimo 6 caracteres',
                       controller: _passwordController,
                       obscureText: true,
                       prefixIcon: Icons.lock_outline,
@@ -149,34 +197,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 32),
                     
-                    // Botão Login
+                    // Botão Cadastrar
                     PrimaryButton(
-                      text: 'Entrar',
-                      onPressed: _handleLogin,
+                      text: 'Criar Conta',
+                      onPressed: _handleSignup,
                       isLoading: _isLoading,
                       width: double.infinity,
                     ),
                     const SizedBox(height: 24),
                     
-                    // Link Cadastro
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Não tem conta? ',
-                          style: AppTextStyles.bodyMedium,
-                        ),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.signup),
-                          child: Text(
-                            'Cadastre-se',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    // Termos
+                    Text(
+                      'Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.',
+                      style: AppTextStyles.caption,
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/luxury_theme.dart';
-import '../../../shared/widgets/luxury_card.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/routes/app_routes.dart';
+import '../../../widgets/primary_button.dart';
+import '../../../widgets/input_field.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,324 +14,244 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _emailNotifications = true;
-  bool _whatsappNotifications = false;
-  String _businessName = 'Minha Barbearia';
-  String _businessPhone = '(11) 99999-9999';
-  String _businessAddress = 'Rua das Flores, 123';
+  final _formKey = GlobalKey<FormState>();
+  final _nomeController = TextEditingController(text: 'Clínica Bella Vista');
+  final _emailController = TextEditingController(text: 'contato@bellavista.com');
+  final _pixKeyController = TextEditingController(text: '05359566493');
+  final _senhaController = TextEditingController();
+  
+  bool _isLoading = false;
+
+  Future<void> _saveSettings() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Configurações salvas com sucesso!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _logout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Sair da Conta', style: AppTextStyles.h5),
+        content: Text(
+          'Tem certeza que deseja sair?',
+          style: AppTextStyles.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar', style: AppTextStyles.labelMedium),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go(AppRoutes.login);
+            },
+            child: Text(
+              'Sair',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Configurações'),
-        backgroundColor: LuxuryTheme.deepBlue,
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [LuxuryTheme.pearl, Colors.white],
-          ),
+        title: Text('Configurações', style: AppTextStyles.h4),
+        leading: IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back),
         ),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
           children: [
-            _buildBusinessSection(),
-            const SizedBox(height: 16),
-            _buildNotificationsSection(),
-            const SizedBox(height: 16),
-            _buildIntegrationsSection(),
-            const SizedBox(height: 16),
-            _buildAccountSection(),
+            // Dados da Empresa
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Dados da Empresa', style: AppTextStyles.h5),
+                      const SizedBox(height: 24),
+                      
+                      InputField(
+                        label: 'Nome da Empresa',
+                        controller: _nomeController,
+                        prefixIcon: Icons.business,
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) {
+                            return 'Nome é obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      InputField(
+                        label: 'E-mail',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: Icons.email,
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) {
+                            return 'E-mail é obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      InputField(
+                        label: 'Chave PIX',
+                        controller: _pixKeyController,
+                        prefixIcon: Icons.pix,
+                        validator: (value) {
+                          if (value?.isEmpty ?? true) {
+                            return 'Chave PIX é obrigatória';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      
+                      PrimaryButton(
+                        text: 'Salvar Alterações',
+                        icon: Icons.save,
+                        onPressed: _saveSettings,
+                        isLoading: _isLoading,
+                        width: double.infinity,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Segurança
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Segurança', style: AppTextStyles.h5),
+                    const SizedBox(height: 24),
+                    
+                    InputField(
+                      label: 'Nova Senha',
+                      hint: 'Deixe em branco para manter a atual',
+                      controller: _senhaController,
+                      obscureText: true,
+                      prefixIcon: Icons.lock,
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    PrimaryButton(
+                      text: 'Alterar Senha',
+                      icon: Icons.security,
+                      onPressed: () {
+                        // Implementar alteração de senha
+                      },
+                      width: double.infinity,
+                      isOutlined: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Ações
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Conta', style: AppTextStyles.h5),
+                    const SizedBox(height: 24),
+                    
+                    ListTile(
+                      leading: const Icon(Icons.help_outline, color: AppColors.primary),
+                      title: Text('Ajuda e Suporte', style: AppTextStyles.labelLarge),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        // Implementar ajuda
+                      },
+                    ),
+                    const Divider(),
+                    
+                    ListTile(
+                      leading: const Icon(Icons.description, color: AppColors.primary),
+                      title: Text('Termos de Uso', style: AppTextStyles.labelLarge),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        // Implementar termos
+                      },
+                    ),
+                    const Divider(),
+                    
+                    ListTile(
+                      leading: const Icon(Icons.logout, color: AppColors.error),
+                      title: Text(
+                        'Sair da Conta',
+                        style: AppTextStyles.labelLarge.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                      onTap: _logout,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            
+            // Versão
+            Text(
+              'AgendeMais v1.0.0',
+              style: AppTextStyles.caption,
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildBusinessSection() {
-    return LuxuryCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Informações do Negócio',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: LuxuryTheme.deepBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            initialValue: _businessName,
-            decoration: const InputDecoration(
-              labelText: 'Nome do Negócio',
-              prefixIcon: Icon(Icons.business),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) => setState(() => _businessName = value),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            initialValue: _businessPhone,
-            decoration: const InputDecoration(
-              labelText: 'Telefone',
-              prefixIcon: Icon(Icons.phone),
-              border: OutlineInputBorder(),
-            ),
-            onChanged: (value) => setState(() => _businessPhone = value),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            initialValue: _businessAddress,
-            decoration: const InputDecoration(
-              labelText: 'Endereço',
-              prefixIcon: Icon(Icons.location_on),
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 2,
-            onChanged: (value) => setState(() => _businessAddress = value),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _saveBusinessInfo,
-            child: const Text('Salvar Informações'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationsSection() {
-    return LuxuryCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Notificações',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: LuxuryTheme.deepBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text('Notificações Push'),
-            subtitle: const Text('Receber notificações no app'),
-            value: _notificationsEnabled,
-            onChanged: (value) => setState(() => _notificationsEnabled = value),
-            activeColor: LuxuryTheme.primaryGold,
-          ),
-          SwitchListTile(
-            title: const Text('Notificações por Email'),
-            subtitle: const Text('Receber emails sobre agendamentos'),
-            value: _emailNotifications,
-            onChanged: (value) => setState(() => _emailNotifications = value),
-            activeColor: LuxuryTheme.primaryGold,
-          ),
-          SwitchListTile(
-            title: const Text('Notificações WhatsApp'),
-            subtitle: const Text('Receber mensagens no WhatsApp'),
-            value: _whatsappNotifications,
-            onChanged: (value) => setState(() => _whatsappNotifications = value),
-            activeColor: LuxuryTheme.primaryGold,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIntegrationsSection() {
-    return LuxuryCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Integrações',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: LuxuryTheme.deepBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: const Icon(Icons.calendar_today, color: Colors.blue),
-            title: const Text('Google Calendar'),
-            subtitle: const Text('Sincronizar agendamentos'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showIntegrationDialog('Google Calendar'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.message, color: Colors.green),
-            title: const Text('WhatsApp Business'),
-            subtitle: const Text('Configurar API do WhatsApp'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showIntegrationDialog('WhatsApp'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.payment, color: Colors.purple),
-            title: const Text('Pagamentos'),
-            subtitle: const Text('Configurar Stripe/Mercado Pago'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showIntegrationDialog('Pagamentos'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAccountSection() {
-    return LuxuryCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Conta',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: LuxuryTheme.deepBlue,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: const Icon(Icons.person, color: Colors.blue),
-            title: const Text('Perfil'),
-            subtitle: const Text('Editar informações pessoais'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showProfileDialog(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.star, color: LuxuryTheme.primaryGold),
-            title: const Text('Assinatura'),
-            subtitle: const Text('Gerenciar plano e pagamentos'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => context.push('/subscription'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.security, color: Colors.orange),
-            title: const Text('Segurança'),
-            subtitle: const Text('Alterar senha e configurações'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showSecurityDialog(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.backup, color: Colors.green),
-            title: const Text('Backup'),
-            subtitle: const Text('Fazer backup dos dados'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showBackupDialog(),
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Sair'),
-            subtitle: const Text('Fazer logout da conta'),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _showLogoutDialog(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _saveBusinessInfo() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Informações salvas com sucesso!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _showIntegrationDialog(String integration) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Configurar $integration'),
-        content: Text('Configuração de $integration em desenvolvimento.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar Perfil'),
-        content: const Text('Funcionalidade em desenvolvimento.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showSecurityDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Configurações de Segurança'),
-        content: const Text('Funcionalidade em desenvolvimento.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBackupDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Backup de Dados'),
-        content: const Text('Funcionalidade em desenvolvimento.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Logout'),
-        content: const Text('Deseja realmente sair da sua conta?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Implementar logout
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Sair'),
-          ),
-        ],
       ),
     );
   }
