@@ -14,7 +14,7 @@ class AppRoutes {
   static const String generatePix = '/generate-pix';
   static const String pixHistory = '/pix-history';
   static const String settings = '/settings';
-  
+
   static final GoRouter router = GoRouter(
     initialLocation: login,
     routes: [
@@ -56,7 +56,7 @@ class AppRoutes {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text('Página não encontrada: ${state.location}'),
+            Text('Página não encontrada: ${state.uri.toString()}'),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => context.go(login),
@@ -66,5 +66,10 @@ class AppRoutes {
         ),
       ),
     ),
+    redirect: (context, state) {
+      // Redirecionar para dashboard se já estiver autenticado
+      // Implementação futura com verificação de autenticação
+      return null;
+    },
   );
 }
