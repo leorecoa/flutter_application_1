@@ -3,14 +3,17 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo Installing Flutter...
+        - echo "Instalando Flutter SDK"
         - git clone https://github.com/flutter/flutter.git -b stable
-        - export PATH="$PATH:`pwd`/flutter/bin"
+        - export PATH=`pwd`/flutter/bin:`pwd`/flutter/bin/cache/dart-sdk/bin:$PATH
+        - flutter precache
         - flutter config --enable-web
-        - flutter precache --web
-        - flutter pub get
+        - flutter doctor
     build:
       commands:
+        - echo "Iniciando build Flutter Web"
+        - export PATH=`pwd`/flutter/bin:`pwd`/flutter/bin/cache/dart-sdk/bin:$PATH
+        - flutter pub get
         - flutter build web --release
   artifacts:
     baseDirectory: build/web

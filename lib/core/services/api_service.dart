@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://gtglq5x0rj.execute-api.us-east-1.amazonaws.com/prod';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'https://gtglq5x0rj.execute-api.us-east-1.amazonaws.com/prod';
   
   static Future<Map<String, dynamic>> generatePix({
     required String empresaId,
