@@ -3,13 +3,19 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Installing Flutter dependencies..."
+        - echo Installing Flutter...
+        - git clone https://github.com/flutter/flutter.git -b stable
+        - export PATH="$PATH:`pwd`/flutter/bin"
+        - flutter config --enable-web
+        - flutter precache --web
         - flutter pub get
     build:
       commands:
-        - echo "Building Flutter Web app..."
-        - flutter build web --release --web-renderer html
+        - flutter build web --release
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
+  cache:
+    paths:
+      - flutter/bin/cache
