@@ -349,7 +349,7 @@ Resources:
       UserPoolAddOns:
         AdvancedSecurityMode: "OFF"
 
-  # UserPoolClient ADICIONADO (estava faltando)
+  # UserPoolClient CORRIGIDO
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
@@ -357,8 +357,6 @@ Resources:
       ClientName: !Sub "${AWS::StackName}-client"
       GenerateSecret: false
       ExplicitAuthFlows:
-        - ADMIN_NO_SRP_AUTH
-        - USER_PASSWORD_AUTH
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
 
