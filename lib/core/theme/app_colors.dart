@@ -2,44 +2,80 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Cores principais - Inspirado no Trinks
-  static const Color primary = Color(0xFF0455BF); // Azul royal
-  static const Color secondary = Color(0xFF7452FF); // Roxo claro
-  static const Color accent = Color(0xFF00D4AA); // Verde água
+  static const Color primary = Color(0xFF3D5AF1);      // Azul principal
+  static const Color secondary = Color(0xFF22CAAD);     // Verde água
+  static const Color tertiary = Color(0xFFF45B69);      // Rosa/vermelho
+  static const Color accent = Color(0xFFFFBE0B);        // Amarelo
   
   // Cores neutras
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF1A1A1A);
-  static const Color grey50 = Color(0xFFF8F9FA);
-  static const Color grey100 = Color(0xFFF1F3F4);
-  static const Color grey200 = Color(0xFFE8EAED);
-  static const Color grey300 = Color(0xFFDADCE0);
-  static const Color grey400 = Color(0xFFBDC1C6);
-  static const Color grey500 = Color(0xFF9AA0A6);
-  static const Color grey600 = Color(0xFF80868B);
-  static const Color grey700 = Color(0xFF5F6368);
-  static const Color grey800 = Color(0xFF3C4043);
-  static const Color grey900 = Color(0xFF202124);
+  static const Color grey50 = Color(0xFFF9FAFC);
+  static const Color grey100 = Color(0xFFF1F4F8);
+  static const Color grey200 = Color(0xFFE9ECF2);
+  static const Color grey300 = Color(0xFFD8DCE3);
+  static const Color grey400 = Color(0xFFC2C7D0);
+  static const Color grey500 = Color(0xFF9AA1B1);
+  static const Color grey600 = Color(0xFF646E82);
+  static const Color grey700 = Color(0xFF424B5F);
+  static const Color grey800 = Color(0xFF2D3445);
+  static const Color grey900 = Color(0xFF1D2333);
   
   // Cores de status
-  static const Color success = Color(0xFF34A853);
-  static const Color warning = Color(0xFFFBBC04);
-  static const Color error = Color(0xFFEA4335);
-  static const Color info = Color(0xFF4285F4);
+  static const Color success = Color(0xFF22CAAD);       // Verde
+  static const Color warning = Color(0xFFFFBE0B);       // Amarelo
+  static const Color error = Color(0xFFF45B69);         // Vermelho
+  static const Color info = Color(0xFF3D5AF1);          // Azul
   
   // Gradientes
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, secondary],
+    colors: [primary, Color(0xFF5B74F7)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
+  static const LinearGradient accentGradient = LinearGradient(
+    colors: [secondary, Color(0xFF0FDFB7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
   static const LinearGradient backgroundGradient = LinearGradient(
-    colors: [Color(0xFFF8F9FA), Color(0xFFE8EAED)],
+    colors: [grey50, grey100],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
   
+  // Gradiente para cards
+  static const LinearGradient cardGradient = LinearGradient(
+    colors: [white, grey50],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+  
   // Cores específicas do PIX
-  static const Color pixGreen = Color(0xFF32BCAD);
+  static const Color pixGreen = Color(0xFF22CAAD);
   static const Color pixBackground = Color(0xFFF0F8F7);
+  
+  // Sombras
+  static List<BoxShadow> cardShadow = [
+    BoxShadow(
+      color: black.withOpacity(0.05),
+      blurRadius: 10,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: black.withOpacity(0.03),
+      blurRadius: 25,
+      offset: const Offset(0, 10),
+    ),
+  ];
+  
+  static List<BoxShadow> buttonShadow = [
+    BoxShadow(
+      color: primary.withOpacity(0.3),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
 }

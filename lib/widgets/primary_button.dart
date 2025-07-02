@@ -7,6 +7,7 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool isOutlined;
+  final bool isSecondary;
   final IconData? icon;
   final double? width;
   final double height;
@@ -17,6 +18,7 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.isOutlined = false,
+    this.isSecondary = false,
     this.icon,
     this.width,
     this.height = 56,
@@ -24,17 +26,28 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       width: width,
       height: height,
       decoration: BoxDecoration(
-        gradient: isOutlined ? null : AppColors.primaryGradient,
-        border: isOutlined ? Border.all(color: AppColors.primary, width: 2) : null,
+        gradient: isOutlined
+            ? null
+            : isSecondary
+                ? AppColors.accentGradient
+                : AppColors.primaryGradient,
+        border: isOutlined
+            ? Border.all(
+                color: isSecondary ? AppColors.secondary : AppColors.primary,
+                width: 2,
+              )
+            : null,
         borderRadius: BorderRadius.circular(12),
         boxShadow: !isOutlined && onPressed != null
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: (isSecondary ? AppColors.secondary : AppColors.primary)
+                      .withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -58,7 +71,9 @@ class PrimaryButton extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isOutlined ? AppColors.primary : AppColors.white,
+                        isOutlined
+                            ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                            : AppColors.white,
                       ),
                     ),
                   )
@@ -66,7 +81,9 @@ class PrimaryButton extends StatelessWidget {
                   if (icon != null) ...[
                     Icon(
                       icon,
-                      color: isOutlined ? AppColors.primary : AppColors.white,
+                      color: isOutlined
+                          ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                          : AppColors.white,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -74,7 +91,9 @@ class PrimaryButton extends StatelessWidget {
                   Text(
                     text,
                     style: AppTextStyles.buttonLarge.copyWith(
-                      color: isOutlined ? AppColors.primary : AppColors.white,
+                      color: isOutlined
+                          ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                          : AppColors.white,
                     ),
                   ),
                 ],

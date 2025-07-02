@@ -17,6 +17,8 @@ class InputField extends StatefulWidget {
   final bool enabled;
   final int? maxLines;
   final List<TextInputFormatter>? inputFormatters;
+  final FocusNode? focusNode;
+  final bool isRequired;
 
   const InputField({
     super.key,
@@ -33,6 +35,8 @@ class InputField extends StatefulWidget {
     this.enabled = true,
     this.maxLines = 1,
     this.inputFormatters,
+    this.focusNode,
+    this.isRequired = false,
   });
 
   @override
@@ -42,11 +46,30 @@ class InputField extends StatefulWidget {
 class _InputFieldState extends State<InputField> {
   bool _isFocused = false;
   late bool _isObscured;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _isObscured = widget.obscureText;
+    
+    // Use provided focus node or internal one
+    (widget.focusNode ?? _focusNode).addListener(_handleFocusChange);
+  }
+  
+  @override
+  void dispose() {
+    if (widget.focusNode == null) {
+      _focusNode.removeListener(_handleFocusChange);
+      _focusNode.dispose();
+    }
+    super.dispose();
+  }
+  
+  void _handleFocusChange() {
+    setState(() {
+      _isFocused = (widget.focusNode ?? _focusNode).hasFocus;
+    });
   }
 
   @override
@@ -54,85 +77,93 @@ class _InputFieldState extends State<InputField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: AppTextStyles.labelMedium,
+        Row(
+          children: [
+            Text(
+              widget.label,
+              style: AppTextStyles.labelMedium,
+            ),
+            if (widget.isRequired) ...[
+              const SizedBox(width: 4),
+              Text(
+                '*',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 8),
-        Focus(
-          onFocusChange: (hasFocus) {
-            setState(() {
-              _isFocused = hasFocus;
-            });
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _isFocused ? AppColors.primary : AppColors.grey300,
-                width: _isFocused ? 2 : 1,
-              ),
-              color: widget.enabled ? AppColors.white : AppColors.grey50,
-              boxShadow: _isFocused
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isFocused ? AppColors.primary : AppColors.grey300,
+              width: _isFocused ? 2 : 1,
             ),
-            child: TextFormField(
-              controller: widget.controller,
-              obscureText: _isObscured,
-              keyboardType: widget.keyboardType,
-              validator: widget.validator,
-              onChanged: widget.onChanged,
-              enabled: widget.enabled,
-              maxLines: widget.maxLines,
-              inputFormatters: widget.inputFormatters,
-              style: AppTextStyles.bodyMedium,
-              decoration: InputDecoration(
-                hintText: widget.hint,
-                hintStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.grey500,
-                ),
-                prefixIcon: widget.prefixIcon != null
-                    ? Icon(
-                        widget.prefixIcon,
-                        color: _isFocused ? AppColors.primary : AppColors.grey500,
+            color: widget.enabled ? AppColors.white : AppColors.grey50,
+            boxShadow: _isFocused
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: TextFormField(
+            controller: widget.controller,
+            obscureText: _isObscured,
+            keyboardType: widget.keyboardType,
+            validator: widget.validator,
+            onChanged: widget.onChanged,
+            enabled: widget.enabled,
+            maxLines: widget.obscureText ? 1 : widget.maxLines,
+            inputFormatters: widget.inputFormatters,
+            focusNode: widget.focusNode ?? _focusNode,
+            style: AppTextStyles.bodyMedium,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              hintStyle: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.grey500,
+              ),
+              prefixIcon: widget.prefixIcon != null
+                  ? Icon(
+                      widget.prefixIcon,
+                      color: _isFocused ? AppColors.primary : AppColors.grey500,
+                      size: 20,
+                    )
+                  : null,
+              suffixIcon: widget.obscureText
+                  ? IconButton(
+                      icon: Icon(
+                        _isObscured ? Icons.visibility : Icons.visibility_off,
+                        color: AppColors.grey500,
                         size: 20,
-                      )
-                    : null,
-                suffixIcon: widget.obscureText
-                    ? IconButton(
-                        icon: Icon(
-                          _isObscured ? Icons.visibility : Icons.visibility_off,
-                          color: AppColors.grey500,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isObscured = !_isObscured;
-                          });
-                        },
-                      )
-                    : widget.suffixIcon != null
-                        ? IconButton(
-                            icon: Icon(
-                              widget.suffixIcon,
-                              color: AppColors.grey500,
-                              size: 20,
-                            ),
-                            onPressed: widget.onSuffixTap,
-                          )
-                        : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
-                ),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscured = !_isObscured;
+                        });
+                      },
+                    )
+                  : widget.suffixIcon != null
+                      ? IconButton(
+                          icon: Icon(
+                            widget.suffixIcon,
+                            color: AppColors.grey500,
+                            size: 20,
+                          ),
+                          onPressed: widget.onSuffixTap,
+                        )
+                      : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
               ),
             ),
           ),
