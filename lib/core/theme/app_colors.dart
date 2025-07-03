@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Cores principais - Inspirado no Trinks
-  static const Color primary = Color(0xFF3D5AF1);      // Azul principal
-  static const Color secondary = Color(0xFF22CAAD);     // Verde água
-  static const Color tertiary = Color(0xFFF45B69);      // Rosa/vermelho
-  static const Color accent = Color(0xFFFFBE0B);        // Amarelo
-  
+  static const Color primary = Color(0xFF3D5AF1); // Azul principal
+  static const Color secondary = Color(0xFF22CAAD); // Verde água
+  static const Color tertiary = Color(0xFFF45B69); // Rosa/vermelho
+  static const Color accent = Color(0xFFFFBE0B); // Amarelo
+
   // Cores neutras
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF1A1A1A);
@@ -20,59 +20,62 @@ class AppColors {
   static const Color grey700 = Color(0xFF424B5F);
   static const Color grey800 = Color(0xFF2D3445);
   static const Color grey900 = Color(0xFF1D2333);
-  
+
   // Cores de status
-  static const Color success = Color(0xFF22CAAD);       // Verde
-  static const Color warning = Color(0xFFFFBE0B);       // Amarelo
-  static const Color error = Color(0xFFF45B69);         // Vermelho
-  static const Color info = Color(0xFF3D5AF1);          // Azul
-  
+  static const Color success = Color(0xFF22CAAD); // Verde
+  static const Color warning = Color(0xFFFFBE0B); // Amarelo
+  static const Color error = Color(0xFFF45B69); // Vermelho
+  static const Color info = Color(0xFF3D5AF1); // Azul
+
   // Gradientes
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primary, Color(0xFF5B74F7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const LinearGradient accentGradient = LinearGradient(
     colors: [secondary, Color(0xFF0FDFB7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   static const LinearGradient backgroundGradient = LinearGradient(
     colors: [grey50, grey100],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
-  
+
   // Gradiente para cards
   static const LinearGradient cardGradient = LinearGradient(
     colors: [white, grey50],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
+
   // Cores específicas do PIX
   static const Color pixGreen = Color(0xFF22CAAD);
   static const Color pixBackground = Color(0xFFF0F8F7);
-  
+
   // Sombras
   static List<BoxShadow> cardShadow = [
     BoxShadow(
+      // ignore: deprecated_member_use
       color: black.withOpacity(0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
+      // ignore: deprecated_member_use
       color: black.withOpacity(0.03),
       blurRadius: 25,
       offset: const Offset(0, 10),
     ),
   ];
-  
+
   static List<BoxShadow> buttonShadow = [
     BoxShadow(
+      // ignore: deprecated_member_use
       color: primary.withOpacity(0.3),
       blurRadius: 12,
       offset: const Offset(0, 4),

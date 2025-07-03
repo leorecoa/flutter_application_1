@@ -14,11 +14,12 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   // Mock data
   final Map<String, dynamic> _dashboardData = {
     'totalClientes': 25,
@@ -38,17 +39,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.8, curve: Curves.easeOut),
       ),
     );
-    
+
     _loadDashboardData();
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -121,7 +122,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Cards de estatísticas
                     GridView.count(
                       shrinkWrap: true,
@@ -169,7 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Receita mensal
                     Card(
                       elevation: 0,
@@ -192,10 +193,11 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
+                                    // ignore: deprecated_member_use
                                     color: AppColors.success.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(
+                                  child: const Icon(
                                     Icons.trending_up,
                                     color: AppColors.success,
                                     size: 24,
@@ -226,14 +228,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Agendamentos
                     Text(
                       'Agendamentos',
                       style: AppTextStyles.h4,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -254,14 +256,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Ações rápidas
                     Text(
                       'Ações Rápidas',
                       style: AppTextStyles.h5,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     if (isDesktop || isTablet)
                       Row(
                         children: [
@@ -269,7 +271,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             child: PrimaryButton(
                               text: 'Gerar QR Code PIX',
                               icon: Icons.qr_code,
-                              onPressed: () => context.go(AppRoutes.generatePix),
+                              onPressed: () =>
+                                  context.go(AppRoutes.generatePix),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -308,7 +311,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
             ),
     );
   }
-  
+
   Widget _buildAgendamentosCard(String title, int count, Color color) {
     return Card(
       elevation: 0,
@@ -330,6 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),

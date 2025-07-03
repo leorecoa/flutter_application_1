@@ -52,11 +52,11 @@ class _InputFieldState extends State<InputField> {
   void initState() {
     super.initState();
     _isObscured = widget.obscureText;
-    
+
     // Use provided focus node or internal one
     (widget.focusNode ?? _focusNode).addListener(_handleFocusChange);
   }
-  
+
   @override
   void dispose() {
     if (widget.focusNode == null) {
@@ -65,7 +65,7 @@ class _InputFieldState extends State<InputField> {
     }
     super.dispose();
   }
-  
+
   void _handleFocusChange() {
     setState(() {
       _isFocused = (widget.focusNode ?? _focusNode).hasFocus;
@@ -107,6 +107,7 @@ class _InputFieldState extends State<InputField> {
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
+                      // ignore: deprecated_member_use
                       color: AppColors.primary.withOpacity(0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),

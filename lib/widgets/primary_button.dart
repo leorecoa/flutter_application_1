@@ -47,6 +47,7 @@ class PrimaryButton extends StatelessWidget {
             ? [
                 BoxShadow(
                   color: (isSecondary ? AppColors.secondary : AppColors.primary)
+                      // ignore: deprecated_member_use
                       .withOpacity(0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
@@ -72,7 +73,9 @@ class PrimaryButton extends StatelessWidget {
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         isOutlined
-                            ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                            ? (isSecondary
+                                ? AppColors.secondary
+                                : AppColors.primary)
                             : AppColors.white,
                       ),
                     ),
@@ -82,7 +85,9 @@ class PrimaryButton extends StatelessWidget {
                     Icon(
                       icon,
                       color: isOutlined
-                          ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                          ? (isSecondary
+                              ? AppColors.secondary
+                              : AppColors.primary)
                           : AppColors.white,
                       size: 20,
                     ),
@@ -92,7 +97,9 @@ class PrimaryButton extends StatelessWidget {
                     text,
                     style: AppTextStyles.buttonLarge.copyWith(
                       color: isOutlined
-                          ? (isSecondary ? AppColors.secondary : AppColors.primary)
+                          ? (isSecondary
+                              ? AppColors.secondary
+                              : AppColors.primary)
                           : AppColors.white,
                     ),
                   ),

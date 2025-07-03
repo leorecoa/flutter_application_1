@@ -13,7 +13,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -29,14 +30,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
@@ -46,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
       ),
     );
-    
+
     _animationController.forward();
   }
 
@@ -66,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       // Simular login
       await Future.delayed(const Duration(seconds: 1));
-      
+
       if (mounted) {
         context.go(AppRoutes.dashboard);
       }
@@ -101,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             colors: [
               AppColors.grey50,
               AppColors.grey100,
+              // ignore: deprecated_member_use
               AppColors.primary.withOpacity(0.05),
             ],
           ),
@@ -134,6 +136,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
+                                // ignore: deprecated_member_use
                                 color: AppColors.primary.withOpacity(0.3),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
@@ -147,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Título
                         Text('AgendeMais', style: AppTextStyles.logo),
                         const SizedBox(height: 8),
@@ -157,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),
-                        
+
                         // Campos
                         InputField(
                           label: 'E-mail',
@@ -170,14 +173,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             if (value?.isEmpty ?? true) {
                               return 'E-mail é obrigatório';
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value!)) {
                               return 'E-mail inválido';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
-                        
+
                         InputField(
                           label: 'Senha',
                           hint: 'Digite sua senha',
@@ -195,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             return null;
                           },
                         ),
-                        
+
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -210,9 +214,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Botão Login
                         PrimaryButton(
                           text: 'Entrar',
@@ -221,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           width: double.infinity,
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Link Cadastro
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,

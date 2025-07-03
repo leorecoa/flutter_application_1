@@ -52,7 +52,7 @@ class AppScaffold extends StatelessWidget {
         children: [
           // Sidebar para desktop e tablet
           if (!isMobile) _buildSidebar(context, isDesktop),
-          
+
           // Conteúdo principal
           Expanded(
             child: Column(
@@ -66,6 +66,7 @@ class AppScaffold extends StatelessWidget {
                       color: AppColors.white,
                       boxShadow: [
                         BoxShadow(
+                          // ignore: deprecated_member_use
                           color: AppColors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 2),
@@ -80,7 +81,7 @@ class AppScaffold extends StatelessWidget {
                       ],
                     ),
                   ),
-                
+
                 // Conteúdo
                 Expanded(
                   child: isLoading
@@ -127,9 +128,9 @@ class AppScaffold extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Botão de Novo Agendamento
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -168,9 +169,9 @@ class AppScaffold extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Menu de navegação
           _buildNavItem(
             context,
@@ -196,9 +197,9 @@ class AppScaffold extends StatelessWidget {
             Icons.settings_outlined,
             AppRoutes.settings,
           ),
-          
+
           const Spacer(),
-          
+
           // Perfil do usuário
           Container(
             margin: const EdgeInsets.all(16),
@@ -211,8 +212,9 @@ class AppScaffold extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
+                  // ignore: deprecated_member_use
                   backgroundColor: AppColors.primary.withOpacity(0.2),
-                  child: Text(
+                  child: const Text(
                     'AB',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -257,7 +259,7 @@ class AppScaffold extends StatelessWidget {
     String route,
   ) {
     final isActive = currentPath == route;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
@@ -269,7 +271,11 @@ class AppScaffold extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isActive ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+              // ignore: deprecated_member_use
+              color: isActive
+                  // ignore: deprecated_member_use
+                  ? AppColors.primary.withOpacity(0.1)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -299,7 +305,7 @@ class AppScaffold extends StatelessWidget {
       child: Column(
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: AppColors.primaryGradient,
             ),
             child: Center(
@@ -313,7 +319,7 @@ class AppScaffold extends StatelessWidget {
                       color: AppColors.white,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.calendar_today,
                       color: AppColors.primary,
                       size: 20,
@@ -328,7 +334,7 @@ class AppScaffold extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Botão de Novo Agendamento
           Padding(
             padding: const EdgeInsets.all(16),
@@ -367,7 +373,7 @@ class AppScaffold extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Menu de navegação
           _buildNavItem(
             context,
@@ -393,9 +399,9 @@ class AppScaffold extends StatelessWidget {
             Icons.settings_outlined,
             AppRoutes.settings,
           ),
-          
+
           const Spacer(),
-          
+
           // Perfil do usuário
           Container(
             margin: const EdgeInsets.all(16),
@@ -408,8 +414,9 @@ class AppScaffold extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 20,
+                  // ignore: deprecated_member_use
                   backgroundColor: AppColors.primary.withOpacity(0.2),
-                  child: Text(
+                  child: const Text(
                     'AB',
                     style: TextStyle(
                       color: AppColors.primary,

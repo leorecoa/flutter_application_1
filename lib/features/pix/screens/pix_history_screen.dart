@@ -13,7 +13,7 @@ class PixHistoryScreen extends StatefulWidget {
 class _PixHistoryScreenState extends State<PixHistoryScreen> {
   bool _isLoading = true;
   String _selectedFilter = 'TODOS';
-  
+
   final List<Map<String, dynamic>> _mockHistory = [
     {
       'empresa_id': 'clinica-abc-123',
@@ -54,7 +54,9 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
 
   List<Map<String, dynamic>> get _filteredHistory {
     if (_selectedFilter == 'TODOS') return _mockHistory;
-    return _mockHistory.where((item) => item['status'] == _selectedFilter).toList();
+    return _mockHistory
+        .where((item) => item['status'] == _selectedFilter)
+        .toList();
   }
 
   Color _getStatusColor(String status) {
@@ -117,7 +119,10 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
                                       _selectedFilter = filter;
                                     });
                                   },
-                                  selectedColor: AppColors.primary.withOpacity(0.2),
+                                  // ignore: deprecated_member_use
+                                  selectedColor:
+                                      // ignore: deprecated_member_use
+                                      AppColors.primary.withOpacity(0.2),
                                   checkmarkColor: AppColors.primary,
                                 ),
                               ))
@@ -128,7 +133,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
               ],
             ),
           ),
-          
+
           // Lista
           Expanded(
             child: _isLoading
@@ -138,6 +143,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // ignore: prefer_const_constructors
                             Icon(
                               Icons.history,
                               size: 64,
@@ -166,7 +172,10 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
                                 width: 48,
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(item['status']).withOpacity(0.1),
+                                  // ignore: deprecated_member_use
+                                  color: _getStatusColor(item['status'])
+                                      // ignore: deprecated_member_use
+                                      .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -222,7 +231,10 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(item['status']).withOpacity(0.1),
+                                      // ignore: deprecated_member_use
+                                      color: _getStatusColor(item['status'])
+                                          // ignore: deprecated_member_use
+                                          .withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(

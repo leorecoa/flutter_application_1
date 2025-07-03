@@ -40,7 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       // Simular cadastro
       await Future.delayed(const Duration(seconds: 2));
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -87,6 +87,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
+                    // ignore: deprecated_member_use
                     color: AppColors.black.withOpacity(0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
@@ -116,7 +117,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Campos
                     InputField(
                       label: 'Nome da Empresa',
@@ -131,7 +132,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    
+
                     InputField(
                       label: 'E-mail',
                       hint: 'contato@empresa.com',
@@ -142,14 +143,15 @@ class _SignupScreenState extends State<SignupScreen> {
                         if (value?.isEmpty ?? true) {
                           return 'E-mail é obrigatório';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value!)) {
                           return 'E-mail inválido';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
-                    
+
                     InputField(
                       label: 'CNPJ',
                       hint: '00.000.000/0001-00',
@@ -164,7 +166,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    
+
                     InputField(
                       label: 'Chave PIX',
                       hint: 'CPF, CNPJ, e-mail ou telefone',
@@ -178,7 +180,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    
+
                     InputField(
                       label: 'Senha',
                       hint: 'Mínimo 6 caracteres',
@@ -196,7 +198,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       },
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Botão Cadastrar
                     PrimaryButton(
                       text: 'Criar Conta',
@@ -205,7 +207,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       width: double.infinity,
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Termos
                     Text(
                       'Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.',

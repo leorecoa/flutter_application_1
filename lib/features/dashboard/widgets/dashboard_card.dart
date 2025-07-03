@@ -28,7 +28,8 @@ class DashboardCard extends StatefulWidget {
   State<DashboardCard> createState() => _DashboardCardState();
 }
 
-class _DashboardCardState extends State<DashboardCard> with SingleTickerProviderStateMixin {
+class _DashboardCardState extends State<DashboardCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -40,21 +41,21 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    
+
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
       ),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
       ),
     );
-    
+
     // Delay animation based on card position
     Future.delayed(Duration(milliseconds: widget.animationDelay), () {
       if (mounted) {
@@ -62,7 +63,7 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
       }
     });
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -97,7 +98,10 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (widget.iconColor ?? AppColors.primary).withOpacity(0.1),
+                      // ignore: deprecated_member_use
+                      color: (widget.iconColor ?? AppColors.primary)
+                          // ignore: deprecated_member_use
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -107,13 +111,11 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
                   Text(
                     widget.title,
                     style: AppTextStyles.labelMedium,
                   ),
                   const SizedBox(height: 8),
-                  
                   if (widget.isLoading)
                     Container(
                       width: 80,
@@ -129,7 +131,6 @@ class _DashboardCardState extends State<DashboardCard> with SingleTickerProvider
                       style: AppTextStyles.statValue,
                     ),
                   const SizedBox(height: 4),
-                  
                   Text(
                     widget.subtitle,
                     style: AppTextStyles.caption,
