@@ -11,12 +11,9 @@ frontend:
             echo "Removendo Flutter SDK antigo...";
             rm -rf $FLUTTER_SDK;
           fi
-        - echo "Instalando Flutter SDK versão 3.7.12 (estável)..."
+        - echo "Instalando Flutter SDK versão estável..."
         - mkdir -p $FLUTTER_HOME
         - git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK
-        - cd $FLUTTER_SDK
-        - git checkout 3.7.12
-        - cd -
         - flutter config --no-analytics
         - flutter config --enable-web
         - flutter doctor -v
@@ -28,7 +25,7 @@ frontend:
         - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
         - export PATH="$FLUTTER_SDK/bin:$PATH"
         - flutter clean
-        - flutter pub get
+        - flutter pub get --no-example
         - flutter build web --release
   artifacts:
     baseDirectory: build/web
