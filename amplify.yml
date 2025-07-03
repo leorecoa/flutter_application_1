@@ -8,13 +8,12 @@ frontend:
         - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
         - export PATH="$FLUTTER_SDK/bin:$PATH"
         - if [ -d "$FLUTTER_SDK" ]; then
-            echo "Flutter SDK já existe, atualizando...";
-            cd $FLUTTER_SDK && git pull;
-          else
-            echo "Instalando Flutter SDK...";
-            mkdir -p $FLUTTER_HOME;
-            git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK;
+            echo "Removendo Flutter SDK antigo...";
+            rm -rf $FLUTTER_SDK;
           fi
+        - echo "Instalando Flutter SDK versão 3.10.0 (com suporte a --web-renderer)..."
+        - mkdir -p $FLUTTER_HOME
+        - git clone https://github.com/flutter/flutter.git -b 3.10.0 $FLUTTER_SDK
         - flutter config --no-analytics
         - flutter config --enable-web
         - flutter doctor -v
@@ -27,12 +26,13 @@ frontend:
         - export PATH="$FLUTTER_SDK/bin:$PATH"
         - flutter clean
         - flutter pub get
-        - flutter build web --release --web-renderer canvaskit --base-href /
+        - echo "Verificando suporte a web-renderer..."
+        - flutter build web --help | grep -- "--web-renderer"
+        - flutter build web --release --web-renderer=canvaskit --base-href=/
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
   cache:
     paths:
-      - /root/.flutter/flutter-sdk/**/*
       - /root/.pub-cache/**/*
