@@ -14,7 +14,7 @@ frontend:
         - echo "Iniciando build Flutter Web"
         - export PATH=`pwd`/flutter/bin:`pwd`/flutter/bin/cache/dart-sdk/bin:$PATH
         - flutter pub get
-        - flutter build web --release
+        - flutter build web --release --base-href /
   artifacts:
     baseDirectory: build/web
     files:
