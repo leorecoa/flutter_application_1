@@ -38,6 +38,20 @@ jobs:
         run: |
           aws s3 sync build/web/ s3://agendafacil-web/ --delete
           
+      - name: Check CloudFront Distribution ID
+        id: check-cloudfront
+        run: |
+          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
+            echo "has_distribution_id=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_distribution_id=false" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Invalidate CloudFront
+        if: steps.check-cloudfront.outputs.has_distribution_id == 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          
+      - name: Skip CloudFront invalidation
+        if: steps.check-cloudfront.outputs.has_distribution_id != 'true'
+        run: echo "Skipping CloudFront invalidation - distribution ID not configured"

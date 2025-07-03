@@ -4,7 +4,7 @@ import '../../../core/config/app_config.dart';
 import '../models/subscription_model.dart';
 
 class SubscriptionService {
-  static const String _baseUrl = '${AppConfig.apiGatewayUrl}/subscription';
+  static String get _baseUrl => '${AppConfig.apiBaseUrl}/subscription';
 
   static Future<SubscriptionModel> getCurrentSubscription() async {
     try {

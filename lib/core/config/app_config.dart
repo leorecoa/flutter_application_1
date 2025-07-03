@@ -1,26 +1,31 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// Configurações globais do aplicativo
 class AppConfig {
-  static const String appName = 'AgendaFácil';
-  static const String version = '1.0.0';
+  /// Ambiente atual (dev, staging, prod)
+  static String get environment => dotenv.env['ENVIRONMENT'] ?? 'dev';
   
-  // AWS Configuration
-  static const String awsRegion = 'us-east-1';
-  static const String apiGatewayUrl = 'https://nf8epil1ck.execute-api.us-east-1.amazonaws.com/dev';
-  static const String cognitoUserPoolId = 'us-east-1_SxSKt5j7R';
-  static const String cognitoClientId = '7tq6nbj8ijsc4j1nul0namhe5e';
+  /// Verifica se é ambiente de produção
+  static bool get isProduction => environment == 'prod';
   
-  // External APIs
-  static const String whatsappApiUrl = 'https://api.z-api.io';
-  static const String whatsappToken = 'YOUR_WHATSAPP_TOKEN';
-  static const String stripePublishableKey = 'pk_test_XXXXXXXXXXXXXXXX';
-  static const String mercadoPagoPublicKey = 'TEST-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX';
+  /// Verifica se é ambiente de desenvolvimento
+  static bool get isDevelopment => environment == 'dev';
   
-  // App Settings
-  static const int maxFreeAppointments = 5;
-  static const List<String> supportedLanguages = ['pt', 'en', 'es'];
+  /// Verifica se é ambiente de staging
+  static bool get isStaging => environment == 'staging';
   
-  static Future<void> initialize() async {
-    // Initialize AWS Amplify, Firebase, or other services
-    // Configure error reporting (Sentry, Crashlytics)
-    // Setup analytics
-  }
+  /// URL base da API
+  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? 'https://api.agendafacil.app/dev';
+  
+  /// Habilitar analytics
+  static bool get enableAnalytics => dotenv.env['ENABLE_ANALYTICS'] == 'true';
+  
+  /// Habilitar relatório de erros
+  static bool get enableCrashReporting => dotenv.env['ENABLE_CRASH_REPORTING'] == 'true';
+  
+  /// Versão do aplicativo
+  static const String appVersion = '1.0.0';
+  
+  /// Build number
+  static const String buildNumber = '1';
 }

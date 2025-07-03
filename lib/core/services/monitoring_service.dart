@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import '../config/aws_config.dart';
+import '../config/app_config.dart';
 
 class MonitoringService {
   static final Logger _logger = Logger();
