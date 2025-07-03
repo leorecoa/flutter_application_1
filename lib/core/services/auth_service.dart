@@ -1,9 +1,14 @@
 class AuthService {
-  static bool get isAuthenticated => false;
-  static String get userId => 'user-123';
+  static bool _isAuthenticated = false;
+  static String _userId = '';
+  static String _accessToken = '';
+  static String _refreshToken = '';
+  
+  static bool get isAuthenticated => _isAuthenticated;
+  static String get userId => _userId;
 
   Future<bool> isSignedIn() async {
-    return false;
+    return _isAuthenticated;
   }
 
   Future<Map<String, dynamic>> signIn(String email, String password) async {
@@ -14,16 +19,42 @@ class AuthService {
   }
 
   Future<Map<String, String>> getAuthHeaders() async {
-    return {'Authorization': 'Bearer token'};
+    return {'Authorization': 'Bearer $_accessToken'};
   }
 
   Future<void> refreshAccessToken() async {}
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> loginUser(String email, String password) async {
     return signIn(email, password);
+  }
+  
+  // Método estático para login (para testes)
+  static Future<bool> login(String email, String password) async {
+    try {
+      // Simula validação de senha
+      if (password == 'wrong_password') {
+        return false;
+      }
+      
+      _isAuthenticated = true;
+      _userId = 'user-123';
+      _accessToken = 'test_token';
+      _refreshToken = 'refresh_token';
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // Método estático para logout (para testes)
+  static Future<void> logout() async {
+    _isAuthenticated = false;
+    _userId = '';
+    _accessToken = '';
+    _refreshToken = '';
   }
 
   static Map<String, dynamic>? getCurrentUser() {
-    return null;
+    return _isAuthenticated ? {'id': _userId, 'token': _accessToken} : null;
   }
 }

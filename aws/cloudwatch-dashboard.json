@@ -1,0 +1,96 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AgendaFacil/App", "ApiRequests", "Endpoint", "auth/login"],
+          ["AgendaFacil/App", "ApiRequests", "Endpoint", "auth/register"],
+          ["AgendaFacil/App", "ApiRequests", "Endpoint", "agendamentos"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "API Requests",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AgendaFacil/App", "ApiErrors", "Endpoint", "auth/login"],
+          ["AgendaFacil/App", "ApiErrors", "Endpoint", "auth/register"],
+          ["AgendaFacil/App", "ApiErrors", "Endpoint", "agendamentos"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "API Errors",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AgendaFacil/App", "UserLogins", "Environment", "prod"],
+          ["AgendaFacil/App", "UserRegistrations", "Environment", "prod"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "User Activity",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          ["AgendaFacil/App", "PageLoad", "Page", "home"],
+          ["AgendaFacil/App", "PageLoad", "Page", "agendamentos"],
+          ["AgendaFacil/App", "PageLoad", "Page", "clientes"]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "us-east-1",
+        "title": "Page Load Times (ms)",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 12,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/aws/lambda/agendafacil-prod-auth' | filter @message like /ERROR/",
+        "region": "us-east-1",
+        "title": "Auth Lambda Errors",
+        "view": "table"
+      }
+    }
+  ]
+}
