@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="AgendeMais - Sistema SaaS de agendamento">
@@ -62,9 +62,7 @@
           serviceWorkerVersion: serviceWorkerVersion,
         },
         onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine({
-            renderer: "canvaskit"
-          }).then(function(appRunner) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
             appRunner.runApp();
             document.getElementById('loading').style.display = 'none';
           });

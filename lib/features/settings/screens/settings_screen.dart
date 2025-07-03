@@ -14,14 +14,15 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProviderStateMixin {
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _pixKeyController = TextEditingController();
   bool _isLoading = true;
   bool _isSaving = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -32,17 +33,17 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
-    
+
     _loadSettings();
   }
-  
+
   @override
   void dispose() {
     _nomeController.dispose();
@@ -54,19 +55,20 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
 
   Future<void> _loadSettings() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Simular carregamento de configurações
       await Future.delayed(const Duration(seconds: 1));
-      
+
       setState(() {
         _nomeController.text = 'Clínica Bella Vista';
         _emailController.text = 'contato@bellavista.com';
         _pixKeyController.text = '05359566493';
       });
-      
+
       _animationController.forward();
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao carregar configurações: $e'),
@@ -77,16 +79,17 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
       setState(() => _isLoading = false);
     }
   }
-  
+
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     try {
       // Simular salvamento de configurações
       await Future.delayed(const Duration(seconds: 1));
-      
+
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Configurações salvas com sucesso!'),
@@ -94,6 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
         ),
       );
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao salvar configurações: $e'),
@@ -134,7 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               style: AppTextStyles.bodyMedium,
             ),
             const SizedBox(height: 32),
-            
+
             // Seção de Perfil
             _buildSection(
               title: 'Perfil da Empresa',
@@ -157,7 +161,6 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                       },
                     ),
                     const SizedBox(height: 20),
-                    
                     InputField(
                       label: 'E-mail',
                       hint: 'Digite seu e-mail',
@@ -169,14 +172,14 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                         if (value?.isEmpty ?? true) {
                           return 'E-mail é obrigatório';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                            .hasMatch(value!)) {
                           return 'E-mail inválido';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
-                    
                     InputField(
                       label: 'Chave PIX',
                       hint: 'Digite sua chave PIX',
@@ -191,7 +194,6 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                       },
                     ),
                     const SizedBox(height: 24),
-                    
                     PrimaryButton(
                       text: 'Salvar Alterações',
                       onPressed: _saveSettings,
@@ -203,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Seção de Segurança
             _buildSection(
               title: 'Segurança',
@@ -231,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Seção de Plano
             _buildSection(
               title: 'Plano e Assinatura',
@@ -249,7 +251,8 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withAlpha(25), // 10% opacity
+                            color:
+                                AppColors.primary.withAlpha(25), // 10% opacity
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -276,9 +279,11 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withAlpha(25), // 10% opacity
+                            color:
+                                AppColors.success.withAlpha(25), // 10% opacity
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -305,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Seção de Conta
             _buildSection(
               title: 'Conta',
@@ -348,7 +353,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
       ),
     );
   }
-  
+
   Widget _buildSection({
     required String title,
     required IconData icon,
@@ -398,7 +403,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
       ),
     );
   }
-  
+
   Widget _buildSettingItem({
     required String title,
     required String subtitle,
@@ -417,7 +422,8 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary).withAlpha(13), // 5% opacity
+                color: (iconColor ?? AppColors.primary)
+                    .withAlpha(13), // 5% opacity
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -445,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen> with SingleTickerProvid
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.chevron_right,
               color: AppColors.grey400,
               size: 20,

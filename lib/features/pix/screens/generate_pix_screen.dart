@@ -15,14 +15,15 @@ class GeneratePixScreen extends StatefulWidget {
   State<GeneratePixScreen> createState() => _GeneratePixScreenState();
 }
 
-class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTickerProviderStateMixin {
+class _GeneratePixScreenState extends State<GeneratePixScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
   bool _isLoading = false;
   bool _pixGerado = false;
   Map<String, dynamic> _pixData = {};
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -34,14 +35,14 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
@@ -51,7 +52,7 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
         curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
       ),
     );
-    
+
     _animationController.forward();
   }
 
@@ -71,22 +72,27 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
     try {
       // Simular geração de PIX
       await Future.delayed(const Duration(seconds: 1));
-      
+
       final valor = double.parse(_valorController.text.replaceAll(',', '.'));
-      
+
       setState(() {
         _pixGerado = true;
         _pixData = {
           'transaction_id': 'PIX${DateTime.now().millisecondsSinceEpoch}',
-          'pix_code': '00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-b028-f142082d7b8752040000530398654041.005802BR5925AgendeMais Tecnologia LTDA6009SAO PAULO62070503***63041D2D',
+          'pix_code':
+              '00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-b028-f142082d7b8752040000530398654041.005802BR5925AgendeMais Tecnologia LTDA6009SAO PAULO62070503***63041D2D',
           'valor': valor,
-          'vencimento': DateTime.now().add(const Duration(days: 1)).toString().substring(0, 10),
+          'vencimento': DateTime.now()
+              .add(const Duration(days: 1))
+              .toString()
+              .substring(0, 10),
         };
       });
-      
+
       _animationController.reset();
       _animationController.forward();
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao gerar PIX: $e'),
@@ -142,9 +148,8 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
             style: AppTextStyles.bodyMedium,
           ),
           const SizedBox(height: 32),
-          
           InputField(
-            label: 'Valor (R$)',
+            label: 'Valor (R\$)',
             hint: '0,00',
             controller: _valorController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -165,7 +170,6 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
             },
           ),
           const SizedBox(height: 20),
-          
           InputField(
             label: 'Descrição',
             hint: 'Ex: Mensalidade Julho 2025',
@@ -181,7 +185,6 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
             },
           ),
           const SizedBox(height: 32),
-          
           PrimaryButton(
             text: 'Gerar QR Code PIX',
             onPressed: _gerarPix,
@@ -209,7 +212,7 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 32),
-        
+
         // QR Code
         Container(
           padding: const EdgeInsets.all(16),
@@ -235,7 +238,7 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Informações do PIX
               Container(
                 padding: const EdgeInsets.all(16),
@@ -249,7 +252,8 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
                     const SizedBox(height: 8),
                     _buildInfoRow('Vencimento:', _pixData['vencimento']),
                     const SizedBox(height: 8),
-                    _buildInfoRow('ID da Transação:', _pixData['transaction_id']),
+                    _buildInfoRow(
+                        'ID da Transação:', _pixData['transaction_id']),
                   ],
                 ),
               ),
@@ -257,7 +261,7 @@ class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTicker
           ),
         ),
         const SizedBox(height: 24),
-        
+
         // Botões
         Row(
           children: [

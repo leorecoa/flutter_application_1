@@ -11,9 +11,12 @@ frontend:
             echo "Removendo Flutter SDK antigo...";
             rm -rf $FLUTTER_SDK;
           fi
-        - echo "Instalando Flutter SDK versão 3.10.0 (com suporte a --web-renderer)..."
+        - echo "Instalando Flutter SDK versão 3.7.12 (estável)..."
         - mkdir -p $FLUTTER_HOME
-        - git clone https://github.com/flutter/flutter.git -b 3.10.0 $FLUTTER_SDK
+        - git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK
+        - cd $FLUTTER_SDK
+        - git checkout 3.7.12
+        - cd -
         - flutter config --no-analytics
         - flutter config --enable-web
         - flutter doctor -v
@@ -26,9 +29,7 @@ frontend:
         - export PATH="$FLUTTER_SDK/bin:$PATH"
         - flutter clean
         - flutter pub get
-        - echo "Verificando suporte a web-renderer..."
-        - flutter build web --help | grep -- "--web-renderer"
-        - flutter build web --release --web-renderer=canvaskit --base-href=/
+        - flutter build web --release
   artifacts:
     baseDirectory: build/web
     files:

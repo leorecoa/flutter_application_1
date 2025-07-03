@@ -13,13 +13,14 @@ class PixHistoryScreen extends StatefulWidget {
   State<PixHistoryScreen> createState() => _PixHistoryScreenState();
 }
 
-class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerProviderStateMixin {
+class _PixHistoryScreenState extends State<PixHistoryScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   List<Map<String, dynamic>> _transactions = [];
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   final _currencyFormat = NumberFormat.currency(
     locale: 'pt_BR',
     symbol: 'R\$',
@@ -33,17 +34,17 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
-    
+
     _loadTransactions();
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -52,11 +53,11 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
 
   Future<void> _loadTransactions() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Simular carregamento de transações
       await Future.delayed(const Duration(seconds: 1));
-      
+
       setState(() {
         _transactions = [
           {
@@ -106,9 +107,10 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
           },
         ];
       });
-      
+
       _animationController.forward();
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao carregar histórico: $e'),
@@ -152,7 +154,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
             ],
           ),
         ),
-        
+
         // Filtros
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -173,14 +175,17 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                     ),
                     value: 'TODOS',
                     items: const [
                       DropdownMenuItem(value: 'TODOS', child: Text('Todos')),
                       DropdownMenuItem(value: 'PAGO', child: Text('Pagos')),
-                      DropdownMenuItem(value: 'PENDENTE', child: Text('Pendentes')),
-                      DropdownMenuItem(value: 'CANCELADO', child: Text('Cancelados')),
+                      DropdownMenuItem(
+                          value: 'PENDENTE', child: Text('Pendentes')),
+                      DropdownMenuItem(
+                          value: 'CANCELADO', child: Text('Cancelados')),
                     ],
                     onChanged: (value) {
                       // Implementar filtro
@@ -198,7 +203,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Lista de transações
         Expanded(
           child: _transactions.isEmpty
@@ -206,7 +211,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.receipt_long,
                         size: 64,
                         color: AppColors.grey400,
@@ -219,7 +224,8 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
                       const SizedBox(height: 24),
                       PrimaryButton(
                         text: 'Gerar PIX',
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.generatePix),
+                        onPressed: () =>
+                            Navigator.pushNamed(context, AppRoutes.generatePix),
                       ),
                     ],
                   ),
@@ -244,7 +250,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
     final status = transaction['status'];
     Color statusColor;
     IconData statusIcon;
-    
+
     switch (status) {
       case 'PAGO':
         statusColor = AppColors.success;
@@ -262,7 +268,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
         statusColor = AppColors.grey500;
         statusIcon = Icons.help;
     }
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -293,7 +299,8 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withAlpha(30),
                         borderRadius: BorderRadius.circular(8),
@@ -359,7 +366,7 @@ class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerPr
       ),
     );
   }
-  
+
   String _formatDate(String dateStr) {
     final date = DateTime.parse(dateStr);
     return DateFormat('dd/MM/yyyy').format(date);
