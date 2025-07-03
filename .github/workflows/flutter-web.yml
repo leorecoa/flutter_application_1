@@ -47,12 +47,9 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          aws-region: 'us-east-1'
       
       - name: Deploy to Amplify
-        env:
-          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID || 'd31iho7gw23enq' }}
-          AMPLIFY_BRANCH: ${{ secrets.AMPLIFY_BRANCH || 'main' }}
         run: |
-          echo "Deploying to Amplify app: $AMPLIFY_APP_ID, branch: $AMPLIFY_BRANCH"
+          echo "Deploying to Amplify app: d31iho7gw23enq, branch: main"
           amplify publish --yes
