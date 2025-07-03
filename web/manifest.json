@@ -1,23 +1,35 @@
 {
-    "name": "AgendeMais",
-    "short_name": "AgendeMais",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0455BF",
-    "theme_color": "#0455BF",
-    "description": "Sistema SaaS de agendamento para clínicas e barbearias",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
-        {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "name": "AgendaFácil",
+  "short_name": "AgendaFácil",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F9FAFC",
+  "theme_color": "#6C63FF",
+  "description": "Sistema de agendamento para clínicas e barbearias",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/Icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/Icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

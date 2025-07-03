@@ -8,29 +8,45 @@ frontend:
         - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
         - export PATH="$FLUTTER_SDK/bin:$PATH"
         - if [ -d "$FLUTTER_SDK" ]; then
-            echo "Removendo Flutter SDK antigo...";
-            rm -rf $FLUTTER_SDK;
+            echo "Flutter SDK encontrado, atualizando...";
+            cd $FLUTTER_SDK && git pull && cd -;
+          else
+            echo "Instalando Flutter SDK...";
+            mkdir -p $FLUTTER_HOME;
+            git clone --depth 1 https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK;
           fi
-        - echo "Instalando Flutter SDK versão estável..."
-        - mkdir -p $FLUTTER_HOME
-        - git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK
         - flutter config --no-analytics
         - flutter config --enable-web
         - flutter doctor -v
-        - flutter --version
     build:
       commands:
         - echo "Iniciando build do Flutter Web..."
-        - export FLUTTER_HOME="/root/.flutter"
-        - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
-        - export PATH="$FLUTTER_SDK/bin:$PATH"
         - flutter clean
-        - flutter pub get --no-example
-        - flutter build web --release
+        - flutter pub get
+        - flutter build web --release --pwa-strategy=offline-first --web-renderer=auto --dart-define=FLUTTER_WEB_USE_SKIA=true
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
+    discard-paths: no
+    headers:
+      - pattern: '**/*.html'
+        value: |
+          cache-control: max-age=0, no-cache, no-store, must-revalidate
+      - pattern: '**/*.js'
+        value: |
+          cache-control: public, max-age=31536000
+      - pattern: '**/*.css'
+        value: |
+          cache-control: public, max-age=31536000
+      - pattern: '**/*.woff2'
+        value: |
+          cache-control: public, max-age=31536000
+      - pattern: '**/*.png'
+        value: |
+          cache-control: public, max-age=86400
   cache:
     paths:
+      - /root/.flutter/flutter-sdk/**/*
       - /root/.pub-cache/**/*
+      - .dart_tool/**/*
