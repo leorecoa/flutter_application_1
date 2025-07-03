@@ -13,22 +13,52 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
-  final _cnpjController = TextEditingController();
-  final _pixKeyController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
+      ),
+    );
+    
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _nomeController.dispose();
     _emailController.dispose();
-    _cnpjController.dispose();
-    _pixKeyController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -39,22 +69,16 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       // Simular cadastro
-      await Future.delayed(const Duration(seconds: 2));
-
+      await Future.delayed(const Duration(seconds: 1));
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cadastro realizado com sucesso!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-        context.go(AppRoutes.login);
+        context.go(AppRoutes.dashboard);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao cadastrar: $e'),
+            content: Text('Erro ao fazer cadastro: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -69,152 +93,181 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width > 768;
+    final isDesktop = size.width > 1024;
+    final isTablet = size.width > 768 && size.width <= 1024;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.grey50,
+              AppColors.grey100,
+              AppColors.primary.withAlpha(13), // 5% opacity
+            ],
+          ),
         ),
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Container(
-              width: isDesktop ? 500 : double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    // ignore: deprecated_member_use
-                    color: AppColors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: Container(
+                  width: isDesktop ? 520 : (isTablet ? 480 : double.infinity),
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: AppColors.cardShadow,
                   ),
-                ],
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header
-                    Row(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        IconButton(
-                          onPressed: () => context.go(AppRoutes.login),
-                          icon: const Icon(Icons.arrow_back),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Criar Conta',
-                            style: AppTextStyles.h3,
-                            textAlign: TextAlign.center,
+                        // Logo
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.primaryGradient,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withAlpha(76), // 30% opacity
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.calendar_today,
+                            color: AppColors.white,
+                            size: 40,
                           ),
                         ),
-                        const SizedBox(width: 48),
+                        const SizedBox(height: 24),
+                        
+                        // Título
+                        Text('Criar Conta', style: AppTextStyles.h3),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Preencha os dados abaixo para criar sua conta',
+                          style: AppTextStyles.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        // Campos
+                        InputField(
+                          label: 'Nome da Empresa',
+                          hint: 'Digite o nome da sua empresa',
+                          controller: _nomeController,
+                          prefixIcon: Icons.business,
+                          isRequired: true,
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'Nome é obrigatório';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        InputField(
+                          label: 'E-mail',
+                          hint: 'Digite seu e-mail',
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          isRequired: true,
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'E-mail é obrigatório';
+                            }
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                              return 'E-mail inválido';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        InputField(
+                          label: 'Senha',
+                          hint: 'Digite sua senha',
+                          controller: _passwordController,
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline,
+                          isRequired: true,
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'Senha é obrigatória';
+                            }
+                            if (value!.length < 6) {
+                              return 'Senha deve ter pelo menos 6 caracteres';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        InputField(
+                          label: 'Confirmar Senha',
+                          hint: 'Confirme sua senha',
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          prefixIcon: Icons.lock_outline,
+                          isRequired: true,
+                          validator: (value) {
+                            if (value?.isEmpty ?? true) {
+                              return 'Confirmação de senha é obrigatória';
+                            }
+                            if (value != _passwordController.text) {
+                              return 'As senhas não coincidem';
+                            }
+                            return null;
+                          },
+                        ),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Botão Cadastrar
+                        PrimaryButton(
+                          text: 'Criar Conta',
+                          onPressed: _handleSignup,
+                          isLoading: _isLoading,
+                          width: double.infinity,
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Link Login
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Já tem conta? ',
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                            GestureDetector(
+                              onTap: () => context.go(AppRoutes.login),
+                              child: Text(
+                                'Faça login',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-
-                    // Campos
-                    InputField(
-                      label: 'Nome da Empresa',
-                      hint: 'Ex: Clínica Bella Vista',
-                      controller: _nomeController,
-                      prefixIcon: Icons.business,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Nome da empresa é obrigatório';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    InputField(
-                      label: 'E-mail',
-                      hint: 'contato@empresa.com',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'E-mail é obrigatório';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value!)) {
-                          return 'E-mail inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    InputField(
-                      label: 'CNPJ',
-                      hint: '00.000.000/0001-00',
-                      controller: _cnpjController,
-                      keyboardType: TextInputType.number,
-                      prefixIcon: Icons.badge,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'CNPJ é obrigatório';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    InputField(
-                      label: 'Chave PIX',
-                      hint: 'CPF, CNPJ, e-mail ou telefone',
-                      controller: _pixKeyController,
-                      prefixIcon: Icons.pix,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Chave PIX é obrigatória';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    InputField(
-                      label: 'Senha',
-                      hint: 'Mínimo 6 caracteres',
-                      controller: _passwordController,
-                      obscureText: true,
-                      prefixIcon: Icons.lock_outline,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Senha é obrigatória';
-                        }
-                        if (value!.length < 6) {
-                          return 'Senha deve ter pelo menos 6 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Botão Cadastrar
-                    PrimaryButton(
-                      text: 'Criar Conta',
-                      onPressed: _handleSignup,
-                      isLoading: _isLoading,
-                      width: double.infinity,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Termos
-                    Text(
-                      'Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.',
-                      style: AppTextStyles.caption,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

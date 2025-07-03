@@ -4,7 +4,7 @@ import 'app_colors.dart';
 
 class AppTextStyles {
   // Headings
-  static TextStyle get h1 => GoogleFonts.inter(
+  static TextStyle get h1 => GoogleFonts.poppins(
     fontSize: 32,
     fontWeight: FontWeight.w700,
     color: AppColors.grey900,
@@ -12,7 +12,7 @@ class AppTextStyles {
     letterSpacing: -0.5,
   );
   
-  static TextStyle get h2 => GoogleFonts.inter(
+  static TextStyle get h2 => GoogleFonts.poppins(
     fontSize: 28,
     fontWeight: FontWeight.w600,
     color: AppColors.grey900,
@@ -20,7 +20,7 @@ class AppTextStyles {
     letterSpacing: -0.5,
   );
   
-  static TextStyle get h3 => GoogleFonts.inter(
+  static TextStyle get h3 => GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.grey900,
@@ -28,7 +28,7 @@ class AppTextStyles {
     letterSpacing: -0.3,
   );
   
-  static TextStyle get h4 => GoogleFonts.inter(
+  static TextStyle get h4 => GoogleFonts.poppins(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     color: AppColors.grey900,
@@ -36,7 +36,7 @@ class AppTextStyles {
     letterSpacing: -0.2,
   );
   
-  static TextStyle get h5 => GoogleFonts.inter(
+  static TextStyle get h5 => GoogleFonts.poppins(
     fontSize: 18,
     fontWeight: FontWeight.w500,
     color: AppColors.grey900,
@@ -89,7 +89,7 @@ class AppTextStyles {
   );
   
   // Button text
-  static TextStyle get buttonLarge => GoogleFonts.inter(
+  static TextStyle get buttonLarge => GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
@@ -97,7 +97,7 @@ class AppTextStyles {
     letterSpacing: 0.2,
   );
   
-  static TextStyle get buttonMedium => GoogleFonts.inter(
+  static TextStyle get buttonMedium => GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.white,
@@ -131,7 +131,7 @@ class AppTextStyles {
     letterSpacing: -0.5,
   );
   
-  static TextStyle get price => GoogleFonts.inter(
+  static TextStyle get price => GoogleFonts.poppins(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AppColors.success,
@@ -161,7 +161,7 @@ class AppTextStyles {
   );
   
   // Card titles
-  static TextStyle get cardTitle => GoogleFonts.inter(
+  static TextStyle get cardTitle => GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.grey800,
@@ -170,7 +170,7 @@ class AppTextStyles {
   );
   
   // Stats
-  static TextStyle get statValue => GoogleFonts.inter(
+  static TextStyle get statValue => GoogleFonts.poppins(
     fontSize: 28,
     fontWeight: FontWeight.w700,
     color: AppColors.grey900,
@@ -183,5 +183,34 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     color: AppColors.grey600,
     height: 1.3,
+  );
+  
+  // Appointment styles
+  static TextStyle get appointmentTitle => GoogleFonts.poppins(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primary,
+    height: 1.3,
+  );
+  
+  static TextStyle get appointmentTime => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.grey800,
+    height: 1.2,
+  );
+  
+  static TextStyle get appointmentClient => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: AppColors.grey700,
+    height: 1.4,
+  );
+  
+  static TextStyle get appointmentService => GoogleFonts.inter(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: AppColors.grey600,
+    height: 1.4,
   );
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../widgets/primary_button.dart';
+import '../../../widgets/app_scaffold.dart';
 import '../../../widgets/input_field.dart';
+import '../../../widgets/primary_button.dart';
+import '../../../core/routes/app_routes.dart';
 
 class GeneratePixScreen extends StatefulWidget {
   const GeneratePixScreen({super.key});
@@ -14,190 +15,303 @@ class GeneratePixScreen extends StatefulWidget {
   State<GeneratePixScreen> createState() => _GeneratePixScreenState();
 }
 
-class _GeneratePixScreenState extends State<GeneratePixScreen> {
+class _GeneratePixScreenState extends State<GeneratePixScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _empresaIdController = TextEditingController();
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
-  
   bool _isLoading = false;
-  Map<String, dynamic>? _pixData;
+  bool _pixGerado = false;
+  Map<String, dynamic> _pixData = {};
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
-  Future<void> _generatePix() async {
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
+      ),
+    );
+    
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _valorController.dispose();
+    _descricaoController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _gerarPix() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      // Simular geração de PIX
+      await Future.delayed(const Duration(seconds: 1));
+      
+      final valor = double.parse(_valorController.text.replaceAll(',', '.'));
       
       setState(() {
+        _pixGerado = true;
         _pixData = {
-          'transaction_id': 'abc123def456',
-          'pix_code': '00020126580014BR.GOV.BCB.PIX0136123e4567-e12b-12d1-a456-426655440000520400005303986540599.905802BR5913AGENDEMAIS SAS6009SAO PAULO62070503***6304ABCD',
-          'valor': double.parse(_valorController.text.replaceAll(',', '.')),
-          'vencimento': '2025-08-01',
+          'transaction_id': 'PIX${DateTime.now().millisecondsSinceEpoch}',
+          'pix_code': '00020126580014BR.GOV.BCB.PIX0136a629532e-7693-4846-b028-f142082d7b8752040000530398654041.005802BR5925AgendeMais Tecnologia LTDA6009SAO PAULO62070503***63041D2D',
+          'valor': valor,
+          'vencimento': DateTime.now().add(const Duration(days: 1)).toString().substring(0, 10),
         };
       });
       
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('QR Code PIX gerado com sucesso!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      _animationController.reset();
+      _animationController.forward();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao gerar PIX: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao gerar PIX: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      setState(() => _isLoading = false);
     }
   }
 
-  void _copyPixCode() {
-    if (_pixData?['pix_code'] != null) {
-      Clipboard.setData(ClipboardData(text: _pixData!['pix_code']));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Código PIX copiado!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
+  void _copiarPix() {
+    Clipboard.setData(ClipboardData(text: _pixData['pix_code']));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Código PIX copiado para a área de transferência'),
+        backgroundColor: AppColors.success,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Gerar QR Code PIX', style: AppTextStyles.h4),
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
-        ),
-      ),
+    return AppScaffold(
+      title: 'Gerar QR Code PIX',
+      currentPath: AppRoutes.generatePix,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Dados da Cobrança', style: AppTextStyles.h5),
-                      const SizedBox(height: 24),
-                      
-                      InputField(
-                        label: 'ID da Empresa',
-                        hint: 'Ex: clinica-abc-123',
-                        controller: _empresaIdController,
-                        prefixIcon: Icons.business,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'ID da empresa é obrigatório';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      InputField(
-                        label: 'Valor (R\$)',
-                        hint: '99,90',
-                        controller: _valorController,
-                        keyboardType: TextInputType.number,
-                        prefixIcon: Icons.attach_money,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Valor é obrigatório';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      InputField(
-                        label: 'Descrição',
-                        hint: 'Ex: Mensalidade Julho 2025',
-                        controller: _descricaoController,
-                        prefixIcon: Icons.description,
-                        maxLines: 3,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) {
-                            return 'Descrição é obrigatória';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      
-                      PrimaryButton(
-                        text: 'Gerar QR Code PIX',
-                        icon: Icons.qr_code,
-                        onPressed: _generatePix,
-                        isLoading: _isLoading,
-                        width: double.infinity,
-                      ),
-                    ],
-                  ),
-                ),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: _pixGerado ? _buildPixGerado() : _buildFormulario(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormulario() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gerar QR Code PIX',
+            style: AppTextStyles.h3,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Preencha os dados abaixo para gerar um QR Code PIX para pagamento',
+            style: AppTextStyles.bodyMedium,
+          ),
+          const SizedBox(height: 32),
+          
+          InputField(
+            label: 'Valor (R$)',
+            hint: '0,00',
+            controller: _valorController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.attach_money,
+            isRequired: true,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+[\,\.]?\d{0,2}')),
+            ],
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Informe o valor';
+              }
+              final valorNumerico = double.tryParse(value.replaceAll(',', '.'));
+              if (valorNumerico == null || valorNumerico <= 0) {
+                return 'Valor inválido';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          
+          InputField(
+            label: 'Descrição',
+            hint: 'Ex: Mensalidade Julho 2025',
+            controller: _descricaoController,
+            maxLines: 2,
+            prefixIcon: Icons.description,
+            isRequired: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Informe a descrição';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 32),
+          
+          PrimaryButton(
+            text: 'Gerar QR Code PIX',
+            onPressed: _gerarPix,
+            isLoading: _isLoading,
+            width: double.infinity,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPixGerado() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          'QR Code PIX Gerado',
+          style: AppTextStyles.h3,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Compartilhe o QR Code abaixo para receber o pagamento',
+          style: AppTextStyles.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        
+        // QR Code
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: AppColors.cardShadow,
+          ),
+          child: Column(
+            children: [
+              QrImageView(
+                data: _pixData['pix_code'],
+                version: QrVersions.auto,
+                size: 200,
+                backgroundColor: Colors.white,
+                errorStateBuilder: (context, error) {
+                  return Center(
+                    child: Text(
+                      'Erro ao gerar QR Code: $error',
+                      style: AppTextStyles.error,
+                    ),
+                  );
+                },
               ),
-            ),
-            if (_pixData != null) ...[
-              const SizedBox(height: 24),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Text('QR Code PIX Gerado', style: AppTextStyles.h5),
-                      const SizedBox(height: 24),
-                      
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.grey200),
-                        ),
-                        child: QrImageView(
-                          data: _pixData!['pix_code'],
-                          version: QrVersions.auto,
-                          size: 200,
-                          backgroundColor: AppColors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      PrimaryButton(
-                        text: 'Copiar Código PIX',
-                        icon: Icons.copy,
-                        onPressed: _copyPixCode,
-                        width: double.infinity,
-                        isOutlined: true,
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 16),
+              
+              // Informações do PIX
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.pixBackground,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow('Valor:', 'R\$ ${_valorController.text}'),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('Vencimento:', _pixData['vencimento']),
+                    const SizedBox(height: 8),
+                    _buildInfoRow('ID da Transação:', _pixData['transaction_id']),
+                  ],
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        
+        // Botões
+        Row(
+          children: [
+            Expanded(
+              child: PrimaryButton(
+                text: 'Copiar Código PIX',
+                onPressed: _copiarPix,
+                icon: Icons.copy,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: PrimaryButton(
+                text: 'Gerar Novo',
+                onPressed: () {
+                  setState(() {
+                    _pixGerado = false;
+                    _valorController.clear();
+                    _descricaoController.clear();
+                  });
+                  _animationController.reset();
+                  _animationController.forward();
+                },
+                isOutlined: true,
+              ),
+            ),
           ],
         ),
-      ),
+        const SizedBox(height: 16),
+        PrimaryButton(
+          text: 'Ver Histórico',
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.pixHistory),
+          isSecondary: true,
+          width: double.infinity,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTextStyles.labelMedium,
+        ),
+        Text(
+          value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Cores principais - Inspirado no Trinks
-  static const Color primary = Color(0xFF3D5AF1); // Azul principal
-  static const Color secondary = Color(0xFF22CAAD); // Verde água
-  static const Color tertiary = Color(0xFFF45B69); // Rosa/vermelho
-  static const Color accent = Color(0xFFFFBE0B); // Amarelo
+  static const Color primary = Color(0xFF6C63FF); // Roxo principal
+  static const Color secondary = Color(0xFF836FFF); // Roxo secundário
+  static const Color tertiary = Color(0xFF00C9A7); // Verde água
+  static const Color accent = Color(0xFFFF6584); // Rosa
 
   // Cores neutras
   static const Color white = Color(0xFFFFFFFF);
@@ -22,20 +22,20 @@ class AppColors {
   static const Color grey900 = Color(0xFF1D2333);
 
   // Cores de status
-  static const Color success = Color(0xFF22CAAD); // Verde
+  static const Color success = Color(0xFF00C9A7); // Verde
   static const Color warning = Color(0xFFFFBE0B); // Amarelo
-  static const Color error = Color(0xFFF45B69); // Vermelho
-  static const Color info = Color(0xFF3D5AF1); // Azul
+  static const Color error = Color(0xFFFF6584); // Rosa/vermelho
+  static const Color info = Color(0xFF6C63FF); // Roxo
 
   // Gradientes
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, Color(0xFF5B74F7)],
+    colors: [primary, Color(0xFF836FFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [secondary, Color(0xFF0FDFB7)],
+    colors: [tertiary, Color(0xFF00E6C3)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -54,20 +54,20 @@ class AppColors {
   );
 
   // Cores específicas do PIX
-  static const Color pixGreen = Color(0xFF22CAAD);
+  static const Color pixGreen = Color(0xFF00C9A7);
   static const Color pixBackground = Color(0xFFF0F8F7);
 
   // Sombras
   static List<BoxShadow> cardShadow = [
     BoxShadow(
       // ignore: deprecated_member_use
-      color: black.withOpacity(0.05),
+      color: black.withAlpha(13), // 5% opacity
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
       // ignore: deprecated_member_use
-      color: black.withOpacity(0.03),
+      color: black.withAlpha(8), // 3% opacity
       blurRadius: 25,
       offset: const Offset(0, 10),
     ),
@@ -76,7 +76,7 @@ class AppColors {
   static List<BoxShadow> buttonShadow = [
     BoxShadow(
       // ignore: deprecated_member_use
-      color: primary.withOpacity(0.3),
+      color: primary.withAlpha(76), // 30% opacity
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../widgets/app_scaffold.dart';
+import '../../../widgets/primary_button.dart';
+import '../../../core/routes/app_routes.dart';
 
 class PixHistoryScreen extends StatefulWidget {
   const PixHistoryScreen({super.key});
@@ -10,250 +13,355 @@ class PixHistoryScreen extends StatefulWidget {
   State<PixHistoryScreen> createState() => _PixHistoryScreenState();
 }
 
-class _PixHistoryScreenState extends State<PixHistoryScreen> {
+class _PixHistoryScreenState extends State<PixHistoryScreen> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
-  String _selectedFilter = 'TODOS';
-
-  final List<Map<String, dynamic>> _mockHistory = [
-    {
-      'empresa_id': 'clinica-abc-123',
-      'valor': 99.90,
-      'status': 'PAGO',
-      'vencimento': '2025-07-01',
-      'descricao': 'Mensalidade Julho 2025',
-      'data_pagamento': '2025-06-28',
-    },
-    {
-      'empresa_id': 'barbearia-xyz-456',
-      'valor': 79.90,
-      'status': 'PENDENTE',
-      'vencimento': '2025-07-15',
-      'descricao': 'Mensalidade Julho 2025',
-      'data_pagamento': null,
-    },
-    {
-      'empresa_id': 'salao-beauty-789',
-      'valor': 129.90,
-      'status': 'VENCIDO',
-      'vencimento': '2025-06-30',
-      'descricao': 'Mensalidade Junho 2025',
-      'data_pagamento': null,
-    },
-  ];
+  List<Map<String, dynamic>> _transactions = [];
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  
+  final _currencyFormat = NumberFormat.currency(
+    locale: 'pt_BR',
+    symbol: 'R\$',
+    decimalDigits: 2,
+  );
 
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+    
+    _loadTransactions();
+  }
+  
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
-  Future<void> _loadHistory() async {
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _isLoading = false);
-  }
-
-  List<Map<String, dynamic>> get _filteredHistory {
-    if (_selectedFilter == 'TODOS') return _mockHistory;
-    return _mockHistory
-        .where((item) => item['status'] == _selectedFilter)
-        .toList();
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'PAGO':
-        return AppColors.success;
-      case 'PENDENTE':
-        return AppColors.warning;
-      case 'VENCIDO':
-        return AppColors.error;
-      default:
-        return AppColors.grey500;
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'PAGO':
-        return 'Pago';
-      case 'PENDENTE':
-        return 'Pendente';
-      case 'VENCIDO':
-        return 'Vencido';
-      default:
-        return status;
+  Future<void> _loadTransactions() async {
+    setState(() => _isLoading = true);
+    
+    try {
+      // Simular carregamento de transações
+      await Future.delayed(const Duration(seconds: 1));
+      
+      setState(() {
+        _transactions = [
+          {
+            'id': 'PIX1689524789123',
+            'valor': 99.90,
+            'status': 'PAGO',
+            'data_criacao': '2025-07-01',
+            'data_pagamento': '2025-07-01',
+            'descricao': 'Mensalidade Julho 2025',
+            'cliente': 'Clínica Bella Vista',
+          },
+          {
+            'id': 'PIX1689438965478',
+            'valor': 149.90,
+            'status': 'PAGO',
+            'data_criacao': '2025-06-15',
+            'data_pagamento': '2025-06-15',
+            'descricao': 'Mensalidade Junho 2025',
+            'cliente': 'Barbearia Vintage',
+          },
+          {
+            'id': 'PIX1689352478965',
+            'valor': 99.90,
+            'status': 'PENDENTE',
+            'data_criacao': '2025-07-10',
+            'data_pagamento': null,
+            'descricao': 'Mensalidade Julho 2025',
+            'cliente': 'Salão Beauty Plus',
+          },
+          {
+            'id': 'PIX1689265987412',
+            'valor': 199.90,
+            'status': 'CANCELADO',
+            'data_criacao': '2025-06-28',
+            'data_pagamento': null,
+            'descricao': 'Plano Premium - Junho 2025',
+            'cliente': 'Studio Nail Art',
+          },
+          {
+            'id': 'PIX1689179654789',
+            'valor': 149.90,
+            'status': 'PAGO',
+            'data_criacao': '2025-05-15',
+            'data_pagamento': '2025-05-15',
+            'descricao': 'Mensalidade Maio 2025',
+            'cliente': 'Barbearia Vintage',
+          },
+        ];
+      });
+      
+      _animationController.forward();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao carregar histórico: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Histórico de Cobranças', style: AppTextStyles.h4),
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back),
+    return AppScaffold(
+      title: 'Histórico de PIX',
+      currentPath: AppRoutes.pixHistory,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Histórico de Pagamentos',
+                style: AppTextStyles.h3,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Visualize todos os pagamentos recebidos e pendentes',
+                style: AppTextStyles.bodyMedium,
+              ),
+            ],
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          // Filtros
-          Container(
+        
+        // Filtros
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: AppColors.cardShadow,
+            ),
             child: Row(
               children: [
-                Text('Filtrar por:', style: AppTextStyles.labelMedium),
-                const SizedBox(width: 16),
                 Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: ['TODOS', 'PAGO', 'PENDENTE', 'VENCIDO']
-                          .map((filter) => Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: FilterChip(
-                                  label: Text(filter),
-                                  selected: _selectedFilter == filter,
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      _selectedFilter = filter;
-                                    });
-                                  },
-                                  // ignore: deprecated_member_use
-                                  selectedColor:
-                                      // ignore: deprecated_member_use
-                                      AppColors.primary.withOpacity(0.2),
-                                  checkmarkColor: AppColors.primary,
-                                ),
-                              ))
-                          .toList(),
+                  child: DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      labelStyle: AppTextStyles.labelMedium,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     ),
+                    value: 'TODOS',
+                    items: const [
+                      DropdownMenuItem(value: 'TODOS', child: Text('Todos')),
+                      DropdownMenuItem(value: 'PAGO', child: Text('Pagos')),
+                      DropdownMenuItem(value: 'PENDENTE', child: Text('Pendentes')),
+                      DropdownMenuItem(value: 'CANCELADO', child: Text('Cancelados')),
+                    ],
+                    onChanged: (value) {
+                      // Implementar filtro
+                    },
                   ),
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  onPressed: _loadTransactions,
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Atualizar',
                 ),
               ],
             ),
           ),
-
-          // Lista
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredHistory.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // ignore: prefer_const_constructors
-                            Icon(
-                              Icons.history,
-                              size: 64,
-                              color: AppColors.grey400,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Nenhuma cobrança encontrada',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.grey500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredHistory.length,
-                        itemBuilder: (context, index) {
-                          final item = _filteredHistory[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              leading: Container(
-                                width: 48,
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  // ignore: deprecated_member_use
-                                  color: _getStatusColor(item['status'])
-                                      // ignore: deprecated_member_use
-                                      .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  item['status'] == 'PAGO'
-                                      ? Icons.check_circle
-                                      : item['status'] == 'PENDENTE'
-                                          ? Icons.schedule
-                                          : Icons.error,
-                                  color: _getStatusColor(item['status']),
-                                ),
-                              ),
-                              title: Text(
-                                item['empresa_id'],
-                                style: AppTextStyles.labelLarge,
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    item['descricao'],
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Vencimento: ${item['vencimento']}',
-                                    style: AppTextStyles.caption,
-                                  ),
-                                  if (item['data_pagamento'] != null)
-                                    Text(
-                                      'Pago em: ${item['data_pagamento']}',
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.success,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'R\$ ${item['valor'].toStringAsFixed(2)}',
-                                    style: AppTextStyles.labelLarge.copyWith(
-                                      color: AppColors.success,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      // ignore: deprecated_member_use
-                                      color: _getStatusColor(item['status'])
-                                          // ignore: deprecated_member_use
-                                          .withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      _getStatusText(item['status']),
-                                      style: AppTextStyles.caption.copyWith(
-                                        color: _getStatusColor(item['status']),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+        ),
+        const SizedBox(height: 16),
+        
+        // Lista de transações
+        Expanded(
+          child: _transactions.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.receipt_long,
+                        size: 64,
+                        color: AppColors.grey400,
                       ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhuma transação encontrada',
+                        style: AppTextStyles.bodyLarge,
+                      ),
+                      const SizedBox(height: 24),
+                      PrimaryButton(
+                        text: 'Gerar PIX',
+                        onPressed: () => Navigator.pushNamed(context, AppRoutes.generatePix),
+                      ),
+                    ],
+                  ),
+                )
+              : FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: _transactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = _transactions[index];
+                      return _buildTransactionCard(transaction, index);
+                    },
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionCard(Map<String, dynamic> transaction, int index) {
+    final status = transaction['status'];
+    Color statusColor;
+    IconData statusIcon;
+    
+    switch (status) {
+      case 'PAGO':
+        statusColor = AppColors.success;
+        statusIcon = Icons.check_circle;
+        break;
+      case 'PENDENTE':
+        statusColor = AppColors.warning;
+        statusIcon = Icons.schedule;
+        break;
+      case 'CANCELADO':
+        statusColor = AppColors.error;
+        statusIcon = Icons.cancel;
+        break;
+      default:
+        statusColor = AppColors.grey500;
+        statusIcon = Icons.help;
+    }
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            // Implementar visualização detalhada
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        transaction['cliente'],
+                        style: AppTextStyles.cardTitle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            statusIcon,
+                            size: 16,
+                            color: statusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            status,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: statusColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  transaction['descricao'],
+                  style: AppTextStyles.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _currencyFormat.format(transaction['valor']),
+                      style: AppTextStyles.price.copyWith(
+                        fontSize: 18,
+                      ),
+                    ),
+                    Text(
+                      'Criado em: ${_formatDate(transaction['data_criacao'])}',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+                if (transaction['data_pagamento'] != null) ...[
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Pago em: ${_formatDate(transaction['data_pagamento'])}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
+  }
+  
+  String _formatDate(String dateStr) {
+    final date = DateTime.parse(dateStr);
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 }
