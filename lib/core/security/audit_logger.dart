@@ -15,9 +15,9 @@ class AuditLogger {
       dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );
-  
+
   static String get _baseUrl => '${AppConfig.apiBaseUrl}/audit';
-  
+
   /// Registra um evento de auditoria
   static Future<void> log({
     required String action,
@@ -34,10 +34,10 @@ class AuditLogger {
       'timestamp': DateTime.now().toIso8601String(),
       'metadata': metadata,
     };
-    
+
     // Log local
     _logger.i('AUDIT: ${event['action']} on ${event['resource']}');
-    
+
     try {
       // Envio para API
       await http.post(
@@ -53,13 +53,13 @@ class AuditLogger {
       _storeForLaterSync(event);
     }
   }
-  
+
   /// Armazena eventos para sincronização posterior
   static void _storeForLaterSync(Map<String, dynamic> event) {
     // Implementação para armazenamento local
-    // TODO: Implementar armazenamento local para sincronização posterior
+    // mkdir -p .github\workflows devops\monitoring devops\scaling devops\testing
   }
-  
+
   /// Registra acesso a dados sensíveis
   static Future<void> logSensitiveAccess({
     required String dataType,
@@ -73,7 +73,7 @@ class AuditLogger {
       metadata: {'reason': reason},
     );
   }
-  
+
   /// Registra alteração em dados sensíveis
   static Future<void> logSensitiveModification({
     required String dataType,

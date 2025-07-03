@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/analytics/screens/analytics_dashboard_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/onboarding/screens/ai_onboarding_screen.dart';
 import '../../features/privacy/screens/privacy_center_screen.dart';
+import '../../features/white_label/screens/white_label_config_screen.dart';
+import '../../core/theme/segments/business_segment.dart';
 
 class AppRoutes {
   // Definição de nomes de rotas para acesso fácil
@@ -13,6 +16,8 @@ class AppRoutes {
   static String get generatePix => '/pix/generate';
   static String get pixHistory => '/pix/history';
   static String get privacyCenter => '/privacy';
+  static String get whiteLabel => '/white-label';
+  static String get aiOnboarding => '/onboarding/ai';
   
   static final GoRouter router = GoRouter(
     initialLocation: '/',
@@ -120,6 +125,37 @@ class AppRoutes {
       GoRoute(
         path: '/privacy',
         builder: (context, state) => const PrivacyCenterScreen(),
+      ),
+      
+      // Rotas de white label
+      GoRoute(
+        path: '/white-label',
+        builder: (context, state) {
+          final tenantId = state.uri.queryParameters['tenantId'] ?? 'default';
+          return WhiteLabelConfigScreen(tenantId: tenantId);
+        },
+      ),
+      
+      // Rotas de onboarding
+      GoRoute(
+        path: '/onboarding/ai',
+        builder: (context, state) {
+          final tenantId = state.uri.queryParameters['tenantId'] ?? 'default';
+          final businessName = state.uri.queryParameters['businessName'] ?? 'Meu Negócio';
+          final segmentName = state.uri.queryParameters['segment'] ?? 'generic';
+          
+          // Converte o nome do segmento para o enum
+          final segment = BusinessSegment.values.firstWhere(
+            (s) => s.name == segmentName,
+            orElse: () => BusinessSegment.generic,
+          );
+          
+          return AiOnboardingScreen(
+            tenantId: tenantId,
+            businessName: businessName,
+            segment: segment,
+          );
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
