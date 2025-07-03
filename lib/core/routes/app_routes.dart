@@ -1,52 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/screens/login_screen.dart';
-import '../../features/auth/screens/signup_screen.dart';
-import '../../features/dashboard/screens/dashboard_screen.dart';
-import '../../features/pix/screens/generate_pix_screen.dart';
-import '../../features/pix/screens/pix_history_screen.dart';
-import '../../features/settings/screens/settings_screen.dart';
+import '../../features/analytics/screens/analytics_dashboard_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 
 class AppRoutes {
-  static const String login = '/login';
-  static const String signup = '/signup';
-  static const String dashboard = '/dashboard';
-  static const String generatePix = '/generate-pix';
-  static const String pixHistory = '/pix-history';
-  static const String settings = '/settings';
-
+  // Definição de nomes de rotas para acesso fácil
+  static String get dashboard => '/';
+  static String get login => '/login';
+  static String get signup => '/signup';
+  static String get settings => '/settings';
+  static String get generatePix => '/pix/generate';
+  static String get pixHistory => '/pix/history';
+  
   static final GoRouter router = GoRouter(
-    initialLocation: login,
+    initialLocation: '/',
     routes: [
+      // Rota principal
       GoRoute(
-        path: login,
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        path: '/',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Tela Principal')),
+        ),
+      ),
+      
+      // Rotas de autenticação
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Tela de Login')),
+        ),
+      ),
+      
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Tela de Cadastro')),
+        ),
+      ),
+      
+      // Rotas de agendamentos
+      GoRoute(
+        path: '/appointments',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Lista de Agendamentos')),
+        ),
       ),
       GoRoute(
-        path: signup,
-        name: 'signup',
-        builder: (context, state) => const SignupScreen(),
+        path: '/appointments/:id',
+        builder: (context, state) {
+          final appointmentId = state.pathParameters['id'];
+          return Scaffold(
+            body: Center(child: Text('Detalhes do Agendamento $appointmentId')),
+          );
+        },
       ),
+      
+      // Rotas de clientes
       GoRoute(
-        path: dashboard,
-        name: 'dashboard',
-        builder: (context, state) => const DashboardScreen(),
+        path: '/clients',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Lista de Clientes')),
+        ),
       ),
+      
+      // Rotas de serviços
       GoRoute(
-        path: generatePix,
-        name: 'generate-pix',
-        builder: (context, state) => const GeneratePixScreen(),
+        path: '/services',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Lista de Serviços')),
+        ),
       ),
+      
+      // Rotas de análise
       GoRoute(
-        path: pixHistory,
-        name: 'pix-history',
-        builder: (context, state) => const PixHistoryScreen(),
+        path: '/analytics',
+        builder: (context, state) => const AnalyticsDashboardScreen(),
       ),
+      
+      // Rotas de notificações
       GoRoute(
-        path: settings,
-        name: 'settings',
-        builder: (context, state) => const SettingsScreen(),
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      
+      // Rotas de configurações
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Configurações')),
+        ),
+      ),
+      
+      // Rotas de perfil
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Perfil do Usuário')),
+        ),
+      ),
+      
+      // Rotas de PIX
+      GoRoute(
+        path: '/pix/generate',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Gerar PIX')),
+        ),
+      ),
+      
+      GoRoute(
+        path: '/pix/history',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('Histórico de PIX')),
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -54,22 +119,18 @@ class AppRoutes {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Página não encontrada: ${state.uri.toString()}'),
+            const Text(
+              'Página não encontrada',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(login),
-              child: const Text('Voltar ao Login'),
+              onPressed: () => context.go('/'),
+              child: const Text('Voltar para o início'),
             ),
           ],
         ),
       ),
     ),
-    redirect: (context, state) {
-      // Redirecionar para dashboard se já estiver autenticado
-      // Implementação futura com verificação de autenticação
-      return null;
-    },
   );
 }

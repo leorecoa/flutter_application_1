@@ -1,216 +1,193 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'app_colors.dart';
 
+/// Estilos de texto do aplicativo
 class AppTextStyles {
-  // Headings
-  static TextStyle get h1 => GoogleFonts.poppins(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    color: AppColors.grey900,
-    height: 1.2,
-    letterSpacing: -0.5,
+  /// Título principal
+  static TextStyle get h1 => heading1;
+  
+  /// Título secundário
+  static TextStyle get h2 => heading2;
+  
+  /// Título terciário
+  static TextStyle get h3 => heading3;
+  
+  /// Título quaternário
+  static TextStyle get h4 => heading4;
+  
+  /// Título quinário
+  static TextStyle get h5 => heading5;
+  
+  /// Corpo de texto médio
+  static TextStyle get bodyMedium => body1;
+  
+  /// Corpo de texto grande
+  static TextStyle get bodyLarge => const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
   );
   
-  static TextStyle get h2 => GoogleFonts.poppins(
-    fontSize: 28,
-    fontWeight: FontWeight.w600,
-    color: AppColors.grey900,
+  /// Corpo de texto pequeno
+  static TextStyle get bodySmall => caption;
+  
+  /// Rótulo grande
+  static TextStyle get labelLarge => const TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
     height: 1.3,
-    letterSpacing: -0.5,
   );
   
-  static TextStyle get h3 => GoogleFonts.poppins(
+  /// Rótulo médio
+  static TextStyle get labelMedium => const TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    height: 1.3,
+  );
+  
+  /// Rótulo pequeno
+  static TextStyle get labelSmall => const TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    height: 1.3,
+  );
+  
+  /// Estilo para botão grande
+  static TextStyle get buttonLarge => const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w500,
+    height: 1.5,
+    letterSpacing: 0.5,
+  );
+  
+  /// Estilo para botão médio
+  static TextStyle get buttonMedium => button;
+  
+  /// Estilo para item de navegação ativo
+  static TextStyle get navItemActive => const TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    height: 1.5,
+  );
+  
+  /// Estilo para item de navegação
+  static TextStyle get navItem => const TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
+  );
+  
+  /// Estilo para título de card
+  static TextStyle get cardTitle => const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+  
+  /// Estilo para valores estatísticos
+  static TextStyle get statValue => const TextStyle(
     fontSize: 24,
-    fontWeight: FontWeight.w600,
-    color: AppColors.grey900,
-    height: 1.3,
-    letterSpacing: -0.3,
+    fontWeight: FontWeight.bold,
+    height: 1.2,
   );
   
-  static TextStyle get h4 => GoogleFonts.poppins(
+  /// Estilo para preços
+  static TextStyle get price => const TextStyle(
     fontSize: 20,
-    fontWeight: FontWeight.w600,
-    color: AppColors.grey900,
-    height: 1.4,
-    letterSpacing: -0.2,
+    fontWeight: FontWeight.bold,
+    height: 1.2,
   );
   
-  static TextStyle get h5 => GoogleFonts.poppins(
+  /// Estilo para logo
+  static TextStyle get logo => const TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    height: 1.2,
+    letterSpacing: 0.5,
+  );
+
+  /// Estilo para mensagens de erro
+  static TextStyle get error => const TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
+    color: Colors.red,
+  );
+
+  /// Título principal
+  static TextStyle get heading1 => const TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    height: 1.3,
+  );
+
+  /// Título secundário
+  static TextStyle get heading2 => const TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.bold,
+    height: 1.3,
+  );
+
+  /// Título terciário
+  static TextStyle get heading3 => const TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    height: 1.3,
+  );
+
+  /// Título quaternário
+  static TextStyle get heading4 => const TextStyle(
     fontSize: 18,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey900,
-    height: 1.4,
-    letterSpacing: -0.1,
+    fontWeight: FontWeight.bold,
+    height: 1.3,
   );
-  
-  // Body text
-  static TextStyle get bodyLarge => GoogleFonts.inter(
+
+  /// Título quinário
+  static TextStyle get heading5 => const TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w400,
-    color: AppColors.grey700,
+    fontWeight: FontWeight.bold,
+    height: 1.3,
+  );
+
+  /// Subtítulo
+  static TextStyle get subtitle1 => const TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w500,
     height: 1.5,
   );
-  
-  static TextStyle get bodyMedium => GoogleFonts.inter(
+
+  /// Subtítulo menor
+  static TextStyle get subtitle2 => const TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.grey700,
+    fontWeight: FontWeight.w500,
     height: 1.5,
   );
-  
-  static TextStyle get bodySmall => GoogleFonts.inter(
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    color: AppColors.grey600,
-    height: 1.4,
-  );
-  
-  // Labels
-  static TextStyle get labelLarge => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey800,
-    height: 1.4,
-  );
-  
-  static TextStyle get labelMedium => GoogleFonts.inter(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey700,
-    height: 1.3,
-  );
-  
-  static TextStyle get labelSmall => GoogleFonts.inter(
-    fontSize: 11,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey600,
-    height: 1.3,
-  );
-  
-  // Button text
-  static TextStyle get buttonLarge => GoogleFonts.poppins(
+
+  /// Corpo de texto principal
+  static TextStyle get body1 => const TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AppColors.white,
-    height: 1.2,
-    letterSpacing: 0.2,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
   );
-  
-  static TextStyle get buttonMedium => GoogleFonts.poppins(
+
+  /// Corpo de texto secundário
+  static TextStyle get body2 => const TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: AppColors.white,
-    height: 1.2,
-    letterSpacing: 0.2,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
   );
-  
-  // Caption
-  static TextStyle get caption => GoogleFonts.inter(
+
+  /// Texto pequeno
+  static TextStyle get caption => const TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.w400,
-    color: AppColors.grey500,
-    height: 1.3,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
   );
-  
-  // Overline
-  static TextStyle get overline => GoogleFonts.inter(
-    fontSize: 10,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey500,
-    height: 1.6,
-    letterSpacing: 1.5,
-  );
-  
-  // Special styles
-  static TextStyle get logo => GoogleFonts.poppins(
-    fontSize: 24,
-    fontWeight: FontWeight.w700,
-    color: AppColors.primary,
-    height: 1.2,
-    letterSpacing: -0.5,
-  );
-  
-  static TextStyle get price => GoogleFonts.poppins(
-    fontSize: 24,
-    fontWeight: FontWeight.w700,
-    color: AppColors.success,
-    height: 1.2,
-  );
-  
-  static TextStyle get error => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-    color: AppColors.error,
-    height: 1.4,
-  );
-  
-  // Navigation
-  static TextStyle get navItem => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey700,
-    height: 1.4,
-  );
-  
-  static TextStyle get navItemActive => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: AppColors.primary,
-    height: 1.4,
-  );
-  
-  // Card titles
-  static TextStyle get cardTitle => GoogleFonts.poppins(
+
+  /// Texto de botão
+  static TextStyle get button => const TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: AppColors.grey800,
-    height: 1.4,
-    letterSpacing: -0.1,
-  );
-  
-  // Stats
-  static TextStyle get statValue => GoogleFonts.poppins(
-    fontSize: 28,
-    fontWeight: FontWeight.w700,
-    color: AppColors.grey900,
-    height: 1.2,
-    letterSpacing: -0.5,
-  );
-  
-  static TextStyle get statLabel => GoogleFonts.inter(
-    fontSize: 12,
     fontWeight: FontWeight.w500,
-    color: AppColors.grey600,
-    height: 1.3,
-  );
-  
-  // Appointment styles
-  static TextStyle get appointmentTitle => GoogleFonts.poppins(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: AppColors.primary,
-    height: 1.3,
-  );
-  
-  static TextStyle get appointmentTime => GoogleFonts.poppins(
-    fontSize: 16,
-    fontWeight: FontWeight.w700,
-    color: AppColors.grey800,
-    height: 1.2,
-  );
-  
-  static TextStyle get appointmentClient => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.grey700,
-    height: 1.4,
-  );
-  
-  static TextStyle get appointmentService => GoogleFonts.inter(
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
-    color: AppColors.grey600,
-    height: 1.4,
+    height: 1.5,
+    letterSpacing: 0.5,
   );
 }
