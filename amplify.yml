@@ -3,22 +3,36 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Instalando Flutter SDK"
-        - git clone https://github.com/flutter/flutter.git -b stable
-        - export PATH=`pwd`/flutter/bin:`pwd`/flutter/bin/cache/dart-sdk/bin:$PATH
-        - flutter precache
+        - echo "Configurando ambiente Flutter..."
+        - export FLUTTER_HOME="/root/.flutter"
+        - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
+        - export PATH="$FLUTTER_SDK/bin:$PATH"
+        - if [ -d "$FLUTTER_SDK" ]; then
+            echo "Flutter SDK já existe, atualizando...";
+            cd $FLUTTER_SDK && git pull;
+          else
+            echo "Instalando Flutter SDK...";
+            mkdir -p $FLUTTER_HOME;
+            git clone https://github.com/flutter/flutter.git -b stable $FLUTTER_SDK;
+          fi
+        - flutter config --no-analytics
         - flutter config --enable-web
-        - flutter doctor
+        - flutter doctor -v
+        - flutter --version
     build:
       commands:
-        - echo "Iniciando build Flutter Web"
-        - export PATH=`pwd`/flutter/bin:`pwd`/flutter/bin/cache/dart-sdk/bin:$PATH
+        - echo "Iniciando build do Flutter Web..."
+        - export FLUTTER_HOME="/root/.flutter"
+        - export FLUTTER_SDK="$FLUTTER_HOME/flutter-sdk"
+        - export PATH="$FLUTTER_SDK/bin:$PATH"
+        - flutter clean
         - flutter pub get
-        - flutter build web --release --base-href /
+        - flutter build web --release --web-renderer canvaskit --base-href /
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
   cache:
     paths:
-      - flutter/bin/cache
+      - /root/.flutter/flutter-sdk/**/*
+      - /root/.pub-cache/**/*
