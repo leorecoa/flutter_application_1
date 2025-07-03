@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import '../lib/core/services/auth_service.dart';
+import 'package:agenda_facil/core/services/auth_service.dart';
 
 @GenerateMocks([http.Client])
 import 'auth_service_test.mocks.dart';
@@ -17,8 +17,13 @@ void main() {
 
     test('login should return true on successful response', () async {
       // Arrange
-      final responseJson = '{"accessToken": "test_token", "refreshToken": "refresh_token", "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyJ9.aBcDeFgHiJkLmNoPqRsTuVwXyZ"}';
-      // Configuração do mock não é necessária para o teste estático
+      const responseJson =
+          '{"accessToken": "test_token", "refreshToken": "refresh_token", "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyJ9.aBcDeFgHiJkLmNoPqRsTuVwXyZ"}';
+      when(mockClient.post(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+      )).thenAnswer((_) async => http.Response(responseJson, 200));
 
       // Act
       final result = await AuthService.login('test@example.com', 'password');
@@ -30,19 +35,31 @@ void main() {
 
     test('login should return false on failed response', () async {
       // Arrange
-      // Configuração do mock não é necessária para o teste estático
+      when(mockClient.post(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+      )).thenAnswer(
+          (_) async => http.Response('{"error": "Invalid credentials"}', 401));
 
       // Act
-      final result = await AuthService.login('test@example.com', 'wrong_password');
+      final result =
+          await AuthService.login('test@example.com', 'wrong_password');
 
       // Assert
       expect(result, false);
-      // Não verificamos isAuthenticated aqui
+      expect(AuthService.isAuthenticated, false);
     });
 
     test('logout should clear authentication data', () async {
       // Arrange - login first
-      // Configuração do mock não é necessária para o teste estático
+      const responseJson =
+          '{"accessToken": "test_token", "refreshToken": "refresh_token", "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyJ9.aBcDeFgHiJkLmNoPqRsTuVwXyZ"}';
+      when(mockClient.post(
+        any,
+        headers: anyNamed('headers'),
+        body: anyNamed('body'),
+      )).thenAnswer((_) async => http.Response(responseJson, 200));
       await AuthService.login('test@example.com', 'password');
 
       // Act
