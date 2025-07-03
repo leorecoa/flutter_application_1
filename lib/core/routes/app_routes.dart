@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/analytics/screens/analytics_dashboard_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/privacy/screens/privacy_center_screen.dart';
 
 class AppRoutes {
   // Definição de nomes de rotas para acesso fácil
@@ -11,6 +12,7 @@ class AppRoutes {
   static String get settings => '/settings';
   static String get generatePix => '/pix/generate';
   static String get pixHistory => '/pix/history';
+  static String get privacyCenter => '/privacy';
   
   static final GoRouter router = GoRouter(
     initialLocation: '/',
@@ -112,6 +114,12 @@ class AppRoutes {
         builder: (context, state) => const Scaffold(
           body: Center(child: Text('Histórico de PIX')),
         ),
+      ),
+      
+      // Rotas de privacidade
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyCenterScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
