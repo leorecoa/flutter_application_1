@@ -28,7 +28,7 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 1024;
-    final isTablet = size.width > 768 && size.width <= 1024;
+    // final isTablet = size.width > 768 && size.width <= 1024;
     final isMobile = size.width <= 768;
 
     return Scaffold(

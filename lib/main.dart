@@ -38,13 +38,6 @@ class AgendeMaisApp extends StatelessWidget {
           scrolledUnderElevation: 1,
           centerTitle: true,
         ),
-        cardTheme: CardTheme(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          color: AppColors.white,
-        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             elevation: 0,
