@@ -2,6 +2,9 @@ class AuthService {
   static bool _isAuthenticated = false;
   static String _userId = '';
   static String _accessToken = '';
+  
+  // Ignorando aviso de campo não utilizado, pois será usado em implementações futuras
+  // ignore: unused_field
   static String _refreshToken = '';
   
   static bool get isAuthenticated => _isAuthenticated;

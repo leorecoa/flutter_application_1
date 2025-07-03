@@ -34,6 +34,8 @@ jobs:
         
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        if: ${{ github.repository_owner == 'leorecoa' }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN || '' }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage/lcov.info
+          fail_ci_if_error: false

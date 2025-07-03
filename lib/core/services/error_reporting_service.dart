@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import '../config/aws_config.dart';
 import 'monitoring_service.dart';
 
 /// Serviço para captura e relatório de erros

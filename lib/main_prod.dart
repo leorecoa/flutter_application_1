@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/routes/app_routes.dart';
 import 'core/theme/app_colors.dart';
 import 'core/services/error_reporting_service.dart';
-import 'core/config/aws_config.dart';
+// import 'core/config/aws_config.dart'; // Será usado na implementação completa
 
 /// Ponto de entrada para o ambiente de produção
 void main() async {

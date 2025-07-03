@@ -1,12 +1,10 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import '../config/aws_config.dart';
-import '../config/app_config.dart';
 
 class MonitoringService {
   static final Logger _logger = Logger();
-  static const String _cloudwatchEndpoint = 'https://monitoring.us-east-1.amazonaws.com/';
+  // Endpoint para CloudWatch (será usado na implementação completa)
+  // static const String _cloudwatchEndpoint = 'https://monitoring.us-east-1.amazonaws.com/';
   
   // Registra métricas no CloudWatch
   static Future<bool> logMetric({
@@ -16,7 +14,8 @@ class MonitoringService {
     Map<String, String>? dimensions,
   }) async {
     try {
-      final Map<String, dynamic> metricData = {
+      // Dados da métrica (serão usados na implementação completa)
+      final Map<String, dynamic> _ = {
         'MetricData': [
           {
             'MetricName': metricName,
@@ -72,7 +71,8 @@ class MonitoringService {
     Map<String, dynamic> eventData,
   ) async {
     try {
-      final event = {
+      // Dados do evento (serão usados na implementação completa)
+      final _ = {
         'userId': userId,
         'eventName': eventName,
         'timestamp': DateTime.now().toUtc().toIso8601String(),

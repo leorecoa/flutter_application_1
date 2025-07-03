@@ -1,16 +1,31 @@
-name: Flutter Web Deploy
+name: Flutter Web Deploy to Amplify
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
+  id-token: write
 
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+      
+      - name: Install Amplify CLI
+        run: npm install -g @aws-amplify/cli
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -20,38 +35,24 @@ jobs:
       
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Enable web
-        run: flutter config --enable-web
-        
+      
+      - name: Run tests
+        run: flutter test
+      
       - name: Build web
         run: flutter build web --release
-        
+      
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          
-      - name: Deploy to S3
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      
+      - name: Deploy to Amplify
+        env:
+          AMPLIFY_APP_ID: ${{ secrets.AMPLIFY_APP_ID || 'd31iho7gw23enq' }}
+          AMPLIFY_BRANCH: ${{ secrets.AMPLIFY_BRANCH || 'main' }}
         run: |
-          aws s3 sync build/web/ s3://agendafacil-web/ --delete
-          
-      - name: Check CloudFront Distribution ID
-        id: check-cloudfront
-        run: |
-          if [ -n "${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}" ]; then
-            echo "has_distribution_id=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_distribution_id=false" >> $GITHUB_OUTPUT
-          fi
-          
-      - name: Invalidate CloudFront
-        if: steps.check-cloudfront.outputs.has_distribution_id == 'true'
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-          
-      - name: Skip CloudFront invalidation
-        if: steps.check-cloudfront.outputs.has_distribution_id != 'true'
-        run: echo "Skipping CloudFront invalidation - distribution ID not configured"
+          echo "Deploying to Amplify app: $AMPLIFY_APP_ID, branch: $AMPLIFY_BRANCH"
+          amplify publish --yes
