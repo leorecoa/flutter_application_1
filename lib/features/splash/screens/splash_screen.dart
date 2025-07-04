@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 30),
                   const Text(
-                    'AgendaFácil',
+                    'AGENDEMAIS',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -81,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Conectando seu negócio com o futuro...',
+                    'Seu negócio sempre em primeiro lugar',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white70,

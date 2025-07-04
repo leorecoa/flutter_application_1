@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/services/api_service.dart';
 import 'features/splash/screens/splash_screen.dart';
 import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/register_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/pix/screens/pix_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
@@ -23,7 +24,7 @@ class AgendaFacilApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'AgendaFácil SaaS',
+      title: 'AGENDEMAIS',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
@@ -47,6 +48,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
     ),
     GoRoute(
       path: '/dashboard',
