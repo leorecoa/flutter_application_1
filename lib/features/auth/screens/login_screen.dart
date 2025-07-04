@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const Icon(Icons.calendar_today, size: 80, color: Colors.blue),
               const SizedBox(height: 32),
               const Text(
-                'Bem-vindo ao AgendaFácil',
+                'Bem-vindo ao AgendaFácil SaaS',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
