@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../shared/models/service_model.dart';
+
 import '../../../core/theme/luxury_theme.dart';
+import '../../../shared/models/service_model.dart';
 
 class AddServiceDialog extends StatefulWidget {
   final ServiceModel? service;

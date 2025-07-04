@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../shared/widgets/admin_layout.dart';
-import '../../appointments/services/agendamento_service.dart';
-import '../../../shared/widgets/dashboard_card.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
+import '../../../shared/widgets/dashboard_card.dart';
+import '../../appointments/services/agendamento_service.dart';
 import '../models/payment_model.dart';
 import '../services/payment_service.dart';
 import '../widgets/pagamentos_table.dart';
-import '../widgets/simple_payment_form.dart';
 import '../widgets/recibo_modal.dart';
+import '../widgets/simple_payment_form.dart';
 
 class FinanceiroScreen extends StatefulWidget {
   const FinanceiroScreen({super.key});

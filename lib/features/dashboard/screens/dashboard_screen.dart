@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/routes/app_routes.dart';
-import '../../../widgets/primary_button.dart';
 import '../../../widgets/app_scaffold.dart';
+import '../../../widgets/primary_button.dart';
 import '../widgets/dashboard_card.dart';
 
 class DashboardScreen extends StatefulWidget {

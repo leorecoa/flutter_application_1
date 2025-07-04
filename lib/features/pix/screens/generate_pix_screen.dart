@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../widgets/app_scaffold.dart';
 import '../../../widgets/input_field.dart';
 import '../../../widgets/primary_button.dart';
-import '../../../core/routes/app_routes.dart';
 
 class GeneratePixScreen extends StatefulWidget {
   const GeneratePixScreen({super.key});

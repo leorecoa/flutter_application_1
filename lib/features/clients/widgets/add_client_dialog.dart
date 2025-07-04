@@ -107,8 +107,9 @@ class _AddClientDialogState extends State<AddClientDialog> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value?.isEmpty == true)
+                          if (value?.isEmpty == true) {
                             return 'Campo obrigatório';
+                          }
                           if (!value!.contains('@')) return 'Email inválido';
                           return null;
                         },

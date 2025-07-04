@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:http/http.dart' as http;
+
 import '../../../core/config/app_config.dart';
 import '../../../core/routes/app_routes.dart';
 import '../models/notification_model.dart';
@@ -22,7 +24,7 @@ class NotificationService {
 
     const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
-      requestBadgePermission: true,
+      
     );
 
     const InitializationSettings initializationSettings =

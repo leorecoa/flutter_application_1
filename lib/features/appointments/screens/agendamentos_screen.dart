@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../shared/widgets/admin_layout.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
 import '../models/agendamento_model.dart';
 import '../services/agendamento_service.dart';
 import '../widgets/agendamento_table.dart';

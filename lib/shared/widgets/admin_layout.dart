@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'admin_sidebar.dart';
-import 'admin_header.dart';
+
 import '../../core/theme/trinks_theme.dart';
+import 'admin_header.dart';
+import 'admin_sidebar.dart';
 
 class AdminLayout extends StatelessWidget {
   final Widget child;

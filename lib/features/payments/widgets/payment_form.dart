@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/trinks_theme.dart';
-import '../models/payment_model.dart';
-import '../services/payment_service.dart';
 import '../../appointments/models/agendamento_model.dart';
 import '../../appointments/services/agendamento_service.dart';
+import '../models/payment_model.dart';
+import '../services/payment_service.dart';
 
 class PaymentForm extends StatefulWidget {
   final Payment? payment;
