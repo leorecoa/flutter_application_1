@@ -29,19 +29,32 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await _apiService.post('/auth/login', {
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      });
-
-      if (response['token'] != null) {
-        _apiService.setAuthToken(response['token']);
-        if (mounted) context.go('/dashboard');
+      // Simula login com dados demo
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Credenciais demo
+      if (_emailController.text == 'demo@agendafacil.com' && 
+          _passwordController.text == '123456') {
+        _apiService.setAuthToken('demo-token-12345');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login realizado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.go('/dashboard');
+        }
+      } else {
+        throw Exception('Credenciais inválidas');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro no login: $e')),
+          SnackBar(
+            content: Text('Erro no login: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -75,7 +88,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 'Bem-vindo ao AgendaFácil',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: const Column(
+                  children: [
+                    Text(
+                      '🎆 DEMO - Use estas credenciais:',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                    ),
+                    SizedBox(height: 4),
+                    Text('Email: demo@agendafacil.com'),
+                    Text('Senha: 123456'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(

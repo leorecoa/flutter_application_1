@@ -22,10 +22,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     try {
-      final response = await _apiService.get('/dashboard/stats');
+      await Future.delayed(const Duration(seconds: 1));
+      
+      final mockStats = {
+        'appointmentsToday': 12,
+        'totalClients': 248,
+        'monthlyRevenue': 15420.50,
+        'activeServices': 8,
+        'weeklyGrowth': 12.5,
+        'satisfactionRate': 4.8,
+        'nextAppointment': {
+          'client': 'Maria Silva',
+          'service': 'Corte + Escova',
+          'time': '14:30',
+        },
+      };
+      
       if (mounted) {
         setState(() {
-          _stats = response;
+          _stats = mockStats;
           _isLoading = false;
         });
       }
@@ -98,7 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         _buildStatCard(
                           'Receita do Mês',
-                          'R\$ ${_stats?['monthlyRevenue']?.toString() ?? '0,00'}',
+                          'R\$ ${(_stats?['monthlyRevenue'] ?? 0).toStringAsFixed(2).replaceAll('.', ',')}',
                           Icons.attach_money,
                           Colors.orange,
                         ),
@@ -108,8 +123,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Icons.build,
                           Colors.purple,
                         ),
+                        _buildStatCard(
+                          'Crescimento Semanal',
+                          '+${_stats?['weeklyGrowth']?.toString() ?? '0'}%',
+                          Icons.trending_up,
+                          Colors.teal,
+                        ),
+                        _buildStatCard(
+                          'Satisfação',
+                          '${_stats?['satisfactionRate']?.toString() ?? '0'}/5 ⭐',
+                          Icons.star,
+                          Colors.amber,
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 24),
+                    if (_stats?['nextAppointment'] != null) ...[
+                      const Text(
+                        'Próximo Agendamento',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Card(
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: Colors.blue,
+                            child: Icon(Icons.person, color: Colors.white),
+                          ),
+                          title: Text(_stats!['nextAppointment']['client']),
+                          subtitle: Text(_stats!['nextAppointment']['service']),
+                          trailing: Text(
+                            _stats!['nextAppointment']['time'],
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 32),
                     const Text(
                       'Ações Rápidas',
@@ -123,22 +176,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _buildActionButton(
                           'Novo Agendamento',
                           Icons.add_circle,
-                          () => _showComingSoon('Novo Agendamento'),
+                          () => _showNewAppointmentDialog(),
                         ),
                         _buildActionButton(
                           'Gerenciar Clientes',
                           Icons.people_outline,
-                          () => _showComingSoon('Gerenciar Clientes'),
+                          () => _showClientsDialog(),
                         ),
                         _buildActionButton(
                           'Relatórios',
                           Icons.analytics,
-                          () => _showComingSoon('Relatórios'),
+                          () => _showReportsDialog(),
                         ),
                         _buildActionButton(
                           'Configurações',
                           Icons.settings,
-                          () => _showComingSoon('Configurações'),
+                          () => context.push('/settings'),
                         ),
                       ],
                     ),
@@ -188,9 +241,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showComingSoon(String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature em breve!')),
+  void _showNewAppointmentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Novo Agendamento'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Cliente',
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Serviço',
+                prefixIcon: Icon(Icons.build),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Data e Hora',
+                prefixIcon: Icon(Icons.schedule),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Agendamento criado com sucesso!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClientsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clientes'),
+        content: SizedBox(
+          width: 400,
+          height: 300,
+          child: ListView(
+            children: const [
+              ListTile(
+                leading: CircleAvatar(child: Text('MS')),
+                title: Text('Maria Silva'),
+                subtitle: Text('(11) 99999-9999'),
+                trailing: Icon(Icons.edit),
+              ),
+              ListTile(
+                leading: CircleAvatar(child: Text('JS')),
+                title: Text('João Santos'),
+                subtitle: Text('(11) 88888-8888'),
+                trailing: Icon(Icons.edit),
+              ),
+              ListTile(
+                leading: CircleAvatar(child: Text('AL')),
+                title: Text('Ana Lima'),
+                subtitle: Text('(11) 77777-7777'),
+                trailing: Icon(Icons.edit),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Novo Cliente'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Relatórios'),
+        content: SizedBox(
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.calendar_month),
+                title: const Text('Relatório Mensal'),
+                subtitle: const Text('Agendamentos e receita'),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gerando relatório mensal...')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.people),
+                title: const Text('Relatório de Clientes'),
+                subtitle: const Text('Lista completa de clientes'),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gerando relatório de clientes...')),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.attach_money),
+                title: const Text('Relatório Financeiro'),
+                subtitle: const Text('Receitas e despesas'),
+                onTap: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gerando relatório financeiro...')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
     );
   }
 }
