@@ -3,9 +3,12 @@
     "awscloudformation": {
       "AuthRoleName": "amplify-agendafacil-dev-authRole",
       "UnauthRoleName": "amplify-agendafacil-dev-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::400621361850:role/amplify-agendafacil-dev-authRole",
-      "UnauthRoleArn": "arn:aws:iam::400621361850:role/amplify-agendafacil-dev-unauthRole",
-      "Region": "us-east-1"
+      "AuthRoleArn": "arn:aws:iam::ACCOUNT:role/amplify-agendafacil-dev-authRole",
+      "UnauthRoleArn": "arn:aws:iam::ACCOUNT:role/amplify-agendafacil-dev-unauthRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-agendafacil-dev-deployment",
+      "StackName": "amplify-agendafacil-dev",
+      "StackId": "arn:aws:cloudformation:us-east-1:ACCOUNT:stack/amplify-agendafacil-dev/uuid"
     }
   }
 }
