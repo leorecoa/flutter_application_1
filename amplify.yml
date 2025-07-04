@@ -1,14 +1,18 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - npm install -g serve
-    build:
-      commands:
-        - mkdir -p build/web
-        - echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>AgendaFácil</title><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{font-family:sans-serif;margin:0;padding:20px;text-align:center;background:#f5f5f5;}h1{color:#2196F3;}p{margin:20px 0;}</style></head><body><h1>AgendaFácil</h1><p>Aplicativo em manutenção. Voltaremos em breve!</p></body></html>' > build/web/index.html
-  artifacts:
-    baseDirectory: build/web
-    files:
-      - '**/*'
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - flutter pub get
+        build:
+          commands:
+            - flutter build web --release
+      artifacts:
+        baseDirectory: build/web
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - ~/.pub-cache/**/*

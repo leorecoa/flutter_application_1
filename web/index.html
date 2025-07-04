@@ -12,70 +12,22 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
   <title>AgendaFácil SaaS</title>
   <link rel="manifest" href="manifest.json">
-  <script>
-    var serviceWorkerVersion = null;
-    var scriptLoaded = false;
-    function loadMainDartJs() {
-      if (scriptLoaded) {
-        return;
-      }
-      scriptLoaded = true;
-      var scriptTag = document.createElement('script');
-      scriptTag.src = 'main.dart.js';
-      scriptTag.type = 'application/javascript';
-      document.body.append(scriptTag);
-    }
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js?v=' + serviceWorkerVersion);
-      });
-    }
-  </script>
 </head>
 <body>
-  <div id="loading" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    z-index: 9999;
-  ">
-    <div style="font-size: 48px; margin-bottom: 20px;">📅</div>
-    <h1 style="margin: 0; font-size: 32px; font-weight: 300;">AgendaFácil</h1>
-    <p style="margin: 10px 0; opacity: 0.8;">Sistema de Agendamento Profissional</p>
-    <div style="
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-top: 20px;
-    "></div>
-  </div>
-  
-  <style>
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-
+  <script src="flutter.js" defer></script>
   <script>
-    window.addEventListener('flutter-first-frame', function () {
-      document.getElementById('loading').style.display = 'none';
+    window.addEventListener('load', function(ev) {
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
     });
-    
-    loadMainDartJs();
   </script>
 </body>
 </html>

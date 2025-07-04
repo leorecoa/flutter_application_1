@@ -27,9 +27,6 @@ jobs:
         with:
           node-version: '16'
       
-      - name: Install Amplify CLI
-        run: npm install -g @aws-amplify/cli
-      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -54,5 +51,10 @@ jobs:
       
       - name: Deploy to Amplify
         run: |
-          echo "Deploying to Amplify app: d31iho7gw23enq, branch: main"
-          amplify publish --yes
+          cd build/web
+          zip -r ../../deploy.zip .
+          cd ../..
+          aws amplify start-deployment \
+            --app-id d31iho7gw23enq \
+            --branch-name main \
+            --source-url deploy.zip
