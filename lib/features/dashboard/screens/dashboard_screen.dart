@@ -192,6 +192,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           () => _showReportsDialog(),
                         ),
                         _buildActionButton(
+                          'PIX Pagamentos',
+                          Icons.pix,
+                          () => context.push('/pix'),
+                        ),
+                        _buildActionButton(
                           'Configurações',
                           Icons.settings,
                           () => context.push('/settings'),
