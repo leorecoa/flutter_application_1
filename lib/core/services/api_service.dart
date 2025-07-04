@@ -4,6 +4,61 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static String get baseUrl => 'https://dy2yuasirk.execute-api.us-east-1.amazonaws.com/dev';
   
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+  
+  String? _authToken;
+  
+  String? get authToken => _authToken;
+  bool get isAuthenticated => _authToken != null;
+  String get currentRegion => 'us-east-1';
+  
+  void setAuthToken(String token) {
+    _authToken = token;
+  }
+  
+  void clearAuthToken() {
+    _authToken = null;
+  }
+  
+  Future<void> init() async {
+    // Initialize service
+  }
+  
+  Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl$path'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      },
+      body: jsonEncode(data),
+    );
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('API Error: ${response.statusCode}');
+    }
+  }
+  
+  Future<Map<String, dynamic>> get(String path) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl$path'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      },
+    );
+    
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('API Error: ${response.statusCode}');
+    }
+  }
+  
   static Future<Map<String, dynamic>> generatePix({
     required String empresaId,
     required double valor,

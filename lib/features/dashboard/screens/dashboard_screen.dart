@@ -52,7 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.public),
-            onPressed: () => context.push('/settings/region'),
+            onPressed: () => context.push('/settings'),
             tooltip: 'Região: ${_apiService.currentRegion}',
           ),
           IconButton(

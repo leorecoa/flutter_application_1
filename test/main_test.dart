@@ -11,9 +11,9 @@ void main() {
             primarySwatch: Colors.blue,
             useMaterial3: true,
           ),
-          home: const Scaffold(
-            appBar: AppBar(title: Text('AgendaFácil')),
-            body: Center(
+          home: Scaffold(
+            appBar: AppBar(title: const Text('AgendaFácil')),
+            body: const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -32,7 +32,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('Theme should be applied correctly', (WidgetTester tester) async {
+    testWidgets('Theme should be applied correctly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -47,21 +48,22 @@ void main() {
 
       final BuildContext context = tester.element(find.byType(Scaffold));
       final ThemeData theme = Theme.of(context);
-      
+
       expect(theme.useMaterial3, true);
       expect(theme.primaryColor, isNotNull);
     });
 
-    testWidgets('Scaffold should have proper structure', (WidgetTester tester) async {
+    testWidgets('Scaffold should have proper structure',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             appBar: PreferredSize(
-              preferredSize: Size.fromHeight(56),
-              child: AppBar(title: Text('Test App')),
+              preferredSize: const Size.fromHeight(56),
+              child: AppBar(title: const Text('Test App')),
             ),
-            body: Center(child: Text('Content')),
-            floatingActionButton: FloatingActionButton(
+            body: const Center(child: Text('Content')),
+            floatingActionButton: const FloatingActionButton(
               onPressed: null,
               child: Icon(Icons.add),
             ),

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'core/config/multi_region_config.dart';
 import 'core/services/api_service.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/dashboard/screens/dashboard_screen.dart';
-import 'features/settings/screens/region_selector_screen.dart';
+import 'features/settings/screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,8 +42,8 @@ final _router = GoRouter(
       builder: (context, state) => const DashboardScreen(),
     ),
     GoRoute(
-      path: '/settings/region',
-      builder: (context, state) => const RegionSelectorScreen(),
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
 );

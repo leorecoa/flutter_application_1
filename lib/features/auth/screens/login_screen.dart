@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.public),
-            onPressed: () => context.push('/settings/region'),
+            onPressed: () => context.push('/settings'),
             tooltip: 'Selecionar Região',
           ),
         ],
