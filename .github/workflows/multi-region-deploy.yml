@@ -226,6 +226,7 @@ jobs:
     if: always()
     steps:
       - name: Send notification
+        if: ${{ secrets.SLACK_WEBHOOK != '' }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

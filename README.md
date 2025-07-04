@@ -1,7 +1,9 @@
-# 🏢 AgendaFácil SaaS - Sistema de Agendamento Multi-Tenant
+# AgendaFácil SaaS - Sistema de Agendamento Multi-Tenant
 
-[![Deploy Status](https://github.com/user/agenda-facil/workflows/Deploy/badge.svg)](https://github.com/user/agenda-facil/actions)
-[![Coverage](https://codecov.io/gh/user/agenda-facil/branch/main/graph/badge.svg)](https://codecov.io/gh/user/agenda-facil)
+[![Build & Deploy](https://github.com/leorecoa/flutter_application_1/actions/workflows/flutter-amplify-deploy.yml/badge.svg)](https://github.com/leorecoa/flutter_application_1/actions/workflows/flutter-amplify-deploy.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=leorecoa_flutter_application_1&metric=alert_status)](https://sonarcloud.io/dashboard?id=leorecoa_flutter_application_1)
+[![Coverage](https://codecov.io/gh/leorecoa/flutter_application_1/branch/main/graph/badge.svg)](https://codecov.io/gh/leorecoa/flutter_application_1)
+[![Security Tests](https://github.com/leorecoa/flutter_application_1/actions/workflows/performance-security.yml/badge.svg)](https://github.com/leorecoa/flutter_application_1/actions/workflows/performance-security.yml)
 
 Sistema completo de agendamento profissional com arquitetura serverless, multi-tenant e escalabilidade global.
 
@@ -77,163 +79,26 @@ POST /auth/register
 }
 ```
 
-### **Tenant Management**
-```bash
-# Criar tenant (após login)
-POST /tenants/create
-Authorization: Bearer <jwt-token>
-{
-  "name": "Minha Empresa",
-  "businessType": "salon"
-}
+## 🌐 **MULTI-REGIÃO**
 
-# Configurações
-GET /tenants/config
-PUT /tenants/config
-{
-  "name": "Nome Atualizado",
-  "theme": {
-    "primaryColor": "#ff0000"
-  }
-}
-```
+O sistema está implantado em múltiplas regiões da AWS para garantir alta disponibilidade e baixa latência:
 
-### **Serviços**
-```bash
-# Listar serviços
-GET /services
-Authorization: Bearer <jwt-token>
+- **Região Primária**: US East (N. Virginia)
+- **Região Secundária**: US West (Oregon)
+- **Regiões Adicionais**: South America (São Paulo), Europe (Ireland), Asia Pacific (Tokyo)
 
-# Criar serviço
-POST /services
-{
-  "name": "Corte de Cabelo",
-  "price": 25.00,
-  "duration": 30,
-  "description": "Corte masculino"
-}
-```
+Para mais detalhes sobre a implementação multi-região, consulte [README-MULTI-REGION.md](README-MULTI-REGION.md).
 
-### **Relatórios**
-```bash
-# Relatório financeiro
-GET /relatorios/financeiro?startDate=2024-01-01&endDate=2024-01-31&groupBy=day
+## 🔄 **CI/CD**
 
-# Exportar relatório
-POST /relatorios/export
-{
-  "reportType": "financeiro",
-  "format": "csv",
-  "params": {
-    "startDate": "2024-01-01",
-    "endDate": "2024-01-31"
-  }
-}
-```
+O projeto utiliza GitHub Actions para automação de CI/CD com:
 
-### **Admin (Super Admin Only)**
-```bash
-# Listar todos os tenants
-GET /admin/tenants
-Authorization: Bearer <super-admin-jwt>
+- **Testes Automatizados**: Execução de testes unitários e de integração
+- **Análise de Qualidade**: Integração com SonarCloud para métricas de qualidade
+- **Verificação de Cobertura**: Mínimo de 70% de cobertura de código
+- **Deploy Automático**: Implantação automática no AWS Amplify após testes bem-sucedidos
 
-# Estatísticas globais
-GET /admin/stats
-
-# Desabilitar tenant
-PATCH /admin/tenants/disable
-{
-  "tenantId": "uuid",
-  "reason": "Violação de política"
-}
-```
-
-## 🧪 **TESTES**
-
-### **Executar Testes**
-```bash
-cd backend
-
-# Todos os testes
-npm test
-
-# Com coverage
-npm run test:coverage
-
-# Testes específicos
-npm test -- auth.test.js
-npm test -- tenant.test.js
-npm test -- admin.test.js
-```
-
-### **Exemplo de JWT para Testes**
-```javascript
-// Mock JWT payload
-{
-  "sub": "user-123",
-  "email": "test@example.com",
-  "custom:tenantId": "tenant-456", 
-  "custom:plan": "pro",
-  "cognito:groups": ["admin"]
-}
-```
-
-## 🔧 **SCRIPTS ÚTEIS**
-
-### **Deploy**
-```bash
-# Deploy dev
-./scripts/deploy.sh dev
-
-# Deploy prod  
-./scripts/deploy.sh prod
-
-# Deploy via CI/CD
-git push origin develop  # → dev
-git push origin main     # → prod
-```
-
-### **Monitoramento**
-```bash
-# Análise de custos
-node scripts/cost-monitor.js
-
-# Logs em tempo real
-aws logs tail /aws/lambda/agenda-facil-dev-AuthFunction --follow
-
-# Métricas
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/Lambda \
-  --metric-name Invocations \
-  --dimensions Name=FunctionName,Value=agenda-facil-dev-AuthFunction \
-  --start-time 2024-01-01T00:00:00Z \
-  --end-time 2024-01-02T00:00:00Z \
-  --period 3600 \
-  --statistics Sum
-```
-
-## 🏢 **MULTI-TENANT**
-
-### **Isolamento de Dados**
-```
-TENANT#uuid#SERVICES → SERVICE#id
-TENANT#uuid#APPOINTMENTS → APPOINTMENT#id  
-TENANT#uuid → CONFIG
-TENANT#uuid → USER#userId
-```
-
-### **Planos e Quotas**
-- **Free**: 50 agendamentos/mês
-- **Pro**: Ilimitado
-- **Enterprise**: Recursos customizados
-
-### **Custom Attributes Cognito**
-```json
-{
-  "custom:tenantId": "uuid-do-tenant",
-  "custom:plan": "free|pro|enterprise"
-}
-```
+Para mais detalhes sobre a configuração de CI/CD, consulte [README-CICD.md](README-CICD.md).
 
 ## 📊 **MONITORAMENTO**
 
@@ -247,116 +112,6 @@ TENANT#uuid → USER#userId
 - Erros > 5 em 1 minuto
 - Duração > 5 segundos  
 - Falhas de invocação
-
-### **Métricas Customizadas**
-```javascript
-logger.metric('appointment_created', 1, 'Count', {
-  tenantId: 'uuid',
-  plan: 'pro'
-});
-```
-
-## 🔐 **SEGURANÇA**
-
-### **Autenticação**
-- Cognito User Pool com MFA opcional
-- JWT com custom claims
-- Política de senha: 8+ chars, símbolos, números
-
-### **Autorização**  
-- API Gateway Authorizer
-- Validação JWT manual com JWKS
-- Middleware multi-tenant
-
-### **IAM Least Privilege**
-```yaml
-AuthFunction:
-  - dynamodb:PutItem (UsersTable only)
-  - cognito-idp:AdminCreateUser
-
-ServicesFunction:  
-  - dynamodb:* (ServicesTable only)
-```
-
-## 🌍 **ESCALABILIDADE**
-
-### **DynamoDB Auto Scaling**
-- Read: 5-100 RCU
-- Write: 5-100 WCU
-- GSI scaling automático
-
-### **Lambda Provisioned Concurrency**
-- AuthFunction: 10 instâncias
-- Endpoints críticos otimizados
-
-### **CloudFront**
-- Cache global para frontend
-- Certificado SSL automático
-
-## 📁 **ESTRUTURA DO PROJETO**
-
-```
-agenda-facil/
-├── backend/
-│   ├── template.yaml
-│   ├── samconfig.toml
-│   ├── lambda/
-│   │   ├── auth/
-│   │   ├── tenant/
-│   │   ├── admin/
-│   │   ├── services/
-│   │   ├── appointments/
-│   │   ├── booking/
-│   │   ├── relatorio/
-│   │   └── shared/
-│   ├── tests/
-│   └── scripts/
-├── frontend/
-│   ├── lib/
-│   │   ├── features/
-│   │   ├── core/
-│   │   └── shared/
-│   └── web/
-├── .github/workflows/
-└── docs/
-```
-
-## 🚀 **DEPLOY PRODUÇÃO**
-
-### **Pré-requisitos**
-- AWS CLI configurado
-- SAM CLI instalado
-- Node.js 18+
-- Flutter SDK
-
-### **Variáveis de Ambiente**
-```bash
-# GitHub Secrets
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY  
-AWS_ACCESS_KEY_ID_PROD
-AWS_SECRET_ACCESS_KEY_PROD
-SNYK_TOKEN
-```
-
-### **Domínio Customizado**
-```bash
-# Certificado SSL
-aws acm request-certificate \
-  --domain-name api.agendafacil.com \
-  --validation-method DNS
-
-# API Gateway Custom Domain
-aws apigateway create-domain-name \
-  --domain-name api.agendafacil.com \
-  --certificate-arn arn:aws:acm:...
-```
-
-## 📞 **SUPORTE**
-
-- **Documentação**: [docs.agendafacil.com](https://docs.agendafacil.com)
-- **Issues**: [GitHub Issues](https://github.com/user/agenda-facil/issues)
-- **Email**: suporte@agendafacil.com
 
 ## 📄 **LICENÇA**
 

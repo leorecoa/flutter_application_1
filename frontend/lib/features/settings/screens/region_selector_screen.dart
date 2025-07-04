@@ -206,7 +206,7 @@ class _RegionSelectorScreenState extends State<RegionSelectorScreen> {
                         enabled: isHealthy,
                       ),
                     );
-                  }).toList(),
+                  }),
                   const SizedBox(height: 16),
                   const Text(
                     'Nota: A alteração de região pode afetar temporariamente o desempenho do aplicativo.',

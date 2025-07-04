@@ -1,0 +1,175 @@
+name: Flutter Build & Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/flutter-amplify-deploy.yml'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  test-and-analyze:
+    name: Test and Analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Cache pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.PUB_CACHE }}
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Verify formatting
+        run: flutter format --set-exit-if-changed .
+      
+      - name: Analyze project source
+        run: flutter analyze
+      
+      - name: Run tests with coverage
+        run: flutter test --coverage
+      
+      - name: Check coverage threshold
+        uses: VeryGoodOpenSource/very_good_coverage@v2
+        with:
+          path: ./coverage/lcov.info
+          min_coverage: 70
+          exclude: "**/*.g.dart **/*.freezed.dart **/generated/**"
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          fail_ci_if_error: true
+      
+      - name: SonarCloud Scan
+        if: ${{ secrets.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=leorecoa_flutter_application_1
+            -Dsonar.organization=leorecoa
+            -Dsonar.sources=lib
+            -Dsonar.tests=test
+            -Dsonar.flutter.coverage.reportPath=coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.g.dart,**/*.freezed.dart,**/generated/**/*
+            -Dsonar.cpd.exclusions=**/*.g.dart,**/*.freezed.dart
+            -Dsonar.qualitygate.wait=true
+  
+  build-and-deploy:
+    name: Build and Deploy
+    needs: test-and-analyze
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.0'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build web
+        run: flutter build web --release
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Deploy to Amplify
+        id: deploy
+        run: |
+          # Zip the build output
+          cd build/web
+          zip -r ../../build.zip *
+          cd ../..
+          
+          # Start the deployment
+          DEPLOY_ID=$(aws amplify start-deployment \
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+            --branch-name ${{ github.event.inputs.environment || 'dev' }} \
+            --source-url build.zip \
+            --query 'jobId' \
+            --output text)
+          
+          echo "::set-output name=deploy_id::$DEPLOY_ID"
+          echo "Deployment started with ID: $DEPLOY_ID"
+          
+          # Wait for deployment to complete
+          aws amplify wait job-complete \
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+            --branch-name ${{ github.event.inputs.environment || 'dev' }} \
+            --job-id $DEPLOY_ID
+      
+      - name: Get Amplify URL
+        id: get_url
+        run: |
+          URL=$(aws amplify get-branch \
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+            --branch-name ${{ github.event.inputs.environment || 'dev' }} \
+            --query 'branch.displayName' \
+            --output text)
+          
+          echo "::set-output name=app_url::$URL"
+          echo "App deployed to: $URL"
+      
+      - name: Create GitHub deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ github.event.inputs.environment || 'dev' }}
+          description: 'Deployment to AWS Amplify'
+          ref: ${{ github.sha }}
+      
+      - name: Update deployment status
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: "success"
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          environment-url: ${{ steps.get_url.outputs.app_url }}
