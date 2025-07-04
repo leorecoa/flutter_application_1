@@ -3,16 +3,20 @@ set -e
 
 echo "🚀 Starting Flutter Web build process..."
 
-# Install dependencies
-echo "📦 Installing system dependencies..."
-yum update -y
-yum install -y curl unzip xz git
-
-# Download and extract Flutter
+# Download and extract Flutter using available tools
 echo "⬇️ Downloading Flutter SDK..."
 if [ ! -d "flutter" ]; then
-    curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz -o flutter.tar.xz
-    tar -xf flutter.tar.xz
+    # Use wget which is available in Amplify
+    wget -O flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz
+    
+    # Extract using Python (available in Amplify)
+    python3 -c "
+import tarfile
+import lzma
+with lzma.open('flutter.tar.xz', 'rb') as xz_file:
+    with tarfile.open(fileobj=xz_file, mode='r|') as tar:
+        tar.extractall()
+"
     rm flutter.tar.xz
 fi
 
