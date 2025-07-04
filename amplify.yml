@@ -3,16 +3,10 @@ applications:
   - appRoot: .
     frontend:
       phases:
-        preBuild:
-          commands:
-            - flutter pub get
         build:
           commands:
-            - flutter build web --release
+            - echo "Using pre-built files"
       artifacts:
-        baseDirectory: build/web
+        baseDirectory: web
         files:
           - '**/*'
-      cache:
-        paths:
-          - ~/.pub-cache/**/*
