@@ -3,10 +3,21 @@ applications:
   - appRoot: .
     frontend:
       phases:
+        preBuild:
+          commands:
+            - wget -O flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz
+            - tar xf flutter.tar.xz
+            - export PATH="$PATH:`pwd`/flutter/bin"
+            - flutter doctor
+            - flutter pub get
         build:
           commands:
-            - echo "Using pre-built files"
+            - export PATH="$PATH:`pwd`/flutter/bin"
+            - flutter build web --release --base-href=/
       artifacts:
-        baseDirectory: web
+        baseDirectory: build/web
         files:
           - '**/*'
+      cache:
+        paths:
+          - flutter/**/*

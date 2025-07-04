@@ -23,7 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadDashboard() async {
     try {
       await Future.delayed(const Duration(seconds: 1));
-      
+
       final mockStats = {
         'appointmentsToday': 12,
         'totalClients': 248,
@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'time': '14:30',
         },
       };
-      
+
       if (mounted) {
         setState(() {
           _stats = mockStats;
@@ -89,7 +89,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Text(
                       'Visão Geral',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     GridView.count(
@@ -141,7 +142,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     if (_stats?['nextAppointment'] != null) ...[
                       const Text(
                         'Próximo Agendamento',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Card(
@@ -166,7 +168,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 32),
                     const Text(
                       'Ações Rápidas',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -202,7 +205,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -355,7 +359,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gerando relatório mensal...')),
+                    const SnackBar(
+                        content: Text('Gerando relatório mensal...')),
                   );
                 },
               ),
@@ -366,7 +371,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gerando relatório de clientes...')),
+                    const SnackBar(
+                        content: Text('Gerando relatório de clientes...')),
                   );
                 },
               ),
@@ -377,7 +383,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gerando relatório financeiro...')),
+                    const SnackBar(
+                        content: Text('Gerando relatório financeiro...')),
                   );
                 },
               ),
