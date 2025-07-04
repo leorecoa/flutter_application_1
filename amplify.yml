@@ -5,8 +5,8 @@ applications:
       phases:
         build:
           commands:
-            - echo "Serving redirect page to GitHub Pages"
-            - cp web/redirect.html web/index.html
+            - echo "Serving Flutter Web files from web directory"
+            - ls -la web/
       artifacts:
         baseDirectory: web
         files:
