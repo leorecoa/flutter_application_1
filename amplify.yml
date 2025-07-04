@@ -3,26 +3,11 @@ applications:
   - appRoot: .
     frontend:
       phases:
-        preBuild:
-          commands:
-            - |
-              if [ ! -d "flutter" ]; then
-                wget -O flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz
-                python3 -c "import tarfile, lzma; tar = tarfile.open(fileobj=lzma.open('flutter.tar.xz', 'rb'), mode='r|'); tar.extractall()"
-                rm flutter.tar.xz
-              fi
-            - export PATH="$PATH:`pwd`/flutter/bin"
-            - flutter config --no-analytics
-            - flutter pub get
         build:
           commands:
-            - export PATH="$PATH:`pwd`/flutter/bin"
-            - flutter build web --release --base-href=/ --web-renderer canvaskit
+            - echo "Serving redirect page to GitHub Pages"
+            - cp web/redirect.html web/index.html
       artifacts:
-        baseDirectory: build/web
+        baseDirectory: web
         files:
           - '**/*'
-      cache:
-        paths:
-          - flutter/**/*
-          - ~/.pub-cache/**/*
