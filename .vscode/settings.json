@@ -4,5 +4,9 @@
     "backend/.aws-sam/**": true,
     "backend/node_modules/**": true,
     "**/node_modules/**": true
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "leorecoa",
+    "projectKey": "leorecoa_flutter_application_1"
   }
 }
