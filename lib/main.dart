@@ -1,48 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'core/routes/app_routes.dart';
-import 'core/services/error_reporting_service.dart';
-import 'core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'core/config/multi_region_config.dart';
+import 'core/services/api_service.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/dashboard/screens/dashboard_screen.dart';
+import 'features/settings/screens/region_selector_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env.dev');
-  ErrorReportingService.init();
-  runApp(const ProviderScope(child: AgendeMaisApp()));
+  
+  // Initialize services
+  await ApiService().init();
+  
+  runApp(const ProviderScope(child: AgendaFacilApp()));
 }
 
-class AgendeMaisApp extends StatelessWidget {
-  const AgendeMaisApp({super.key});
+class AgendaFacilApp extends StatelessWidget {
+  const AgendaFacilApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'AgendeMais - Seu tempo, seu agendamento',
-      debugShowCheckedModeBanner: false,
-      routerConfig: AppRoutes.router,
+      title: 'AgendaFácil SaaS',
       theme: ThemeData(
+        primarySwatch: Colors.blue,
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-        ),
-        scaffoldBackgroundColor: AppColors.grey50,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.white,
-          elevation: 0,
-          scrolledUnderElevation: 1,
-          centerTitle: true,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
       ),
+      routerConfig: _router,
     );
   }
 }
+
+final _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) => const DashboardScreen(),
+    ),
+    GoRoute(
+      path: '/settings/region',
+      builder: (context, state) => const RegionSelectorScreen(),
+    ),
+  ],
+);

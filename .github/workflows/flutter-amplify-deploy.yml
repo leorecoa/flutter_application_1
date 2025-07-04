@@ -61,6 +61,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=leorecoa_flutter_application_1
+            -Dsonar.organization=leorecoa
+            -Dsonar.sources=lib
+            -Dsonar.tests=test
+            -Dsonar.flutter.coverage.reportPath=coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.g.dart,**/*.freezed.dart,**/generated/**/*,test/**
+            -Dsonar.cpd.exclusions=**/*.g.dart,**/*.freezed.dart
+            -Dsonar.qualitygate.wait=false
   
   build-and-deploy:
     name: Build and Deploy
