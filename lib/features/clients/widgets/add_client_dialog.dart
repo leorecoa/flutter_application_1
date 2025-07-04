@@ -17,11 +17,11 @@ class ClientModel {
     required this.name,
     required this.email,
     required this.phone,
+    required this.createdAt,
     this.address,
     this.birthDate,
     this.notes,
     this.isActive = true,
-    required this.createdAt,
   });
 }
 
@@ -30,9 +30,9 @@ class AddClientDialog extends StatefulWidget {
   final Function(ClientModel) onSave;
 
   const AddClientDialog({
+    required this.onSave,
     super.key,
     this.client,
-    required this.onSave,
   });
 
   @override
@@ -91,7 +91,8 @@ class _AddClientDialogState extends State<AddClientDialog> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                  validator: (value) =>
+                      value?.isEmpty == true ? 'Campo obrigatório' : null,
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -106,7 +107,8 @@ class _AddClientDialogState extends State<AddClientDialog> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value?.isEmpty == true) return 'Campo obrigatório';
+                          if (value?.isEmpty == true)
+                            return 'Campo obrigatório';
                           if (!value!.contains('@')) return 'Email inválido';
                           return null;
                         },
@@ -122,7 +124,8 @@ class _AddClientDialogState extends State<AddClientDialog> {
                           prefixIcon: Icon(Icons.phone),
                         ),
                         keyboardType: TextInputType.phone,
-                        validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                        validator: (value) =>
+                            value?.isEmpty == true ? 'Campo obrigatório' : null,
                       ),
                     ),
                   ],
@@ -138,11 +141,9 @@ class _AddClientDialogState extends State<AddClientDialog> {
                 ),
                 const SizedBox(height: 16),
                 ListTile(
-                  title: Text(
-                    _birthDate == null 
-                      ? 'Data de Nascimento (opcional)' 
-                      : 'Nascimento: ${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'
-                  ),
+                  title: Text(_birthDate == null
+                      ? 'Data de Nascimento (opcional)'
+                      : 'Nascimento: ${_birthDate!.day}/${_birthDate!.month}/${_birthDate!.year}'),
                   trailing: const Icon(Icons.calendar_today),
                   onTap: _selectBirthDate,
                 ),
@@ -189,7 +190,8 @@ class _AddClientDialogState extends State<AddClientDialog> {
   Future<void> _selectBirthDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: _birthDate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
+      initialDate:
+          _birthDate ?? DateTime.now().subtract(const Duration(days: 365 * 25)),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
@@ -201,17 +203,19 @@ class _AddClientDialogState extends State<AddClientDialog> {
   void _saveClient() {
     if (_formKey.currentState!.validate()) {
       final client = ClientModel(
-        id: widget.client?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: widget.client?.id ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
-        address: _addressController.text.isEmpty ? null : _addressController.text,
+        address:
+            _addressController.text.isEmpty ? null : _addressController.text,
         birthDate: _birthDate,
         notes: _notesController.text.isEmpty ? null : _notesController.text,
         isActive: _isActive,
         createdAt: widget.client?.createdAt ?? DateTime.now(),
       );
-      
+
       widget.onSave(client);
       Navigator.pop(context);
     }

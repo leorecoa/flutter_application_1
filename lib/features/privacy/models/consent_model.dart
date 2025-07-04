@@ -37,9 +37,9 @@ class ConsentModel {
     required this.type,
     required this.status,
     required this.createdAt,
+    required this.version,
     this.expiresAt,
     this.updatedAt,
-    required this.version,
     this.metadata,
   });
 
@@ -56,8 +56,10 @@ class ConsentModel {
         orElse: () => ConsentStatus.pending,
       ),
       createdAt: DateTime.parse(json['createdAt']),
-      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
-      updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      expiresAt:
+          json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
+      updatedAt:
+          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       version: json['version'],
       metadata: json['metadata'],
     );

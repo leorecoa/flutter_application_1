@@ -40,29 +40,35 @@ class PaymentService {
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     var payments = List<Payment>.from(_payments);
-    
+
     if (filtroCliente?.isNotEmpty == true) {
-      payments = payments.where((p) => 
-        p.clienteNome.toLowerCase().contains(filtroCliente!.toLowerCase())
-      ).toList();
+      payments = payments
+          .where((p) => p.clienteNome
+              .toLowerCase()
+              .contains(filtroCliente!.toLowerCase()))
+          .toList();
     }
-    
+
     if (filtroFormaPagamento != null) {
-      payments = payments.where((p) => p.formaPagamento == filtroFormaPagamento).toList();
+      payments = payments
+          .where((p) => p.formaPagamento == filtroFormaPagamento)
+          .toList();
     }
-    
+
     if (filtroStatus != null) {
       payments = payments.where((p) => p.status == filtroStatus).toList();
     }
-    
+
     if (dataInicio != null) {
       payments = payments.where((p) => p.data.isAfter(dataInicio)).toList();
     }
-    
+
     if (dataFim != null) {
-      payments = payments.where((p) => p.data.isBefore(dataFim.add(const Duration(days: 1)))).toList();
+      payments = payments
+          .where((p) => p.data.isBefore(dataFim.add(const Duration(days: 1))))
+          .toList();
     }
-    
+
     return payments..sort((a, b) => b.data.compareTo(a.data));
   }
 
@@ -106,31 +112,30 @@ class PaymentService {
 
   static Future<Map<String, double>> getResumoFinanceiro() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     final hoje = DateTime.now();
-    final inicioMes = DateTime(hoje.year, hoje.month, 1);
-    
-    final pagamentosHoje = _payments.where((p) => 
-      p.data.day == hoje.day && 
-      p.data.month == hoje.month && 
-      p.data.year == hoje.year &&
-      p.status == StatusPagamento.pago
-    );
-    
-    final pagamentosMes = _payments.where((p) => 
-      p.data.isAfter(inicioMes) &&
-      p.status == StatusPagamento.pago
-    );
-    
-    final pendentes = _payments.where((p) => p.status == StatusPagamento.pendente);
-    
+    final inicioMes = DateTime(hoje.year, hoje.month);
+
+    final pagamentosHoje = _payments.where((p) =>
+        p.data.day == hoje.day &&
+        p.data.month == hoje.month &&
+        p.data.year == hoje.year &&
+        p.status == StatusPagamento.pago);
+
+    final pagamentosMes = _payments.where(
+        (p) => p.data.isAfter(inicioMes) && p.status == StatusPagamento.pago);
+
+    final pendentes =
+        _payments.where((p) => p.status == StatusPagamento.pendente);
+
     return {
       'receitaHoje': pagamentosHoje.fold(0.0, (sum, p) => sum + p.valor),
       'receitaMes': pagamentosMes.fold(0.0, (sum, p) => sum + p.valor),
       'pendentes': pendentes.fold(0.0, (sum, p) => sum + p.valor),
-      'ticketMedio': pagamentosMes.isNotEmpty 
-        ? pagamentosMes.fold(0.0, (sum, p) => sum + p.valor) / pagamentosMes.length
-        : 0.0,
+      'ticketMedio': pagamentosMes.isNotEmpty
+          ? pagamentosMes.fold(0.0, (sum, p) => sum + p.valor) /
+              pagamentosMes.length
+          : 0.0,
     };
   }
 }

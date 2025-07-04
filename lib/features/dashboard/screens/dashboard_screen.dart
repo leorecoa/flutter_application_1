@@ -138,7 +138,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                           subtitle: 'Empresas cadastradas',
                           icon: Icons.business,
                           isLoading: _isLoading,
-                          animationDelay: 0,
                         ),
                         DashboardCard(
                           title: 'Pagamentos em Dia',

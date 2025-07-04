@@ -11,7 +11,7 @@ class SegmentThemeProvider {
     final backgroundColor = segment.backgroundColor;
     final fontFamily = segment.fontFamily;
     final borderRadius = segment.borderRadius;
-    
+
     // Carrega a fonte do Google Fonts
     final textTheme = GoogleFonts.getTextTheme(
       fontFamily,
@@ -21,14 +21,13 @@ class SegmentThemeProvider {
         displaySmall: TextStyle(color: primaryColor.withAlpha(204)),
       ),
     );
-    
+
     return ThemeData.light().copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
         surface: backgroundColor,
-        brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: backgroundColor,
       textTheme: textTheme,
@@ -49,14 +48,14 @@ class SegmentThemeProvider {
       ),
     );
   }
-  
+
   /// Gera um tema escuro baseado no segmento de negócio
   static ThemeData getDarkThemeForSegment(BusinessSegment segment) {
     final primaryColor = segment.primaryColor;
     final secondaryColor = segment.secondaryColor;
     final fontFamily = segment.fontFamily;
     final borderRadius = segment.borderRadius;
-    
+
     // Carrega a fonte do Google Fonts
     final textTheme = GoogleFonts.getTextTheme(
       fontFamily,
@@ -66,7 +65,7 @@ class SegmentThemeProvider {
         displaySmall: const TextStyle(color: Colors.white70),
       ),
     );
-    
+
     return ThemeData.dark().copyWith(
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,

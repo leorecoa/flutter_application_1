@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/theme/trinks_theme.dart';
 import '../../../shared/widgets/admin_layout.dart';
 import '../../../shared/widgets/dashboard_card.dart';
-import '../../../core/theme/trinks_theme.dart';
 
 class AdminFinancialScreen extends StatelessWidget {
   const AdminFinancialScreen({super.key});
@@ -93,23 +94,29 @@ class AdminFinancialScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTransactionItem('João Silva', 'Corte + Barba', 'R\$ 55,00', 'Pago', true),
-          _buildTransactionItem('Carlos Santos', 'Corte', 'R\$ 35,00', 'Pendente', false),
-          _buildTransactionItem('Pedro Costa', 'Barba', 'R\$ 25,00', 'Pago', true),
-          _buildTransactionItem('Maria Oliveira', 'Corte + Sobrancelha', 'R\$ 50,00', 'Pago', true),
+          _buildTransactionItem(
+              'João Silva', 'Corte + Barba', 'R\$ 55,00', 'Pago', true),
+          _buildTransactionItem(
+              'Carlos Santos', 'Corte', 'R\$ 35,00', 'Pendente', false),
+          _buildTransactionItem(
+              'Pedro Costa', 'Barba', 'R\$ 25,00', 'Pago', true),
+          _buildTransactionItem('Maria Oliveira', 'Corte + Sobrancelha',
+              'R\$ 50,00', 'Pago', true),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionItem(String client, String service, String amount, String status, bool isPaid) {
+  Widget _buildTransactionItem(String client, String service, String amount,
+      String status, bool isPaid) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           CircleAvatar(
             backgroundColor: TrinksTheme.lightPurple,
-            child: Text(client[0], style: const TextStyle(color: TrinksTheme.navyBlue)),
+            child: Text(client[0],
+                style: const TextStyle(color: TrinksTheme.navyBlue)),
           ),
           const SizedBox(width: 12),
           Expanded(

@@ -10,10 +10,10 @@ class AdminLayout extends StatelessWidget {
   final Widget? floatingActionButton;
 
   const AdminLayout({
-    super.key,
     required this.child,
     required this.title,
     required this.currentRoute,
+    super.key,
     this.floatingActionButton,
   });
 

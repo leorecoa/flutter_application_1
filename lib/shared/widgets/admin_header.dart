@@ -6,8 +6,8 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
   final String userName;
 
   const AdminHeader({
-    super.key,
     required this.title,
+    super.key,
     this.userName = 'Administrador',
   });
 
@@ -50,7 +50,8 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
     return Stack(
       children: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: TrinksTheme.darkGray),
+          icon: const Icon(Icons.notifications_outlined,
+              color: TrinksTheme.darkGray),
           onPressed: () {},
         ),
         Positioned(

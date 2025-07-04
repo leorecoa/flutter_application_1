@@ -11,11 +11,11 @@ class PagamentosTable extends StatelessWidget {
   final bool isLoading;
 
   const PagamentosTable({
-    super.key,
     required this.payments,
     required this.onEdit,
     required this.onCancel,
     required this.onEmitirRecibo,
+    super.key,
     this.isLoading = false,
   });
 
@@ -76,13 +76,31 @@ class PagamentosTable extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Expanded(flex: 2, child: Text('Cliente', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Serviço', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 1, child: Text('Valor', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Forma Pagamento', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Data', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 1, child: Text('Ações', style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Cliente',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Serviço',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              child:
+                  Text('Valor', style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Forma Pagamento',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              child: Text('Status',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child:
+                  Text('Data', style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              child:
+                  Text('Ações', style: TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
     );
@@ -117,14 +135,14 @@ class PagamentosTable extends StatelessWidget {
           ),
           Expanded(flex: 2, child: Text(payment.servicoNome)),
           Expanded(
-            flex: 1,
             child: Text(
               'R\$ ${payment.valor.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          Expanded(flex: 2, child: _buildFormaPagamentoChip(payment.formaPagamento)),
-          Expanded(flex: 1, child: _buildStatusChip(payment.status)),
+          Expanded(
+              flex: 2, child: _buildFormaPagamentoChip(payment.formaPagamento)),
+          Expanded(child: _buildStatusChip(payment.status)),
           Expanded(
             flex: 2,
             child: Column(
@@ -141,7 +159,7 @@ class PagamentosTable extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(flex: 1, child: _buildActions(payment)),
+          Expanded(child: _buildActions(payment)),
         ],
       ),
     );
@@ -151,7 +169,7 @@ class PagamentosTable extends StatelessWidget {
     IconData icon;
     Color color;
     String text;
-    
+
     switch (forma) {
       case FormaPagamento.pix:
         icon = Icons.pix_outlined;
@@ -191,7 +209,7 @@ class PagamentosTable extends StatelessWidget {
     Color color;
     String text;
     IconData icon;
-    
+
     switch (status) {
       case StatusPagamento.pago:
         color = TrinksTheme.success;
@@ -247,13 +265,15 @@ class PagamentosTable extends StatelessWidget {
           ),
           if (payment.status == StatusPagamento.pago)
             IconButton(
-              icon: const Icon(Icons.receipt_outlined, size: 18, color: TrinksTheme.lightBlue),
+              icon: const Icon(Icons.receipt_outlined,
+                  size: 18, color: TrinksTheme.lightBlue),
               onPressed: () => onEmitirRecibo(payment),
               tooltip: 'Emitir Recibo',
             ),
           if (payment.status != StatusPagamento.pago)
             IconButton(
-              icon: const Icon(Icons.cancel_outlined, size: 18, color: TrinksTheme.error),
+              icon: const Icon(Icons.cancel_outlined,
+                  size: 18, color: TrinksTheme.error),
               onPressed: () => onCancel(payment.id),
               tooltip: 'Cancelar',
             ),

@@ -10,8 +10,6 @@ class AuditLogger {
       methodCount: 0,
       errorMethodCount: 5,
       lineLength: 80,
-      colors: true,
-      printEmojis: true,
       dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
     ),
   );

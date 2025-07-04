@@ -10,9 +10,9 @@ class PaymentForm extends StatefulWidget {
   final VoidCallback onSaved;
 
   const PaymentForm({
+    required this.onSaved,
     super.key,
     this.payment,
-    required this.onSaved,
   });
 
   @override
@@ -24,13 +24,13 @@ class _PaymentFormState extends State<PaymentForm> {
   final _clienteController = TextEditingController();
   final _observacoesController = TextEditingController();
   final _chavePixController = TextEditingController();
-  
+
   Cliente? _clienteSelecionado;
   Servico? _servicoSelecionado;
   Barbeiro? _barbeiroSelecionado;
   FormaPagamento _formaPagamento = FormaPagamento.dinheiro;
   StatusPagamento _status = StatusPagamento.pago;
-  
+
   List<Cliente> _clientes = [];
   bool _isLoading = false;
 
@@ -45,12 +45,14 @@ class _PaymentFormState extends State<PaymentForm> {
 
   void _loadData() {
     final clientesData = AgendamentoService.getClientes();
-    _clientes = clientesData.map((c) => Cliente(
-      id: c.id,
-      nome: c.nome,
-      telefone: '',
-      email: '',
-    )).toList();
+    _clientes = clientesData
+        .map((c) => Cliente(
+              id: c.id,
+              nome: c.nome,
+              telefone: '',
+              email: '',
+            ))
+        .toList();
     setState(() {});
   }
 
@@ -147,9 +149,9 @@ class _PaymentFormState extends State<PaymentForm> {
     return Autocomplete<Cliente>(
       optionsBuilder: (textEditingValue) {
         if (textEditingValue.text.isEmpty) return _clientes;
-        return _clientes.where((cliente) =>
-          cliente.nome.toLowerCase().contains(textEditingValue.text.toLowerCase())
-        );
+        return _clientes.where((cliente) => cliente.nome
+            .toLowerCase()
+            .contains(textEditingValue.text.toLowerCase()));
       },
       displayStringForOption: (cliente) => cliente.nome,
       onSelected: (cliente) {
@@ -165,7 +167,8 @@ class _PaymentFormState extends State<PaymentForm> {
             labelText: 'Cliente',
             prefixIcon: Icon(Icons.person_outline),
           ),
-          validator: (value) => value?.isEmpty == true ? 'Selecione um cliente' : null,
+          validator: (value) =>
+              value?.isEmpty == true ? 'Selecione um cliente' : null,
           onEditingComplete: onEditingComplete,
         );
       },
@@ -236,7 +239,8 @@ class _PaymentFormState extends State<PaymentForm> {
         prefixIcon: Icon(Icons.payment_outlined),
       ),
       items: const [
-        DropdownMenuItem(value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
+        DropdownMenuItem(
+            value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
         DropdownMenuItem(value: FormaPagamento.pix, child: Text('PIX')),
         DropdownMenuItem(value: FormaPagamento.cartao, child: Text('Cartão')),
       ],
@@ -253,7 +257,8 @@ class _PaymentFormState extends State<PaymentForm> {
       ),
       items: const [
         DropdownMenuItem(value: StatusPagamento.pago, child: Text('Pago')),
-        DropdownMenuItem(value: StatusPagamento.pendente, child: Text('Pendente')),
+        DropdownMenuItem(
+            value: StatusPagamento.pendente, child: Text('Pendente')),
       ],
       onChanged: (status) => setState(() => _status = status!),
     );
@@ -304,14 +309,15 @@ class _PaymentFormState extends State<PaymentForm> {
     );
   }
 
-  void _salvarPagamento() async {
+  Future<void> _salvarPagamento() async {
     if (!_formKey.currentState!.validate()) return;
     if (_clienteSelecionado == null) return;
 
     setState(() => _isLoading = true);
 
     final payment = Payment(
-      id: widget.payment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.payment?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       clienteNome: _clienteSelecionado!.nome,
       clienteId: _clienteSelecionado!.id,
       servicoNome: _servicoSelecionado!.nome,
@@ -322,9 +328,12 @@ class _PaymentFormState extends State<PaymentForm> {
       formaPagamento: _formaPagamento,
       status: _status,
       data: DateTime.now(),
-      observacoes: _observacoesController.text.isEmpty ? null : _observacoesController.text,
-      chavePix: _formaPagamento == FormaPagamento.pix && _chavePixController.text.isNotEmpty 
-          ? _chavePixController.text 
+      observacoes: _observacoesController.text.isEmpty
+          ? null
+          : _observacoesController.text,
+      chavePix: _formaPagamento == FormaPagamento.pix &&
+              _chavePixController.text.isNotEmpty
+          ? _chavePixController.text
           : null,
     );
 
@@ -334,7 +343,7 @@ class _PaymentFormState extends State<PaymentForm> {
       } else {
         await PaymentService.atualizarPagamento(payment);
       }
-      
+
       widget.onSaved();
       if (mounted) Navigator.of(context).pop();
     } finally {

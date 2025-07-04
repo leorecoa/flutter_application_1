@@ -198,7 +198,6 @@ class _GeneratePixScreenState extends State<GeneratePixScreen>
 
   Widget _buildPixGerado() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           'QR Code PIX Gerado',
@@ -225,7 +224,6 @@ class _GeneratePixScreenState extends State<GeneratePixScreen>
             children: [
               QrImageView(
                 data: _pixData['pix_code'],
-                version: QrVersions.auto,
                 size: 200,
                 backgroundColor: Colors.white,
                 errorStateBuilder: (context, error) {

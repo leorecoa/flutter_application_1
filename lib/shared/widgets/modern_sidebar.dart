@@ -5,7 +5,7 @@ import '../../core/theme/trinks_theme.dart';
 class ModernSidebar extends StatelessWidget {
   final String currentRoute;
 
-  const ModernSidebar({super.key, required this.currentRoute});
+  const ModernSidebar({required this.currentRoute, super.key});
 
   @override
   Widget build(BuildContext context) {

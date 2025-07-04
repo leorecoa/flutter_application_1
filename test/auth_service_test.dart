@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application_1/core/services/auth_service.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('AuthService', () {

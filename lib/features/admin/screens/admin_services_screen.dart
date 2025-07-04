@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/admin_layout.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
 
 class AdminServicesScreen extends StatelessWidget {
   const AdminServicesScreen({super.key});
@@ -53,17 +54,21 @@ class AdminServicesScreen extends StatelessWidget {
       mainAxisSpacing: 16,
       childAspectRatio: 1.2,
       children: [
-        _buildServiceCard('Corte Masculino', 'R\$ 35,00', '45 min', Icons.content_cut),
+        _buildServiceCard(
+            'Corte Masculino', 'R\$ 35,00', '45 min', Icons.content_cut),
         _buildServiceCard('Barba', 'R\$ 25,00', '30 min', Icons.face),
         _buildServiceCard('Corte + Barba', 'R\$ 55,00', '60 min', Icons.person),
-        _buildServiceCard('Sobrancelha', 'R\$ 15,00', '15 min', Icons.visibility),
-        _buildServiceCard('Lavagem', 'R\$ 10,00', '20 min', Icons.local_car_wash),
+        _buildServiceCard(
+            'Sobrancelha', 'R\$ 15,00', '15 min', Icons.visibility),
+        _buildServiceCard(
+            'Lavagem', 'R\$ 10,00', '20 min', Icons.local_car_wash),
         _buildServiceCard('Tratamento', 'R\$ 45,00', '40 min', Icons.spa),
       ],
     );
   }
 
-  Widget _buildServiceCard(String name, String price, String duration, IconData icon) {
+  Widget _buildServiceCard(
+      String name, String price, String duration, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: TrinksTheme.cardDecoration,

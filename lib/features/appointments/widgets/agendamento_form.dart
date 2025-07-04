@@ -9,9 +9,9 @@ class AgendamentoForm extends StatefulWidget {
   final VoidCallback onSaved;
 
   const AgendamentoForm({
+    required this.onSaved,
     super.key,
     this.agendamento,
-    required this.onSaved,
   });
 
   @override
@@ -43,14 +43,16 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
     }
   }
 
-  void _loadData() async {
+  Future<void> _loadData() async {
     final clientesData = AgendamentoService.getClientes();
-    _clientes = clientesData.map((c) => Cliente(
-      id: c.id,
-      nome: c.nome,
-      telefone: '',
-      email: '',
-    )).toList();
+    _clientes = clientesData
+        .map((c) => Cliente(
+              id: c.id,
+              nome: c.nome,
+              telefone: '',
+              email: '',
+            ))
+        .toList();
     _clientesFiltrados = _clientes;
     setState(() {});
   }
@@ -147,13 +149,15 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
         if (textEditingValue.text.isEmpty) return _clientes;
         final clientesData = AgendamentoService.getClientes();
         final clientesFiltrados = clientesData
-            .where((c) => c.nome.toLowerCase().contains(textEditingValue.text.toLowerCase()))
+            .where((c) => c.nome
+                .toLowerCase()
+                .contains(textEditingValue.text.toLowerCase()))
             .map((c) => Cliente(
-              id: c.id,
-              nome: c.nome,
-              telefone: '',
-              email: '',
-            ))
+                  id: c.id,
+                  nome: c.nome,
+                  telefone: '',
+                  email: '',
+                ))
             .toList();
         return clientesFiltrados;
       },
@@ -324,7 +328,7 @@ class _AgendamentoFormState extends State<AgendamentoForm> {
     );
   }
 
-  void _salvarAgendamento() async {
+  Future<void> _salvarAgendamento() async {
     if (!_formKey.currentState!.validate()) return;
     if (_clienteSelecionado == null) return;
 

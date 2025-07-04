@@ -14,14 +14,14 @@ class AppScaffold extends StatelessWidget {
   final String currentPath;
 
   const AppScaffold({
-    super.key,
     required this.title,
     required this.body,
+    required this.currentPath,
+    super.key,
     this.floatingActionButton,
     this.showBackButton = false,
     this.actions,
     this.isLoading = false,
-    required this.currentPath,
   });
 
   @override

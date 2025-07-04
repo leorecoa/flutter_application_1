@@ -8,11 +8,11 @@ class AnimatedCounter extends StatefulWidget {
   final Duration duration;
 
   const AnimatedCounter({
-    super.key,
     required this.value,
     required this.label,
     required this.icon,
     required this.color,
+    super.key,
     this.duration = const Duration(milliseconds: 1500),
   });
 
@@ -29,8 +29,8 @@ class _AnimatedCounterState extends State<AnimatedCounter>
   void initState() {
     super.initState();
     _controller = AnimationController(duration: widget.duration, vsync: this);
-    _animation = Tween<double>(begin: 0, end: widget.value.toDouble())
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _animation = Tween<double>(begin: 0, end: widget.value.toDouble()).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
   }
 
@@ -54,7 +54,6 @@ class _AnimatedCounterState extends State<AnimatedCounter>
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: widget.color.withValues(alpha: 0.3),
-                  width: 1,
                 ),
               ),
               child: Icon(

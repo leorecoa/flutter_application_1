@@ -16,9 +16,9 @@ class SubscriptionModel {
     required this.price,
     required this.startDate,
     required this.expirationDate,
+    required this.paymentStatus,
     this.paymentProvider,
     this.paymentId,
-    required this.paymentStatus,
   });
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) {
@@ -51,7 +51,8 @@ class SubscriptionModel {
 
   bool get isActive => status == 'ACTIVE';
   bool get isExpired => DateTime.now().isAfter(expirationDate);
-  int get daysUntilExpiration => expirationDate.difference(DateTime.now()).inDays;
+  int get daysUntilExpiration =>
+      expirationDate.difference(DateTime.now()).inDays;
 }
 
 class SubscriptionLimits {
@@ -117,7 +118,8 @@ class PlanModel {
       PlanModel(
         name: 'PRO',
         price: 29.90,
-        limits: SubscriptionLimits(clients: 500, barbers: 5, appointments: 1000),
+        limits:
+            SubscriptionLimits(clients: 500, barbers: 5, appointments: 1000),
         features: [
           'Até 500 clientes',
           '5 profissionais',

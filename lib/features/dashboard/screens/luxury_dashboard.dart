@@ -82,7 +82,6 @@ class _LuxuryDashboardState extends State<LuxuryDashboard>
   Widget _buildLuxuryAppBar() {
     return SliverAppBar(
       expandedHeight: 120,
-      floating: false,
       pinned: true,
       backgroundColor: LuxuryTheme.deepBlue,
       flexibleSpace: FlexibleSpaceBar(

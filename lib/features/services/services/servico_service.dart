@@ -1,7 +1,8 @@
 import 'dart:convert';
+
+import '../../../core/config/aws_config.dart';
 import '../../../core/services/api_client.dart';
 import '../../../core/services/auth_service.dart';
-import '../../../core/config/aws_config.dart';
 
 class ServicoService {
   static Future<List<Map<String, dynamic>>> getServicos() async {

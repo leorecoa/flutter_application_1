@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/routes/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/routes/app_routes.dart';
-import '../../../widgets/primary_button.dart';
 import '../../../widgets/input_field.dart';
+import '../../../widgets/primary_button.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -13,7 +14,8 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderStateMixin {
+class _SignupScreenState extends State<SignupScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
@@ -31,14 +33,14 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
@@ -48,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
         curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
       ),
     );
-    
+
     _animationController.forward();
   }
 
@@ -70,7 +72,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
     try {
       // Simular cadastro
       await Future.delayed(const Duration(seconds: 1));
-      
+
       if (mounted) {
         context.go(AppRoutes.dashboard);
       }
@@ -138,7 +140,8 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withAlpha(76), // 30% opacity
+                                color: AppColors.primary
+                                    .withAlpha(76), // 30% opacity
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -151,7 +154,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Título
                         Text('Criar Conta', style: AppTextStyles.h3),
                         const SizedBox(height: 8),
@@ -161,7 +164,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
-                        
+
                         // Campos
                         InputField(
                           label: 'Nome da Empresa',
@@ -177,7 +180,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           },
                         ),
                         const SizedBox(height: 20),
-                        
+
                         InputField(
                           label: 'E-mail',
                           hint: 'Digite seu e-mail',
@@ -189,14 +192,15 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                             if (value?.isEmpty ?? true) {
                               return 'E-mail é obrigatório';
                             }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value!)) {
                               return 'E-mail inválido';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
-                        
+
                         InputField(
                           label: 'Senha',
                           hint: 'Digite sua senha',
@@ -215,7 +219,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           },
                         ),
                         const SizedBox(height: 20),
-                        
+
                         InputField(
                           label: 'Confirmar Senha',
                           hint: 'Confirme sua senha',
@@ -233,9 +237,9 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Botão Cadastrar
                         PrimaryButton(
                           text: 'Criar Conta',
@@ -244,7 +248,7 @@ class _SignupScreenState extends State<SignupScreen> with SingleTickerProviderSt
                           width: double.infinity,
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Link Login
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,

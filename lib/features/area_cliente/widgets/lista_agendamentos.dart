@@ -8,8 +8,8 @@ class ListaAgendamentos extends StatelessWidget {
   final bool isLoading;
 
   const ListaAgendamentos({
-    super.key,
     required this.agendamentos,
+    super.key,
     this.isLoading = false,
   });
 
@@ -58,7 +58,7 @@ class ListaAgendamentos extends StatelessWidget {
 
   Widget _buildAgendamentoCard(Agendamento agendamento) {
     final isFuturo = agendamento.dataHora.isAfter(DateTime.now());
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),

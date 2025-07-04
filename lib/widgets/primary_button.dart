@@ -13,8 +13,8 @@ class PrimaryButton extends StatelessWidget {
   final double height;
 
   const PrimaryButton({
-    super.key,
     required this.text,
+    super.key,
     this.onPressed,
     this.isLoading = false,
     this.isOutlined = false,

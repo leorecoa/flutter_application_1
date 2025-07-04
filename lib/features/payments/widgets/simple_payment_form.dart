@@ -7,9 +7,9 @@ class SimplePaymentForm extends StatefulWidget {
   final VoidCallback onSaved;
 
   const SimplePaymentForm({
+    required this.onSaved,
     super.key,
     this.payment,
-    required this.onSaved,
   });
 
   @override
@@ -104,8 +104,8 @@ class _SimplePaymentFormState extends State<SimplePaymentForm> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value?.isEmpty == true) {
-      return 'Campo obrigatório';
-    }
+                          return 'Campo obrigatório';
+                        }
                         if (double.tryParse(value!) == null) {
                           return 'Valor inválido';
                         }

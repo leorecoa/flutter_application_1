@@ -5,7 +5,7 @@ import '../models/agendamento_model.dart';
 class AddAppointmentDialog extends StatefulWidget {
   final Function(Agendamento) onSave;
 
-  const AddAppointmentDialog({super.key, required this.onSave});
+  const AddAppointmentDialog({required this.onSave, super.key});
 
   @override
   State<AddAppointmentDialog> createState() => _AddAppointmentDialogState();
@@ -46,7 +46,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   labelText: 'Nome do Cliente',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -55,7 +56,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   labelText: 'Serviço',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -64,7 +66,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   labelText: 'Profissional',
                   border: OutlineInputBorder(),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -74,14 +77,16 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: ListTile(
-                      title: Text('Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                      title: Text(
+                          'Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: _selectDate,
                     ),
@@ -159,7 +164,7 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
         valor: double.tryParse(_valorController.text) ?? 0.0,
         status: StatusAgendamento.pendente,
       );
-      
+
       widget.onSave(agendamento);
       Navigator.pop(context);
     }

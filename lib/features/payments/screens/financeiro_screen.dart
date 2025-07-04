@@ -22,7 +22,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
   List<Payment> _payments = [];
   RelatorioFinanceiro? _relatorio;
   bool _isLoading = false;
-  
+
   String? _filtroBarbeiro;
   FormaPagamento? _filtroFormaPagamento;
   StatusPagamento? _filtroStatus;
@@ -46,7 +46,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
     _carregarPayments();
   }
 
-  void _carregarDados() async {
+  Future<void> _carregarDados() async {
     await Future.wait([
       _carregarPayments(),
       _carregarRelatorio(),
@@ -55,7 +55,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
 
   Future<void> _carregarPayments() async {
     setState(() => _isLoading = true);
-    
+
     final payments = await PaymentService.getPayments(
       filtroCliente: _buscaController.text,
       filtroFormaPagamento: _filtroFormaPagamento,
@@ -63,7 +63,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
       dataInicio: _filtroDataInicio,
       dataFim: _filtroDataFim,
     );
-    
+
     setState(() {
       _payments = payments;
       _isLoading = false;
@@ -72,18 +72,18 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
 
   Future<void> _carregarRelatorio() async {
     final resumo = await PaymentService.getResumoFinanceiro();
-    
+
     setState(() => _relatorio = RelatorioFinanceiro(
-      totalRecebido: resumo['receitaMes'] ?? 0.0,
-      totalPendente: resumo['pendentes'] ?? 0.0,
-      totalTransacoes: _payments.length,
-      receitaPorBarbeiro: {},
-      receitaPorFormaPagamento: {
-        FormaPagamento.pix: (resumo['receitaMes'] ?? 0.0) * 0.6,
-        FormaPagamento.dinheiro: (resumo['receitaMes'] ?? 0.0) * 0.3,
-        FormaPagamento.cartao: (resumo['receitaMes'] ?? 0.0) * 0.1,
-      },
-    ));
+          totalRecebido: resumo['receitaMes'] ?? 0.0,
+          totalPendente: resumo['pendentes'] ?? 0.0,
+          totalTransacoes: _payments.length,
+          receitaPorBarbeiro: {},
+          receitaPorFormaPagamento: {
+            FormaPagamento.pix: (resumo['receitaMes'] ?? 0.0) * 0.6,
+            FormaPagamento.dinheiro: (resumo['receitaMes'] ?? 0.0) * 0.3,
+            FormaPagamento.cartao: (resumo['receitaMes'] ?? 0.0) * 0.1,
+          },
+        ));
   }
 
   @override
@@ -120,7 +120,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
 
   Widget _buildResumoFinanceiro() {
     final relatorio = _relatorio!;
-    
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -144,14 +144,16 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
         ),
         DashboardCard(
           title: 'PIX',
-          value: 'R\$ ${(relatorio.receitaPorFormaPagamento[FormaPagamento.pix] ?? 0).toStringAsFixed(0)}',
+          value:
+              'R\$ ${(relatorio.receitaPorFormaPagamento[FormaPagamento.pix] ?? 0).toStringAsFixed(0)}',
           icon: Icons.pix,
           iconColor: TrinksTheme.lightBlue,
           subtitle: 'Pagamentos PIX',
         ),
         DashboardCard(
           title: 'Dinheiro',
-          value: 'R\$ ${(relatorio.receitaPorFormaPagamento[FormaPagamento.dinheiro] ?? 0).toStringAsFixed(0)}',
+          value:
+              'R\$ ${(relatorio.receitaPorFormaPagamento[FormaPagamento.dinheiro] ?? 0).toStringAsFixed(0)}',
           icon: Icons.attach_money,
           iconColor: TrinksTheme.success,
           subtitle: 'Pagamentos em dinheiro',
@@ -223,12 +225,15 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
             : null,
       ),
       controller: TextEditingController(
-        text: _filtroDataInicio != null ? DateFormat('dd/MM/yyyy').format(_filtroDataInicio!) : '',
+        text: _filtroDataInicio != null
+            ? DateFormat('dd/MM/yyyy').format(_filtroDataInicio!)
+            : '',
       ),
       onTap: () async {
         final data = await showDatePicker(
           context: context,
-          initialDate: _filtroDataInicio ?? DateTime.now().subtract(const Duration(days: 30)),
+          initialDate: _filtroDataInicio ??
+              DateTime.now().subtract(const Duration(days: 30)),
           firstDate: DateTime.now().subtract(const Duration(days: 365)),
           lastDate: DateTime.now(),
         );
@@ -258,13 +263,16 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
             : null,
       ),
       controller: TextEditingController(
-        text: _filtroDataFim != null ? DateFormat('dd/MM/yyyy').format(_filtroDataFim!) : '',
+        text: _filtroDataFim != null
+            ? DateFormat('dd/MM/yyyy').format(_filtroDataFim!)
+            : '',
       ),
       onTap: () async {
         final data = await showDatePicker(
           context: context,
           initialDate: _filtroDataFim ?? DateTime.now(),
-          firstDate: _filtroDataInicio ?? DateTime.now().subtract(const Duration(days: 365)),
+          firstDate: _filtroDataInicio ??
+              DateTime.now().subtract(const Duration(days: 365)),
           lastDate: DateTime.now(),
         );
         if (data != null) {
@@ -284,7 +292,7 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
         border: OutlineInputBorder(),
       ),
       items: [
-        const DropdownMenuItem(value: null, child: Text('Todos os barbeiros')),
+        const DropdownMenuItem(child: Text('Todos os barbeiros')),
         ...AgendamentoService.getBarbeiros().map((barbeiro) {
           return DropdownMenuItem(
             value: barbeiro.id,
@@ -308,9 +316,10 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
         border: OutlineInputBorder(),
       ),
       items: const [
-        DropdownMenuItem(value: null, child: Text('Todas as formas')),
+        DropdownMenuItem(child: Text('Todas as formas')),
         DropdownMenuItem(value: FormaPagamento.pix, child: Text('PIX')),
-        DropdownMenuItem(value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
+        DropdownMenuItem(
+            value: FormaPagamento.dinheiro, child: Text('Dinheiro')),
         DropdownMenuItem(value: FormaPagamento.cartao, child: Text('Cartão')),
       ],
       onChanged: (value) {
@@ -329,10 +338,12 @@ class _FinanceiroScreenState extends State<FinanceiroScreen> {
         border: OutlineInputBorder(),
       ),
       items: const [
-        DropdownMenuItem(value: null, child: Text('Todos os status')),
+        DropdownMenuItem(child: Text('Todos os status')),
         DropdownMenuItem(value: StatusPagamento.pago, child: Text('Pago')),
-        DropdownMenuItem(value: StatusPagamento.pendente, child: Text('Pendente')),
-        DropdownMenuItem(value: StatusPagamento.cancelado, child: Text('Cancelado')),
+        DropdownMenuItem(
+            value: StatusPagamento.pendente, child: Text('Pendente')),
+        DropdownMenuItem(
+            value: StatusPagamento.cancelado, child: Text('Cancelado')),
       ],
       onChanged: (value) {
         setState(() => _filtroStatus = value);

@@ -10,10 +10,10 @@ class AiOnboardingScreen extends StatefulWidget {
   final BusinessSegment segment;
 
   const AiOnboardingScreen({
-    super.key,
     required this.tenantId,
     required this.businessName,
     required this.segment,
+    super.key,
   });
 
   @override

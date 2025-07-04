@@ -12,9 +12,9 @@ class PixPaymentScreen extends StatefulWidget {
   final String description;
 
   const PixPaymentScreen({
-    super.key,
     required this.amount,
     required this.description,
+    super.key,
   });
 
   @override

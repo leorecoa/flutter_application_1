@@ -18,7 +18,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   final _buscaController = TextEditingController();
   List<Agendamento> _agendamentos = [];
   bool _isLoading = false;
-  
+
   String? _filtroBarbeiro;
   StatusAgendamento? _filtroStatus;
   DateTime? _filtroData;
@@ -40,11 +40,11 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     _carregarAgendamentos();
   }
 
-  void _carregarAgendamentos() async {
+  Future<void> _carregarAgendamentos() async {
     setState(() => _isLoading = true);
-    
+
     final agendamentos = await AgendamentoService.getAgendamentos();
-    
+
     setState(() {
       _agendamentos = agendamentos;
       _isLoading = false;
@@ -72,7 +72,6 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
               onEdit: _editarAgendamento,
               onCancel: _cancelarAgendamento,
               onComplete: _concluirAgendamento,
-
             ),
           ),
         ],
@@ -133,7 +132,9 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
             : null,
       ),
       controller: TextEditingController(
-        text: _filtroData != null ? DateFormat('dd/MM/yyyy').format(_filtroData!) : '',
+        text: _filtroData != null
+            ? DateFormat('dd/MM/yyyy').format(_filtroData!)
+            : '',
       ),
       onTap: () async {
         final data = await showDatePicker(
@@ -159,7 +160,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
         border: OutlineInputBorder(),
       ),
       items: [
-        const DropdownMenuItem(value: null, child: Text('Todos os barbeiros')),
+        const DropdownMenuItem(child: Text('Todos os barbeiros')),
         ...AgendamentoService.getBarbeiros().map((barbeiro) {
           return DropdownMenuItem(
             value: barbeiro.id,
@@ -183,11 +184,15 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
         border: OutlineInputBorder(),
       ),
       items: const [
-        DropdownMenuItem(value: null, child: Text('Todos os status')),
-        DropdownMenuItem(value: StatusAgendamento.confirmado, child: Text('Confirmado')),
-        DropdownMenuItem(value: StatusAgendamento.pendente, child: Text('Pendente')),
-        DropdownMenuItem(value: StatusAgendamento.cancelado, child: Text('Cancelado')),
-        DropdownMenuItem(value: StatusAgendamento.concluido, child: Text('Concluído')),
+        DropdownMenuItem(child: Text('Todos os status')),
+        DropdownMenuItem(
+            value: StatusAgendamento.confirmado, child: Text('Confirmado')),
+        DropdownMenuItem(
+            value: StatusAgendamento.pendente, child: Text('Pendente')),
+        DropdownMenuItem(
+            value: StatusAgendamento.cancelado, child: Text('Cancelado')),
+        DropdownMenuItem(
+            value: StatusAgendamento.concluido, child: Text('Concluído')),
       ],
       onChanged: (value) {
         setState(() => _filtroStatus = value);
@@ -242,7 +247,8 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancelar Agendamento'),
-        content: const Text('Tem certeza que deseja cancelar este agendamento?'),
+        content:
+            const Text('Tem certeza que deseja cancelar este agendamento?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -262,12 +268,11 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     );
   }
 
-  void _concluirAgendamento(String id) async {
+  Future<void> _concluirAgendamento(String id) async {
     final agendamento = _agendamentos.firstWhere((a) => a.id == id);
-    final agendamentoAtualizado = agendamento.copyWith(status: StatusAgendamento.concluido);
+    final agendamentoAtualizado =
+        agendamento.copyWith(status: StatusAgendamento.concluido);
     await AgendamentoService.atualizarAgendamento(agendamentoAtualizado);
     _carregarAgendamentos();
   }
-
-
 }

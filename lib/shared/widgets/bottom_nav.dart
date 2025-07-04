@@ -5,7 +5,7 @@ import '../../core/theme/luxury_theme.dart';
 class BottomNav extends StatelessWidget {
   final int currentIndex;
 
-  const BottomNav({super.key, required this.currentIndex});
+  const BottomNav({required this.currentIndex, super.key});
 
   @override
   Widget build(BuildContext context) {

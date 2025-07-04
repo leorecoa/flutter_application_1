@@ -2,13 +2,13 @@
 
 /// Tipos de solicitação de titular de dados
 enum RequestType {
-  access,        // Acesso aos dados
+  access, // Acesso aos dados
   rectification, // Correção de dados
-  erasure,       // Exclusão de dados
-  restriction,   // Restrição de processamento
-  portability,   // Portabilidade de dados
-  objection,     // Objeção ao processamento
-  automated,     // Decisões automatizadas
+  erasure, // Exclusão de dados
+  restriction, // Restrição de processamento
+  portability, // Portabilidade de dados
+  objection, // Objeção ao processamento
+  automated, // Decisões automatizadas
 }
 
 /// Status da solicitação
@@ -39,8 +39,8 @@ class DataSubjectRequestModel {
     required this.type,
     required this.status,
     required this.createdAt,
-    this.completedAt,
     required this.description,
+    this.completedAt,
     this.attachments,
     this.metadata,
     this.rejectionReason,
@@ -59,9 +59,13 @@ class DataSubjectRequestModel {
         orElse: () => RequestStatus.pending,
       ),
       createdAt: DateTime.parse(json['createdAt']),
-      completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt']) : null,
+      completedAt: json['completedAt'] != null
+          ? DateTime.parse(json['completedAt'])
+          : null,
       description: json['description'],
-      attachments: json['attachments'] != null ? List<String>.from(json['attachments']) : null,
+      attachments: json['attachments'] != null
+          ? List<String>.from(json['attachments'])
+          : null,
       metadata: json['metadata'],
       rejectionReason: json['rejectionReason'],
     );

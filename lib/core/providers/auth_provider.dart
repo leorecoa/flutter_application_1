@@ -40,7 +40,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _checkAuthStatus() async {
     state = state.copyWith(isLoading: true);
-    
+
     try {
       final isSignedIn = await AuthService().isSignedIn();
       if (isSignedIn) {
@@ -61,11 +61,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> signIn(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    state = state.copyWith(isLoading: true);
+
     try {
       final result = await AuthService().signIn(email, password);
-      
+
       if (result['success'] == true) {
         final user = AuthService.getCurrentUser();
         final attributes = <String, dynamic>{'email': email};

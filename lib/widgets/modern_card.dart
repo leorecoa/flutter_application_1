@@ -12,8 +12,8 @@ class ModernCard extends StatelessWidget {
   final double? height;
 
   const ModernCard({
-    super.key,
     required this.child,
+    super.key,
     this.padding = const EdgeInsets.all(24),
     this.onTap,
     this.backgroundColor,

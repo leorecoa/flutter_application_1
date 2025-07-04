@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/admin_layout.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
 
 class AdminClientsScreen extends StatelessWidget {
   const AdminClientsScreen({super.key});
@@ -51,19 +52,24 @@ class AdminClientsScreen extends StatelessWidget {
       decoration: TrinksTheme.cardDecoration,
       child: Column(
         children: [
-          _buildClientItem('João Silva', 'joao@email.com', '(11) 99999-9999', '15 agendamentos'),
-          _buildClientItem('Carlos Santos', 'carlos@email.com', '(11) 88888-8888', '8 agendamentos'),
-          _buildClientItem('Pedro Costa', 'pedro@email.com', '(11) 77777-7777', '3 agendamentos'),
+          _buildClientItem('João Silva', 'joao@email.com', '(11) 99999-9999',
+              '15 agendamentos'),
+          _buildClientItem('Carlos Santos', 'carlos@email.com',
+              '(11) 88888-8888', '8 agendamentos'),
+          _buildClientItem('Pedro Costa', 'pedro@email.com', '(11) 77777-7777',
+              '3 agendamentos'),
         ],
       ),
     );
   }
 
-  Widget _buildClientItem(String name, String email, String phone, String appointments) {
+  Widget _buildClientItem(
+      String name, String email, String phone, String appointments) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: TrinksTheme.lightPurple,
-        child: Text(name[0], style: const TextStyle(color: TrinksTheme.navyBlue)),
+        child:
+            Text(name[0], style: const TextStyle(color: TrinksTheme.navyBlue)),
       ),
       title: Text(name),
       subtitle: Column(
@@ -76,7 +82,8 @@ class AdminClientsScreen extends StatelessWidget {
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(appointments, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(appointments,
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           const Text('Total', style: TextStyle(fontSize: 12)),
         ],
       ),

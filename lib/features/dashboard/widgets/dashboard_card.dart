@@ -13,11 +13,11 @@ class DashboardCard extends StatefulWidget {
   final int animationDelay;
 
   const DashboardCard({
-    super.key,
     required this.title,
     required this.value,
     required this.subtitle,
     required this.icon,
+    super.key,
     this.iconColor,
     this.onTap,
     this.isLoading = false,

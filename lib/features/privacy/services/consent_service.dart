@@ -10,7 +10,7 @@ class ConsentService {
   static String get _baseUrl => '${AppConfig.apiBaseUrl}/privacy/consent';
   static const String _currentVersion = '1.0.0';
   static const _uuid = Uuid();
-  
+
   /// Obtém todos os consentimentos do usuário
   static Future<List<ConsentModel>> getUserConsents(String userId) async {
     try {
@@ -26,14 +26,15 @@ class ConsentService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((item) => ConsentModel.fromJson(item)).toList();
       } else {
-        throw Exception('Falha ao obter consentimentos: ${response.statusCode}');
+        throw Exception(
+            'Falha ao obter consentimentos: ${response.statusCode}');
       }
     } catch (e) {
       // Dados simulados para desenvolvimento
       return _getMockConsents(userId);
     }
   }
-  
+
   /// Registra um novo consentimento
   static Future<ConsentModel> registerConsent({
     required String userId,
@@ -49,11 +50,10 @@ class ConsentService {
       status: status,
       createdAt: DateTime.now(),
       expiresAt: expiresAt,
-      updatedAt: null,
       version: _currentVersion,
       metadata: metadata,
     );
-    
+
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -72,10 +72,11 @@ class ConsentService {
           userId: userId,
           metadata: {'status': status.name},
         );
-        
+
         return ConsentModel.fromJson(json.decode(response.body));
       } else {
-        throw Exception('Falha ao registrar consentimento: ${response.statusCode}');
+        throw Exception(
+            'Falha ao registrar consentimento: ${response.statusCode}');
       }
     } catch (e) {
       // Simulação para desenvolvimento
@@ -86,11 +87,11 @@ class ConsentService {
         userId: userId,
         metadata: {'status': status.name, 'offline': true},
       );
-      
+
       return consent;
     }
   }
-  
+
   /// Atualiza um consentimento existente
   static Future<ConsentModel> updateConsent({
     required String consentId,
@@ -120,10 +121,11 @@ class ConsentService {
           userId: userId,
           metadata: {'status': status.name},
         );
-        
+
         return ConsentModel.fromJson(json.decode(response.body));
       } else {
-        throw Exception('Falha ao atualizar consentimento: ${response.statusCode}');
+        throw Exception(
+            'Falha ao atualizar consentimento: ${response.statusCode}');
       }
     } catch (e) {
       // Simulação para desenvolvimento
@@ -132,13 +134,13 @@ class ConsentService {
         (c) => c.id == consentId,
         orElse: () => throw Exception('Consentimento não encontrado'),
       );
-      
+
       final updatedConsent = existingConsent.copyWith(
         status: status,
         updatedAt: DateTime.now(),
         metadata: metadata ?? existingConsent.metadata,
       );
-      
+
       // Registra evento de auditoria mesmo em caso de falha
       await AuditLogger.log(
         action: 'consent_updated',
@@ -146,25 +148,25 @@ class ConsentService {
         userId: userId,
         metadata: {'status': status.name, 'offline': true},
       );
-      
+
       return updatedConsent;
     }
   }
-  
+
   /// Verifica se o usuário deu consentimento para um tipo específico
   static Future<bool> hasConsent(String userId, ConsentType type) async {
     final consents = await getUserConsents(userId);
     final consent = consents.where((c) => c.type == type).toList();
-    
+
     if (consent.isEmpty) {
       return false;
     }
-    
+
     // Pega o consentimento mais recente
     consent.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return consent.first.status == ConsentStatus.granted;
   }
-  
+
   /// Gera dados simulados para desenvolvimento
   static List<ConsentModel> _getMockConsents(String userId) {
     return [

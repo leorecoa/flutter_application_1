@@ -8,8 +8,8 @@ class ModernCard extends StatelessWidget {
   final Color? backgroundColor;
 
   const ModernCard({
-    super.key,
     required this.child,
+    super.key,
     this.padding,
     this.onTap,
     this.backgroundColor,
@@ -54,11 +54,11 @@ class KpiCard extends StatelessWidget {
   final double? percentage;
 
   const KpiCard({
-    super.key,
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
+    super.key,
     this.subtitle,
     this.percentage,
   });
@@ -82,9 +82,10 @@ class KpiCard extends StatelessWidget {
               const Spacer(),
               if (percentage != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: percentage! >= 0 
+                    color: percentage! >= 0
                         ? TrinksTheme.success.withValues(alpha: 0.1)
                         : TrinksTheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -94,7 +95,9 @@ class KpiCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: percentage! >= 0 ? TrinksTheme.success : TrinksTheme.error,
+                      color: percentage! >= 0
+                          ? TrinksTheme.success
+                          : TrinksTheme.error,
                     ),
                   ),
                 ),

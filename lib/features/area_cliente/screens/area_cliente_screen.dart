@@ -13,14 +13,15 @@ class AreaClienteScreen extends StatefulWidget {
   State<AreaClienteScreen> createState() => _AreaClienteScreenState();
 }
 
-class _AreaClienteScreenState extends State<AreaClienteScreen> with TickerProviderStateMixin {
+class _AreaClienteScreenState extends State<AreaClienteScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
-  
+
   List<Agendamento> _agendamentos = [];
   List<Payment> _pagamentos = [];
   bool _isLoadingAgendamentos = false;
   bool _isLoadingPagamentos = false;
-  
+
   String? _clienteId;
 
   @override
@@ -36,32 +37,33 @@ class _AreaClienteScreenState extends State<AreaClienteScreen> with TickerProvid
     super.dispose();
   }
 
-  void _carregarDados() async {
+  Future<void> _carregarDados() async {
     _clienteId = await ClienteService.getCurrentClienteId();
     _carregarAgendamentos();
     _carregarPagamentos();
   }
 
-  void _carregarAgendamentos() async {
+  Future<void> _carregarAgendamentos() async {
     if (_clienteId == null) return;
-    
+
     setState(() => _isLoadingAgendamentos = true);
-    
-    final agendamentos = await ClienteService.getAgendamentosCliente(_clienteId!);
-    
+
+    final agendamentos =
+        await ClienteService.getAgendamentosCliente(_clienteId!);
+
     setState(() {
       _agendamentos = agendamentos;
       _isLoadingAgendamentos = false;
     });
   }
 
-  void _carregarPagamentos() async {
+  Future<void> _carregarPagamentos() async {
     if (_clienteId == null) return;
-    
+
     setState(() => _isLoadingPagamentos = true);
-    
+
     final pagamentos = await ClienteService.getPagamentosCliente(_clienteId!);
-    
+
     setState(() {
       _pagamentos = pagamentos;
       _isLoadingPagamentos = false;
@@ -108,7 +110,8 @@ class _AreaClienteScreenState extends State<AreaClienteScreen> with TickerProvid
                 color: TrinksTheme.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.content_cut, color: TrinksTheme.white, size: 28),
+              child: const Icon(Icons.content_cut,
+                  color: TrinksTheme.white, size: 28),
             ),
             const SizedBox(width: 16),
             const Expanded(

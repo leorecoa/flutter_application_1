@@ -6,10 +6,10 @@ import '../services/white_label_service.dart';
 
 class WhiteLabelConfigScreen extends StatefulWidget {
   final String tenantId;
-  
+
   const WhiteLabelConfigScreen({
-    super.key,
     required this.tenantId,
+    super.key,
   });
 
   @override
@@ -20,24 +20,24 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
   bool _isLoading = true;
   late WhiteLabelConfig _config;
   final _formKey = GlobalKey<FormState>();
-  
+
   final _companyNameController = TextEditingController();
   final _logoUrlController = TextEditingController();
   final _welcomeTextController = TextEditingController();
   final _supportEmailController = TextEditingController();
   final _supportPhoneController = TextEditingController();
-  
+
   Color _primaryColor = Colors.blue;
   Color _secondaryColor = Colors.blueAccent;
   BusinessSegment _selectedSegment = BusinessSegment.generic;
   double _borderRadius = 8.0;
-  
+
   @override
   void initState() {
     super.initState();
     _loadConfig();
   }
-  
+
   @override
   void dispose() {
     _companyNameController.dispose();
@@ -47,15 +47,15 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
     _supportPhoneController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadConfig() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final config = await WhiteLabelService.getConfig(widget.tenantId);
-      
+
       setState(() {
         _config = config;
         _companyNameController.text = config.companyName;
@@ -64,7 +64,8 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
         _supportEmailController.text = config.supportEmail ?? '';
         _supportPhoneController.text = config.supportPhone ?? '';
         _primaryColor = config.primaryColor;
-        _secondaryColor = config.secondaryColor ?? config.segment.secondaryColor;
+        _secondaryColor =
+            config.secondaryColor ?? config.segment.secondaryColor;
         _selectedSegment = config.segment;
         _borderRadius = config.borderRadius ?? config.segment.borderRadius;
         _isLoading = false;
@@ -73,7 +74,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar configurações: $e')),
@@ -81,34 +82,41 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
       }
     }
   }
-  
+
   Future<void> _saveConfig() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final updatedConfig = _config.copyWith(
         companyName: _companyNameController.text,
-        logoUrl: _logoUrlController.text.isEmpty ? null : _logoUrlController.text,
+        logoUrl:
+            _logoUrlController.text.isEmpty ? null : _logoUrlController.text,
         primaryColor: _primaryColor,
         secondaryColor: _secondaryColor,
         segment: _selectedSegment,
         borderRadius: _borderRadius,
-        welcomeText: _welcomeTextController.text.isEmpty ? null : _welcomeTextController.text,
-        supportEmail: _supportEmailController.text.isEmpty ? null : _supportEmailController.text,
-        supportPhone: _supportPhoneController.text.isEmpty ? null : _supportPhoneController.text,
+        welcomeText: _welcomeTextController.text.isEmpty
+            ? null
+            : _welcomeTextController.text,
+        supportEmail: _supportEmailController.text.isEmpty
+            ? null
+            : _supportEmailController.text,
+        supportPhone: _supportPhoneController.text.isEmpty
+            ? null
+            : _supportPhoneController.text,
       );
-      
+
       await WhiteLabelService.updateConfig(widget.tenantId, updatedConfig);
-      
+
       setState(() {
         _config = updatedConfig;
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Configurações salvas com sucesso')),
@@ -118,7 +126,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao salvar configurações: $e')),
@@ -126,13 +134,13 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
       }
     }
   }
-  
+
   void _showColorPicker(Color initialColor, Function(Color) onColorChanged) {
     showDialog(
       context: context,
       builder: (context) {
         Color selectedColor = initialColor;
-        
+
         return AlertDialog(
           title: const Text('Selecione uma cor'),
           content: SingleChildScrollView(
@@ -191,7 +199,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Informações básicas
                     const Text(
                       'Informações Básicas',
@@ -233,7 +241,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       maxLines: 2,
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Segmento de negócio
                     const Text(
                       'Segmento de Negócio',
@@ -274,7 +282,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Cores
                     const Text(
                       'Cores',
@@ -333,7 +341,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Raio de borda
                     const Text(
                       'Raio de Borda',
@@ -345,7 +353,6 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                     const SizedBox(height: 8),
                     Slider(
                       value: _borderRadius,
-                      min: 0,
                       max: 32,
                       divisions: 32,
                       label: _borderRadius.round().toString(),
@@ -356,7 +363,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Informações de contato
                     const Text(
                       'Informações de Contato',
@@ -386,7 +393,7 @@ class _WhiteLabelConfigScreenState extends State<WhiteLabelConfigScreen> {
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Botão de salvar
                     SizedBox(
                       width: double.infinity,

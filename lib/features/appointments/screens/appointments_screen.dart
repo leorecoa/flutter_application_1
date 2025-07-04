@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/luxury_theme.dart';
-import '../../../shared/widgets/luxury_card.dart';
 import '../../../shared/widgets/bottom_nav.dart';
-import '../services/agendamento_service.dart';
+import '../../../shared/widgets/luxury_card.dart';
 import '../models/agendamento_model.dart';
+import '../services/agendamento_service.dart';
 import '../widgets/add_appointment_dialog.dart';
 
 class AppointmentsScreen extends StatefulWidget {
@@ -131,7 +132,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
-  Widget _buildAppointmentCard(String name, String service, String time, String status, Color statusColor) {
+  Widget _buildAppointmentCard(String name, String service, String time,
+      String status, Color statusColor) {
     return LuxuryCard(
       child: Row(
         children: [

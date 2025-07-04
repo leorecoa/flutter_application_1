@@ -19,8 +19,6 @@ class TrinksTheme {
     colorScheme: const ColorScheme.light(
       primary: navyBlue,
       secondary: purple,
-      surface: white,
-      onPrimary: white,
       onSecondary: white,
       onSurface: darkGray,
       error: error,

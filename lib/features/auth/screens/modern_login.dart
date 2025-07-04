@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/trinks_theme.dart';
+
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/theme/trinks_theme.dart';
 
 class ModernLogin extends ConsumerStatefulWidget {
   const ModernLogin({super.key});
@@ -28,9 +29,9 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(authProvider.notifier).signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
     if (success && mounted) {
       context.go('/dashboard');
@@ -89,7 +90,7 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
               ),
             ),
           ),
-          
+
           // Right Side - Login Form
           Expanded(
             child: Container(
@@ -121,7 +122,7 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                             ),
                           ),
                           const SizedBox(height: 48),
-                          
+
                           // Email Field
                           TextFormField(
                             controller: _emailController,
@@ -134,14 +135,15 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                               if (value == null || value.isEmpty) {
                                 return 'Digite seu e-mail';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                  .hasMatch(value)) {
                                 return 'E-mail inválido';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Password Field
                           TextFormField(
                             controller: _passwordController,
@@ -151,9 +153,12 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                               prefixIcon: const Icon(Icons.lock_outlined),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword),
                               ),
                             ),
                             validator: (value) {
@@ -163,7 +168,7 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                               return null;
                             },
                           ),
-                          
+
                           // Error Message
                           if (authState.error != null) ...[
                             const SizedBox(height: 16),
@@ -172,59 +177,67 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                               decoration: BoxDecoration(
                                 color: TrinksTheme.error.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: TrinksTheme.error.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                    color: TrinksTheme.error
+                                        .withValues(alpha: 0.3)),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.error_outline, color: TrinksTheme.error, size: 20),
+                                  const Icon(Icons.error_outline,
+                                      color: TrinksTheme.error, size: 20),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       authState.error!,
-                                      style: const TextStyle(color: TrinksTheme.error),
+                                      style: const TextStyle(
+                                          color: TrinksTheme.error),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ],
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Login Button
                           SizedBox(
                             height: 48,
                             child: ElevatedButton(
-                              onPressed: authState.isLoading ? null : _handleLogin,
+                              onPressed:
+                                  authState.isLoading ? null : _handleLogin,
                               child: authState.isLoading
                                   ? const SizedBox(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     )
                                   : const Text('Entrar'),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Forgot Password
                           TextButton(
                             onPressed: () {},
                             child: const Text('Esqueceu sua senha?'),
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Divider
                           Row(
                             children: [
                               const Expanded(child: Divider()),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   'Novo por aqui?',
                                   style: TextStyle(color: Colors.grey[600]),
@@ -233,15 +246,16 @@ class _ModernLoginState extends ConsumerState<ModernLogin> {
                               const Expanded(child: Divider()),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Sign Up Button
                           OutlinedButton(
                             onPressed: () {},
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: const BorderSide(color: TrinksTheme.navyBlue),
+                              side:
+                                  const BorderSide(color: TrinksTheme.navyBlue),
                             ),
                             child: const Text('Criar conta gratuita'),
                           ),

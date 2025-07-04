@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'core/services/auth_service.dart';
-import 'features/appointments/services/agendamento_service.dart';
 import 'features/appointments/models/agendamento_model.dart';
+import 'features/appointments/services/agendamento_service.dart';
 
 class TestAWSIntegration extends StatefulWidget {
   const TestAWSIntegration({super.key});
@@ -49,11 +50,12 @@ class _TestAWSIntegrationState extends State<TestAWSIntegration> {
 
     try {
       // Teste de login (vai falhar pois não temos API real)
-      final result = await AuthService().loginUser('test@test.com', 'password123');
+      final result =
+          await AuthService().loginUser('test@test.com', 'password123');
       setState(() {
         _status = result['success'] == true
-          ? '✅ Auth: Login simulado com sucesso' 
-          : '⚠️ Auth: Fallback funcionando (API não disponível)';
+            ? '✅ Auth: Login simulado com sucesso'
+            : '⚠️ Auth: Fallback funcionando (API não disponível)';
       });
     } catch (e) {
       setState(() {
@@ -73,7 +75,7 @@ class _TestAWSIntegrationState extends State<TestAWSIntegration> {
     try {
       // Teste de busca de agendamentos
       final agendamentos = await AgendamentoService.getAgendamentos();
-      
+
       // Teste de criação
       final novoAgendamento = Agendamento(
         id: '',
@@ -87,11 +89,12 @@ class _TestAWSIntegrationState extends State<TestAWSIntegration> {
         valor: 50.0,
         status: StatusAgendamento.pendente,
       );
-      
+
       await AgendamentoService.criarAgendamento(novoAgendamento);
-      
+
       setState(() {
-        _status = '✅ Agendamentos: ${agendamentos.length} encontrados, criação OK';
+        _status =
+            '✅ Agendamentos: ${agendamentos.length} encontrados, criação OK';
       });
     } catch (e) {
       setState(() {

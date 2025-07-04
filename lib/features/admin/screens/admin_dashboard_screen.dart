@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/models/dashboard_stats.dart';
 import '../../../shared/widgets/admin_layout.dart';
 import '../../../shared/widgets/dashboard_card.dart';
-import '../../../shared/models/dashboard_stats.dart';
-import '../../../core/theme/trinks_theme.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -178,7 +179,8 @@ class AdminDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+      String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -225,10 +227,14 @@ class AdminDashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildActivityItem('João Silva agendou corte para hoje às 14:00', '2 min atrás'),
-          _buildActivityItem('Pagamento de R\$ 45,00 recebido de Carlos Santos', '15 min atrás'),
-          _buildActivityItem('Maria Oliveira cancelou agendamento', '1 hora atrás'),
-          _buildActivityItem('Novo cliente cadastrado: Pedro Costa', '2 horas atrás'),
+          _buildActivityItem(
+              'João Silva agendou corte para hoje às 14:00', '2 min atrás'),
+          _buildActivityItem('Pagamento de R\$ 45,00 recebido de Carlos Santos',
+              '15 min atrás'),
+          _buildActivityItem(
+              'Maria Oliveira cancelou agendamento', '1 hora atrás'),
+          _buildActivityItem(
+              'Novo cliente cadastrado: Pedro Costa', '2 horas atrás'),
         ],
       ),
     );

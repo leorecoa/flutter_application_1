@@ -9,8 +9,8 @@ class LuxuryCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const LuxuryCard({
-    super.key,
     required this.child,
+    super.key,
     this.padding,
     this.elevation,
     this.color,
@@ -60,8 +60,8 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   const GlassCard({
-    super.key,
     required this.child,
+    super.key,
     this.padding,
   });
 
@@ -73,7 +73,6 @@ class GlassCard extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.1),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.2),
-          width: 1,
         ),
         boxShadow: [
           BoxShadow(

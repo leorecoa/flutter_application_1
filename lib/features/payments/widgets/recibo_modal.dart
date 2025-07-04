@@ -6,7 +6,7 @@ import '../models/payment_model.dart';
 class ReciboModal extends StatelessWidget {
   final Payment payment;
 
-  const ReciboModal({super.key, required this.payment});
+  const ReciboModal({required this.payment, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +74,6 @@ class ReciboModal extends StatelessWidget {
 
   Widget _buildBarbeariHeader() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +84,8 @@ class ReciboModal extends StatelessWidget {
                 color: TrinksTheme.navyBlue,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.content_cut, color: TrinksTheme.white, size: 24),
+              child: const Icon(Icons.content_cut,
+                  color: TrinksTheme.white, size: 24),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -128,11 +128,13 @@ class ReciboModal extends StatelessWidget {
     return Column(
       children: [
         _buildInfoRow('Recibo Nº:', payment.id),
-        _buildInfoRow('Data:', DateFormat('dd/MM/yyyy HH:mm').format(payment.data)),
+        _buildInfoRow(
+            'Data:', DateFormat('dd/MM/yyyy HH:mm').format(payment.data)),
         _buildInfoRow('Cliente:', payment.clienteNome),
         _buildInfoRow('Serviço:', payment.servicoNome),
         _buildInfoRow('Profissional:', payment.barbeiroNome),
-        _buildInfoRow('Forma de Pagamento:', _getFormaPagamentoText(payment.formaPagamento)),
+        _buildInfoRow('Forma de Pagamento:',
+            _getFormaPagamentoText(payment.formaPagamento)),
         if (payment.chavePix != null)
           _buildInfoRow('Chave PIX:', payment.chavePix!),
       ],
@@ -226,7 +228,8 @@ class ReciboModal extends StatelessWidget {
         TextButton.icon(
           onPressed: () => _compartilharWhatsApp(),
           icon: const Icon(Icons.share, color: TrinksTheme.success),
-          label: const Text('WhatsApp', style: TextStyle(color: TrinksTheme.success)),
+          label: const Text('WhatsApp',
+              style: TextStyle(color: TrinksTheme.success)),
         ),
         const SizedBox(width: 16),
         TextButton.icon(

@@ -408,9 +408,9 @@ class _SettingsScreenState extends State<SettingsScreen>
     required String title,
     required String subtitle,
     required IconData icon,
+    required VoidCallback onTap,
     Color? iconColor,
     Color? textColor,
-    required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,

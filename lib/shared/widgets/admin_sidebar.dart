@@ -6,7 +6,7 @@ import '../models/menu_item.dart';
 class AdminSidebar extends StatelessWidget {
   final String currentRoute;
 
-  const AdminSidebar({super.key, required this.currentRoute});
+  const AdminSidebar({required this.currentRoute, super.key});
 
   static const List<MenuItem> menuItems = [
     MenuItem(

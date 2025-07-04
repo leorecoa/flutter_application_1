@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/trinks_theme.dart';
-import '../../../shared/widgets/modern_sidebar.dart';
 import '../../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_sidebar.dart';
 
 class ModernDashboard extends StatelessWidget {
   const ModernDashboard({super.key});

@@ -7,9 +7,9 @@ class SimpleAgendamentoForm extends StatefulWidget {
   final VoidCallback onSaved;
 
   const SimpleAgendamentoForm({
+    required this.onSaved,
     super.key,
     this.agendamento,
-    required this.onSaved,
   });
 
   @override

@@ -6,7 +6,7 @@ import 'core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  await dotenv.load();
   runApp(const ProviderScope(child: AgendeMaisApp()));
 }
 
@@ -23,7 +23,6 @@ class AgendeMaisApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
-          brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: AppColors.grey50,
         appBarTheme: const AppBarTheme(

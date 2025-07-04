@@ -21,8 +21,8 @@ class InputField extends StatefulWidget {
   final bool isRequired;
 
   const InputField({
-    super.key,
     required this.label,
+    super.key,
     this.hint,
     this.controller,
     this.obscureText = false,

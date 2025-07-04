@@ -9,8 +9,8 @@ class ListaPagamentos extends StatelessWidget {
   final bool isLoading;
 
   const ListaPagamentos({
-    super.key,
     required this.pagamentos,
+    super.key,
     this.isLoading = false,
   });
 
@@ -67,7 +67,8 @@ class ListaPagamentos extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _getFormaPagamentoColor(pagamento.formaPagamento).withValues(alpha: 0.1),
+              color: _getFormaPagamentoColor(pagamento.formaPagamento)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -127,7 +128,8 @@ class ListaPagamentos extends StatelessWidget {
           if (pagamento.status == StatusPagamento.pago)
             IconButton(
               onPressed: () => _gerarRecibo(context, pagamento),
-              icon: const Icon(Icons.receipt_outlined, color: TrinksTheme.lightBlue),
+              icon: const Icon(Icons.receipt_outlined,
+                  color: TrinksTheme.lightBlue),
               tooltip: 'Ver Recibo',
             ),
         ],

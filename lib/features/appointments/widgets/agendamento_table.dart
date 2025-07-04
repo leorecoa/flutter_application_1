@@ -11,11 +11,11 @@ class AgendamentoTable extends StatelessWidget {
   final bool isLoading;
 
   const AgendamentoTable({
-    super.key,
     required this.agendamentos,
     required this.onEdit,
     required this.onCancel,
     required this.onComplete,
+    super.key,
     this.isLoading = false,
   });
 
@@ -76,12 +76,28 @@ class AgendamentoTable extends StatelessWidget {
       ),
       child: const Row(
         children: [
-          Expanded(flex: 2, child: Text('Cliente', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Serviço', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Barbeiro', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 2, child: Text('Data/Hora', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 1, child: Text('Status', style: TextStyle(fontWeight: FontWeight.w600))),
-          Expanded(flex: 1, child: Text('Ações', style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Cliente',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Serviço',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Barbeiro',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              flex: 2,
+              child: Text('Data/Hora',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              child: Text('Status',
+                  style: TextStyle(fontWeight: FontWeight.w600))),
+          Expanded(
+              child:
+                  Text('Ações', style: TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
     );
@@ -132,8 +148,8 @@ class AgendamentoTable extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(flex: 1, child: _buildStatusChip(agendamento.status)),
-          Expanded(flex: 1, child: _buildActions(agendamento)),
+          Expanded(child: _buildStatusChip(agendamento.status)),
+          Expanded(child: _buildActions(agendamento)),
         ],
       ),
     );
@@ -142,7 +158,7 @@ class AgendamentoTable extends StatelessWidget {
   Widget _buildStatusChip(StatusAgendamento status) {
     Color color;
     String text;
-    
+
     switch (status) {
       case StatusAgendamento.confirmado:
         color = TrinksTheme.success;
@@ -198,7 +214,8 @@ class AgendamentoTable extends StatelessWidget {
             ),
           if (agendamento.status != StatusAgendamento.concluido)
             IconButton(
-              icon: const Icon(Icons.cancel_outlined, size: 18, color: TrinksTheme.error),
+              icon: const Icon(Icons.cancel_outlined,
+                  size: 18, color: TrinksTheme.error),
               onPressed: () => onCancel(agendamento.id),
               tooltip: 'Cancelar',
             ),

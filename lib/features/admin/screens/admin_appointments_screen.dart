@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/admin_layout.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
 
 class AdminAppointmentsScreen extends StatelessWidget {
   const AdminAppointmentsScreen({super.key});
@@ -51,7 +52,8 @@ class AdminAppointmentsScreen extends StatelessWidget {
       decoration: TrinksTheme.cardDecoration,
       child: Column(
         children: [
-          _buildAppointmentItem('João Silva', '14:00', 'Corte + Barba', 'Confirmado'),
+          _buildAppointmentItem(
+              'João Silva', '14:00', 'Corte + Barba', 'Confirmado'),
           _buildAppointmentItem('Carlos Santos', '15:30', 'Corte', 'Pendente'),
           _buildAppointmentItem('Pedro Costa', '16:00', 'Barba', 'Confirmado'),
         ],
@@ -59,18 +61,22 @@ class AdminAppointmentsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppointmentItem(String client, String time, String service, String status) {
+  Widget _buildAppointmentItem(
+      String client, String time, String service, String status) {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: TrinksTheme.lightPurple,
-        child: Text(client[0], style: const TextStyle(color: TrinksTheme.navyBlue)),
+        child: Text(client[0],
+            style: const TextStyle(color: TrinksTheme.navyBlue)),
       ),
       title: Text(client),
       subtitle: Text('$service - $time'),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: status == 'Confirmado' ? TrinksTheme.success : TrinksTheme.warning,
+          color: status == 'Confirmado'
+              ? TrinksTheme.success
+              : TrinksTheme.warning,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

@@ -17,7 +17,6 @@ class LuxuryTheme {
       surface: charcoal,
       onPrimary: deepBlue,
       onSecondary: deepBlue,
-      onSurface: Colors.white,
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,

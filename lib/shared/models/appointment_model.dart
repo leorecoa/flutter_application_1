@@ -22,7 +22,6 @@ class AppointmentModel {
     required this.userId,
     required this.clientName,
     required this.clientPhone,
-    this.clientEmail,
     required this.serviceId,
     required this.serviceName,
     required this.servicePrice,
@@ -31,10 +30,11 @@ class AppointmentModel {
     required this.status,
     required this.paymentStatus,
     required this.paymentMethod,
-    this.paymentId,
-    this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.clientEmail,
+    this.paymentId,
+    this.notes,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {

@@ -59,13 +59,13 @@ class WhiteLabelConfig {
 
   WhiteLabelConfig({
     required this.companyName,
-    this.logoUrl,
     required this.primaryColor,
+    required this.segment,
+    this.logoUrl,
     this.secondaryColor,
     this.backgroundColor,
     this.fontFamily,
     this.borderRadius,
-    required this.segment,
     this.welcomeText,
     this.faviconUrl,
     this.customDomain,

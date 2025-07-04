@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/theme/luxury_theme.dart';
-import '../../../shared/widgets/luxury_card.dart';
 import '../../../shared/models/service_model.dart';
+import '../../../shared/widgets/luxury_card.dart';
 import '../widgets/add_service_dialog.dart';
 
 class ServicesScreen extends StatefulWidget {
@@ -110,7 +111,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: LuxuryTheme.primaryGold.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -126,7 +128,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(8),

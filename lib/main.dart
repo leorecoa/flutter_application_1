@@ -25,7 +25,6 @@ class AgendeMaisApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
-          brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: AppColors.grey50,
         appBarTheme: const AppBarTheme(

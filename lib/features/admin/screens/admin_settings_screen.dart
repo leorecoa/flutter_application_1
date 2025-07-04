@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../shared/widgets/admin_layout.dart';
+
 import '../../../core/theme/trinks_theme.dart';
+import '../../../shared/widgets/admin_layout.dart';
 
 class AdminSettingsScreen extends StatelessWidget {
   const AdminSettingsScreen({super.key});
@@ -20,14 +21,17 @@ class AdminSettingsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSettingsSection('Perfil da Barbearia', [
-            _buildSettingItem('Nome da Barbearia', 'Barbearia do João', Icons.store),
-            _buildSettingItem('Endereço', 'Rua das Flores, 123', Icons.location_on),
+            _buildSettingItem(
+                'Nome da Barbearia', 'Barbearia do João', Icons.store),
+            _buildSettingItem(
+                'Endereço', 'Rua das Flores, 123', Icons.location_on),
             _buildSettingItem('Telefone', '(11) 99999-9999', Icons.phone),
             _buildSettingItem('Email', 'contato@barbearia.com', Icons.email),
           ]),
           const SizedBox(height: 32),
           _buildSettingsSection('Horário de Funcionamento', [
-            _buildSettingItem('Segunda a Sexta', '08:00 - 18:00', Icons.schedule),
+            _buildSettingItem(
+                'Segunda a Sexta', '08:00 - 18:00', Icons.schedule),
             _buildSettingItem('Sábado', '08:00 - 16:00', Icons.schedule),
             _buildSettingItem('Domingo', 'Fechado', Icons.schedule_outlined),
           ]),

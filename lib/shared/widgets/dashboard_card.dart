@@ -10,11 +10,11 @@ class DashboardCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   const DashboardCard({
-    super.key,
     required this.title,
     required this.value,
     required this.icon,
     required this.iconColor,
+    super.key,
     this.subtitle,
     this.onTap,
   });

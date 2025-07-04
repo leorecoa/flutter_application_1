@@ -15,7 +15,7 @@ class PDFGenerator {
 class ReciboDialog extends StatelessWidget {
   final Payment pagamento;
 
-  const ReciboDialog({super.key, required this.pagamento});
+  const ReciboDialog({required this.pagamento, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +85,6 @@ class ReciboDialog extends StatelessWidget {
 
   Widget _buildBarbeariHeader() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -96,7 +95,8 @@ class ReciboDialog extends StatelessWidget {
                 color: TrinksTheme.navyBlue,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.content_cut, color: TrinksTheme.white, size: 24),
+              child: const Icon(Icons.content_cut,
+                  color: TrinksTheme.white, size: 24),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -156,7 +156,8 @@ class ReciboDialog extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _buildInfoRow('Nome:', pagamento.clienteNome),
-        _buildInfoRow('Data do Atendimento:', DateFormat('dd/MM/yyyy HH:mm').format(pagamento.data)),
+        _buildInfoRow('Data do Atendimento:',
+            DateFormat('dd/MM/yyyy HH:mm').format(pagamento.data)),
       ],
     );
   }
@@ -193,8 +194,10 @@ class ReciboDialog extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        _buildInfoRow('Forma de Pagamento:', _getFormaPagamentoText(pagamento.formaPagamento)),
-        _buildInfoRow('Data do Pagamento:', DateFormat('dd/MM/yyyy HH:mm').format(pagamento.data)),
+        _buildInfoRow('Forma de Pagamento:',
+            _getFormaPagamentoText(pagamento.formaPagamento)),
+        _buildInfoRow('Data do Pagamento:',
+            DateFormat('dd/MM/yyyy HH:mm').format(pagamento.data)),
         if (pagamento.chavePix != null)
           _buildInfoRow('Chave PIX:', pagamento.chavePix!),
       ],
@@ -302,7 +305,8 @@ class ReciboDialog extends StatelessWidget {
         TextButton.icon(
           onPressed: () => _compartilharWhatsApp(),
           icon: const Icon(Icons.share, color: TrinksTheme.success),
-          label: const Text('Compartilhar', style: TextStyle(color: TrinksTheme.success)),
+          label: const Text('Compartilhar',
+              style: TextStyle(color: TrinksTheme.success)),
         ),
         const SizedBox(width: 16),
         ElevatedButton.icon(

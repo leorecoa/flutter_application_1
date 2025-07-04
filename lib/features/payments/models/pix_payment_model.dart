@@ -12,9 +12,9 @@ class PixPayment {
     required this.amount,
     required this.description,
     required this.status,
+    required this.createdAt,
     this.pixCode,
     this.pixQrCodeBase64,
-    required this.createdAt,
   });
 
   factory PixPayment.fromJson(Map<String, dynamic> json) {

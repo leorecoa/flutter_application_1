@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/luxury_theme.dart';
 import '../../../shared/widgets/luxury_card.dart';
-import '../../../core/providers/auth_provider.dart';
 
 class AmplifyLoginScreen extends ConsumerStatefulWidget {
   const AmplifyLoginScreen({super.key});
@@ -28,9 +29,9 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(authProvider.notifier).signIn(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
 
     if (success && mounted) {
       context.go('/dashboard');
@@ -76,7 +77,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                           gradient: LuxuryTheme.goldGradient,
                           boxShadow: [
                             BoxShadow(
-                              color: LuxuryTheme.primaryGold.withValues(alpha: 0.3),
+                              color: LuxuryTheme.primaryGold
+                                  .withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -90,7 +92,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       ShaderMask(
-                        shaderCallback: (bounds) => LuxuryTheme.goldGradient.createShader(bounds),
+                        shaderCallback: (bounds) =>
+                            LuxuryTheme.goldGradient.createShader(bounds),
                         child: const Text(
                           'AgendaFácil',
                           style: TextStyle(
@@ -123,7 +126,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Digite seu e-mail';
                           }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              .hasMatch(value)) {
                             return 'E-mail inválido';
                           }
                           return null;
@@ -155,7 +159,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+                              Icon(Icons.error_outline,
+                                  color: Colors.red[700], size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -180,7 +185,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 8,
-                            shadowColor: LuxuryTheme.darkGold.withValues(alpha: 0.5),
+                            shadowColor:
+                                LuxuryTheme.darkGold.withValues(alpha: 0.5),
                           ),
                           child: authState.isLoading
                               ? const SizedBox(
@@ -188,7 +194,8 @@ class _AmplifyLoginScreenState extends ConsumerState<AmplifyLoginScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 3,
-                                    valueColor: AlwaysStoppedAnimation<Color>(LuxuryTheme.deepBlue),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        LuxuryTheme.deepBlue),
                                   ),
                                 )
                               : const Text(

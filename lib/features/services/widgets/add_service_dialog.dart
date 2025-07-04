@@ -7,9 +7,9 @@ class AddServiceDialog extends StatefulWidget {
   final Function(ServiceModel) onSave;
 
   const AddServiceDialog({
+    required this.onSave,
     super.key,
     this.service,
-    required this.onSave,
   });
 
   @override
@@ -74,7 +74,8 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.content_cut),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -98,7 +99,8 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                         prefixIcon: Icon(Icons.attach_money),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      validator: (value) =>
+                          value?.isEmpty == true ? 'Campo obrigatório' : null,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -111,7 +113,8 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                         prefixIcon: Icon(Icons.timer),
                       ),
                       keyboardType: TextInputType.number,
-                      validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                      validator: (value) =>
+                          value?.isEmpty == true ? 'Campo obrigatório' : null,
                     ),
                   ),
                 ],
@@ -164,7 +167,8 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
   void _saveService() {
     if (_formKey.currentState!.validate()) {
       final service = ServiceModel(
-        id: widget.service?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: widget.service?.id ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text,
         description: _descriptionController.text,
         price: double.tryParse(_priceController.text) ?? 0.0,
@@ -175,7 +179,7 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
         createdAt: widget.service?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       widget.onSave(service);
       Navigator.pop(context);
     }
