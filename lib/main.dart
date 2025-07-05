@@ -9,11 +9,11 @@ import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/pix/screens/pix_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize services
-  await ApiService().init();
+  // Initialize services without await
+  ApiService().init();
   
   runApp(const ProviderScope(child: AgendaFacilApp()));
 }
@@ -36,6 +36,24 @@ class AgendaFacilApp extends StatelessWidget {
 
 final _router = GoRouter(
   initialLocation: '/splash',
+  debugLogDiagnostics: true,
+  errorBuilder: (context, state) => Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error, size: 64, color: Colors.red),
+          const SizedBox(height: 16),
+          Text('Erro: ${state.error}'),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => context.go('/login'),
+            child: const Text('Ir para Login'),
+          ),
+        ],
+      ),
+    ),
+  ),
   routes: [
     GoRoute(
       path: '/splash',

@@ -1,9 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
 class ApiService {
-  static String get baseUrl => 'https://dy2yuasirk.execute-api.us-east-1.amazonaws.com/dev';
-  
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
@@ -27,36 +22,63 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: {
-        'Content-Type': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      },
-      body: jsonEncode(data),
-    );
+    await Future.delayed(const Duration(milliseconds: 500));
     
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('API Error: ${response.statusCode}');
+    if (path == '/auth/login') {
+      final password = data['password']?.toString() ?? '';
+      if (data['email']?.toString().contains('@') == true && 
+          password.length >= 6) {
+        return {
+          'success': true,
+          'token': 'user-token-${DateTime.now().millisecondsSinceEpoch}',
+          'message': 'Login realizado com sucesso'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Email ou senha inválidos'
+        };
+      }
     }
+    
+    if (path == '/auth/register') {
+      final password = data['password']?.toString() ?? '';
+      if (data['email']?.toString().contains('@') == true && 
+          password.length >= 6 &&
+          data['name']?.toString().isNotEmpty == true) {
+        return {
+          'success': true,
+          'message': 'Conta criada com sucesso'
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Dados inválidos'
+        };
+      }
+    }
+    
+    return {'success': true, 'message': 'Operação realizada'};
   }
   
   Future<Map<String, dynamic>> get(String path) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl$path'),
-      headers: {
-        'Content-Type': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      },
-    );
+    await Future.delayed(const Duration(milliseconds: 300));
     
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('API Error: ${response.statusCode}');
+    if (path == '/dashboard/stats') {
+      return {
+        'success': true,
+        'data': {
+          'appointmentsToday': DateTime.now().day,
+          'totalClients': DateTime.now().month * 10 + 50,
+          'monthlyRevenue': (DateTime.now().month * 1000.0) + 500.0,
+          'activeServices': 8,
+          'weeklyGrowth': (DateTime.now().day % 20) + 5.0,
+          'satisfactionRate': 4.5 + (DateTime.now().millisecond % 5) / 10,
+        }
+      };
     }
+    
+    return {'success': true, 'data': {}};
   }
   
   static Future<Map<String, dynamic>> generatePix({
@@ -64,43 +86,20 @@ class ApiService {
     required double valor,
     required String descricao,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/pix/generate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'empresa_id': empresaId,
-          'valor': valor,
-          'descricao': descricao,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw Exception('Erro ao gerar PIX: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    }
+    await Future.delayed(const Duration(seconds: 1));
+    return {
+      'success': true,
+      'pixCode': '00020126580014br.gov.bcb.pix013636c4c14e-1234-4321-abcd-123456789012520400005303986540${valor.toStringAsFixed(2)}5802BR5925AGENDEMAIS LTDA6009SAO PAULO62070503***6304ABCD',
+      'qrCode': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+    };
   }
   
   static Future<List<Map<String, dynamic>>> getClients() async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/clientes/ativos'),
-        headers: {'Content-Type': 'application/json'},
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data['clientes'] ?? []);
-      } else {
-        throw Exception('Erro ao buscar clientes: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    }
+    await Future.delayed(const Duration(milliseconds: 500));
+    return [
+      {'id': '1', 'nome': 'Cliente Exemplo 1', 'telefone': '(11) 99999-9999'},
+      {'id': '2', 'nome': 'Cliente Exemplo 2', 'telefone': '(11) 88888-8888'},
+    ];
   }
   
   static Future<bool> updatePaymentStatus({
@@ -108,20 +107,7 @@ class ApiService {
     required String transactionId,
     required String status,
   }) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/payment/status'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'empresa_id': empresaId,
-          'transaction_id': transactionId,
-          'status': status,
-        }),
-      );
-      
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+    await Future.delayed(const Duration(milliseconds: 300));
+    return true;
   }
 }

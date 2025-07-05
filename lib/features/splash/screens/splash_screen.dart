@@ -20,14 +20,22 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 1),
     );
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1).animate(_controller);
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(_controller);
     
     _controller.forward();
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) context.go('/login');
+    
+    // Redirecionamento mais rápido
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        try {
+          context.go('/login');
+        } catch (e) {
+          print('Erro no redirecionamento: $e');
+        }
+      }
     });
   }
 

@@ -11,12 +11,35 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
   <title>AGENDEMAIS - Sistema de Agendamento</title>
-  <link rel="manifest" href="manifest.json">
   <style>
-    body { margin: 0; background: #667eea; }
+    body { 
+      margin: 0; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: Arial, sans-serif;
+    }
     #loading { 
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      color: white; font-family: Arial; text-align: center;
+      position: fixed; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%);
+      color: white; 
+      text-align: center;
+      z-index: 1000;
+    }
+    #loading h1 { font-size: 48px; margin: 0 0 20px 0; }
+    #loading p { font-size: 18px; opacity: 0.8; }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 4px solid white;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -24,19 +47,25 @@
   <div id="loading">
     <h1>AGENDEMAIS</h1>
     <p>Carregando sistema...</p>
+    <div class="spinner"></div>
   </div>
-  <script src="flutter.js" defer></script>
+
+  <script src="flutter_bootstrap.js" async></script>
+  
   <script>
-    window.addEventListener('load', function(ev) {
-      _flutter.loader.load({
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            document.getElementById('loading').style.display = 'none';
-            appRunner.runApp();
-          });
-        }
-      });
+    console.log('🚀 AGENDEMAIS iniciando...');
+    
+    // Hide loading after Flutter loads
+    window.addEventListener('flutter-first-frame', function() {
+      console.log('✅ Flutter carregado!');
+      document.getElementById('loading').style.display = 'none';
     });
+    
+    // Timeout fallback
+    setTimeout(function() {
+      console.log('⚠️ Timeout - removendo loading');
+      document.getElementById('loading').style.display = 'none';
+    }, 8000);
   </script>
 </body>
 </html>
