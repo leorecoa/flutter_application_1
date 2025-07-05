@@ -1,108 +1,73 @@
-# AgendaFácil SaaS - Sistema de Agendamento Multi-Tenant
+# AGENDEMAIS - Sistema de Agendamento SaaS
 
-[![Flutter Tests](https://github.com/leorecoa/flutter_application_1/actions/workflows/flutter-test.yml/badge.svg)](https://github.com/leorecoa/flutter_application_1/actions/workflows/flutter-test.yml)
+[![Deploy Status](https://img.shields.io/badge/Deploy-Live-brightgreen)](https://main.d31iho7gw23enq.amplifyapp.com/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.16.9-blue)](https://flutter.dev)
+[![AWS Amplify](https://img.shields.io/badge/AWS-Amplify-orange)](https://aws.amazon.com/amplify/)
 
-Sistema completo de agendamento profissional com arquitetura serverless, multi-tenant e escalabilidade global.
+## 🚀 **SISTEMA EM PRODUÇÃO**
+
+**URL:** https://main.d31iho7gw23enq.amplifyapp.com/
+
+## 📱 **FUNCIONALIDADES**
+
+### ✅ **Autenticação**
+- Login/Registro de usuários
+- Validação de dados
+- Sessões seguras
+
+### ✅ **Dashboard**
+- Métricas em tempo real
+- Agendamentos do dia
+- Receita mensal
+- Crescimento semanal
+
+### ✅ **PIX Pagamentos**
+- Geração de códigos PIX
+- Histórico de transações
+- Status de pagamentos
+
+### ✅ **Configurações**
+- Perfil do usuário
+- Configurações do negócio
+- Logout seguro
 
 ## 🏗️ **ARQUITETURA**
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Flutter Web  │────│   API Gateway    │────│   Lambda Funcs  │
-│   (CloudFront)  │    │   (Cognito Auth) │    │   (Multi-Tenant)│
+│   Flutter Web  │────│   AWS Amplify    │────│   API Gateway   │
+│   (Frontend)    │    │   (Hosting)      │    │   (Backend)     │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                        │
-                       ┌────────▼────────┐    ┌─────────▼─────────┐
-                       │   DynamoDB      │    │      S3 Bucket    │
-                       │ (Single Table)  │    │   (Files/Reports) │
-                       └─────────────────┘    └───────────────────┘
 ```
 
-### **Componentes**
-- **Frontend**: Flutter Web + CloudFront + S3
-- **API**: API Gateway + Cognito Authorizer
-- **Backend**: Lambda Functions (Node.js 18)
-- **Database**: DynamoDB Single Table Pattern
-- **Storage**: S3 para arquivos e relatórios
-- **Auth**: Cognito User Pool com custom attributes
-- **Monitoring**: CloudWatch + X-Ray
+## 🛠️ **TECNOLOGIAS**
 
-## 🚀 **QUICK START**
+- **Frontend**: Flutter Web
+- **Hosting**: AWS Amplify
+- **Roteamento**: GoRouter
+- **Estado**: Riverpod
+- **UI**: Material Design 3
 
-### **Desenvolvimento Local**
+## 📦 **BUILD & DEPLOY**
+
 ```bash
-# Clone o repositório
-git clone https://github.com/leorecoa/flutter_application_1.git
-cd flutter_application_1
-
 # Instalar dependências
 flutter pub get
 
-# Executar testes
-flutter test
+# Build para produção
+flutter build web --release
 
-# Executar aplicação
-flutter run -d chrome
+# Deploy automático via Amplify
+git push origin main
 ```
 
-### **Build para Produção**
-```bash
-# Build web
-flutter build web
+## 🎯 **PRÓXIMOS PASSOS**
 
-# Analisar código
-flutter analyze
-```
-
-## 🔗 **ENDPOINTS API**
-
-### **Base URL**: `https://api.agendafacil.com/dev`
-
-### **Autenticação**
-```bash
-# Login
-POST /auth/login
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-
-# Registro
-POST /auth/register  
-{
-  "name": "João Silva",
-  "email": "joao@example.com", 
-  "password": "password123",
-  "businessName": "Barbearia do João",
-  "businessType": "salon"
-}
-```
-
-## 🔄 **CI/CD**
-
-O projeto utiliza GitHub Actions para automação de CI/CD com:
-
-- **Testes Automatizados**: Execução de testes unitários
-- **Análise de Código**: Flutter analyze
-- **Build Automático**: Build web para produção
-
-## 📊 **MONITORAMENTO**
-
-### **CloudWatch Dashboard**
-- Invocações por função
-- Erros 4xx/5xx
-- Duração média
-- Uso por tenant
-
-### **Alarmes Configurados**
-- Erros > 5 em 1 minuto
-- Duração > 5 segundos  
-- Falhas de invocação
-
-## 📄 **LICENÇA**
-
-MIT License - veja [LICENSE](LICENSE) para detalhes.
+- [ ] Integração com backend real
+- [ ] Notificações push
+- [ ] App mobile nativo
+- [ ] Relatórios avançados
 
 ---
 
-**AgendaFácil SaaS** - Sistema profissional de agendamento multi-tenant com arquitetura serverless escalável.
+**AGENDEMAIS** - Seu negócio sempre em primeiro lugar! 💼✨

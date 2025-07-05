@@ -1,13 +1,22 @@
 version: 1
-applications:
-  - appRoot: .
-    frontend:
-      phases:
-        build:
-          commands:
-            - echo "Serving Flutter Web files from web directory"
-            - ls -la web/
-      artifacts:
-        baseDirectory: web
-        files:
-          - '**/*'
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "⚙️ Instalando dependências do Flutter..."
+        - flutter --version
+        - flutter pub get
+    build:
+      commands:
+        - echo "🚀 Gerando build Flutter Web..."
+        - flutter build web --release --web-renderer canvaskit
+        - echo "✅ Build concluído com sucesso!"
+        - ls -la build/web/
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .pub-cache/**/*
+      - .dart_tool/**/*
