@@ -28,10 +28,10 @@ const RESOURCES = {"app.yaml": "bbc0298cd435db702552722cb9499e22",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
-"index.html": "a8ccf38356d1509f9069c417a905eec3",
-"/": "a8ccf38356d1509f9069c417a905eec3",
+"index.html": "fc2cb4986bc6157b5258aa2396ec1cb8",
+"/": "fc2cb4986bc6157b5258aa2396ec1cb8",
 "main.dart.js": "d0173be78add2c8d6966db663a74c048",
-"manifest.json": "c35321fc66dc4cb1c91d124d0bc681f5",
+"manifest.json": "cfc3cb1de5834791278a930500d52c2d",
 "version.json": "9045dccd7fe4c59baff93fdfbe9592cd"};
 // The application shell files that are downloaded before a service worker can
 // start.

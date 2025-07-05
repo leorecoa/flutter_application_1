@@ -24,7 +24,7 @@ class AgendaFacilApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'AGENDEMAIS',
+      title: 'AGENDEMAIS - Sistema de Agendamento',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
