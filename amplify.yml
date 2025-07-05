@@ -3,20 +3,14 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "⚙️ Instalando dependências do Flutter..."
-        - flutter --version
         - flutter pub get
     build:
       commands:
-        - echo "🚀 Gerando build Flutter Web..."
-        - flutter build web --release --web-renderer canvaskit
-        - echo "✅ Build concluído com sucesso!"
-        - ls -la build/web/
+        - flutter build web --release
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
   cache:
     paths:
-      - .pub-cache/**/*
-      - .dart_tool/**/*
+      - .pub-cache
