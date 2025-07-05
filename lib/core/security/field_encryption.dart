@@ -16,13 +16,13 @@ class FieldEncryption {
     if (_encrypter != null) return;
 
     // Recupera ou gera chave de criptografia
-    String? keyString = await _secureStorage.read(key: _keyName);
+    final String? keyString = await _secureStorage.read(key: _keyName);
 
     // Recupera ou gera vetor de inicialização
-    String? ivString = await _secureStorage.read(key: _ivName);
+    final String? ivString = await _secureStorage.read(key: _ivName);
 
-    final key = Key(base64.decode(keyString));
-    _iv = IV(base64.decode(ivString));
+    final key = Key(base64.decode(keyString ?? ''));
+    _iv = IV(base64.decode(ivString ?? ''));
     _encrypter = Encrypter(AES(key));
   }
 
