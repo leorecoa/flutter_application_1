@@ -22,38 +22,62 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    print('🚀 API Call: $path with data: $data');
+    await Future.delayed(const Duration(milliseconds: 800));
     
     if (path == '/auth/login') {
+      final email = data['email']?.toString() ?? '';
       final password = data['password']?.toString() ?? '';
-      if (data['email']?.toString().contains('@') == true && 
-          password.length >= 6) {
+      
+      print('🔑 Login attempt: $email');
+      
+      if (email.contains('@') && password.length >= 6) {
+        final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
+        print('✅ Login success: $token');
         return {
           'success': true,
-          'token': 'user-token-${DateTime.now().millisecondsSinceEpoch}',
+          'token': token,
+          'user': {
+            'id': DateTime.now().millisecondsSinceEpoch.toString(),
+            'email': email,
+            'name': email.split('@')[0],
+          },
           'message': 'Login realizado com sucesso'
         };
       } else {
+        print('❌ Login failed: invalid credentials');
         return {
           'success': false,
-          'message': 'Email ou senha inválidos'
+          'message': 'Email deve conter @ e senha ter 6+ caracteres'
         };
       }
     }
     
     if (path == '/auth/register') {
+      final email = data['email']?.toString() ?? '';
       final password = data['password']?.toString() ?? '';
-      if (data['email']?.toString().contains('@') == true && 
-          password.length >= 6 &&
-          data['name']?.toString().isNotEmpty == true) {
+      final name = data['name']?.toString() ?? '';
+      final businessName = data['businessName']?.toString() ?? '';
+      
+      print('📝 Register attempt: $email, $name, $businessName');
+      
+      if (email.contains('@') && password.length >= 6 && name.isNotEmpty) {
+        print('✅ Registration success');
         return {
           'success': true,
-          'message': 'Conta criada com sucesso'
+          'user': {
+            'id': DateTime.now().millisecondsSinceEpoch.toString(),
+            'email': email,
+            'name': name,
+            'businessName': businessName,
+          },
+          'message': 'Conta criada com sucesso! Faça login para continuar.'
         };
       } else {
+        print('❌ Registration failed: invalid data');
         return {
           'success': false,
-          'message': 'Dados inválidos'
+          'message': 'Preencha todos os campos corretamente'
         };
       }
     }

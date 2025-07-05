@@ -32,20 +32,24 @@ class _LoginScreenState extends State<LoginScreen> {
       // Simula login real
       await Future.delayed(const Duration(seconds: 1));
       
-      // Validação básica
-      if (_emailController.text.contains('@') && _passwordController.text.length >= 6) {
-        _apiService.setAuthToken('user-token-${DateTime.now().millisecondsSinceEpoch}');
+      final response = await _apiService.post('/auth/login', {
+        'email': _emailController.text,
+        'password': _passwordController.text,
+      });
+      
+      if (response['success'] == true) {
+        _apiService.setAuthToken(response['token']);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login realizado com sucesso!'),
+            SnackBar(
+              content: Text(response['message'] ?? 'Login realizado!'),
               backgroundColor: Colors.green,
             ),
           );
           context.go('/dashboard');
         }
       } else {
-        throw Exception('Email ou senha inválidos');
+        throw Exception(response['message'] ?? 'Erro no login');
       }
     } catch (e) {
       if (mounted) {

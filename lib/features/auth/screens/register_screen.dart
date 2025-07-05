@@ -34,13 +34,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (response['success'] == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Conta criada com sucesso! Faça login.'),
+            SnackBar(
+              content: Text(response['message'] ?? 'Conta criada com sucesso!'),
               backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
             ),
           );
+          // Aguarda um pouco antes de redirecionar
+          await Future.delayed(const Duration(seconds: 1));
           context.go('/login');
         }
+      } else {
+        throw Exception(response['message'] ?? 'Erro no registro');
       }
     } catch (e) {
       if (mounted) {
