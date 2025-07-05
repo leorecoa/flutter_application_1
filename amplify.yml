@@ -1,16 +1,11 @@
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - flutter pub get
     build:
       commands:
-        - flutter build web --release
+        - chmod +x build_and_copy.sh
+        - ./build_and_copy.sh
   artifacts:
-    baseDirectory: build/web
+    baseDirectory: .
     files:
       - '**/*'
-  cache:
-    paths:
-      - .pub-cache

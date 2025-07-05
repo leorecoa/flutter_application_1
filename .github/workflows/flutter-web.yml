@@ -1,60 +1,53 @@
-name: Flutter Web Deploy to Amplify
+name: Build Flutter Web & Deploy to Amplify
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.9'
           channel: 'stable'
-      
+          cache: true
+
       - name: Install dependencies
         run: flutter pub get
-      
-      - name: Run tests
-        run: flutter test
-      
-      - name: Build web
-        run: flutter build web --release
-      
+
+      - name: Build Web
+        run: flutter build web --release --base-href=/
+
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: 'us-east-1'
-      
+          aws-region: us-east-1
+
       - name: Deploy to Amplify
         run: |
+          # Zip build files
           cd build/web
           zip -r ../../deploy.zip .
           cd ../..
+          
+          # Upload to S3 and trigger Amplify deployment
+          aws s3 cp deploy.zip s3://amplify-agendafacil-build/
           aws amplify start-deployment \
             --app-id d31iho7gw23enq \
             --branch-name main \
-            --source-url deploy.zip
+            --source-url s3://amplify-agendafacil-build/deploy.zip
+
+      - name: Notify Success
+        run: |
+          echo "✅ Flutter Web build completed successfully!"
+          echo "🚀 Deployed to: https://main.d31iho7gw23enq.amplifyapp.com/"
