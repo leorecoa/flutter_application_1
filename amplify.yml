@@ -3,9 +3,8 @@ frontend:
   phases:
     build:
       commands:
-        - chmod +x build_and_copy.sh
-        - ./build_and_copy.sh
+        - echo "Serving pre-built Flutter Web files"
   artifacts:
-    baseDirectory: .
+    baseDirectory: web
     files:
       - '**/*'
