@@ -1,52 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: AgendaFácil SaaS - Teste Simples
+Description: AgendaFácil SaaS - Simple Backend
 
 Parameters:
   Environment:
     Type: String
     Default: dev
 
-Globals:
-  Function:
-    Runtime: nodejs18.x
-    MemorySize: 256
-    Timeout: 30
-    Environment:
-      Variables:
-        MAIN_TABLE: !Ref MainTable
-        ENVIRONMENT: !Ref Environment
-
 Resources:
-  # API Gateway Simples
-  ApiGateway:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub "${AWS::StackName}-api"
-      StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'GET,POST,OPTIONS'"
-        AllowHeaders: "'Content-Type,Authorization'"
-        AllowOrigin: "'*'"
-
-  # Função Auth Simples
-  AuthFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: lambda/auth/
-      Handler: index.handler
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref MainTable
-      Events:
-        AuthApi:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /auth/{proxy+}
-            Method: ANY
-
-  # Tabela DynamoDB Simples
+  # DynamoDB Table
   MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -63,11 +25,32 @@ Resources:
         - AttributeName: SK
           KeyType: RANGE
 
+  # Auth Function
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/auth/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE: !Ref MainTable
+          ENVIRONMENT: !Ref Environment
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MainTable
+      Events:
+        AuthApi:
+          Type: Api
+          Properties:
+            Path: /auth/{proxy+}
+            Method: ANY
+
 Outputs:
-  ApiUrl:
+  ApiGatewayUrl:
     Description: API Gateway URL
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
-  
-  TableName:
-    Description: DynamoDB Table Name
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+  MainTableName:
+    Description: Main DynamoDB Table Name
     Value: !Ref MainTable

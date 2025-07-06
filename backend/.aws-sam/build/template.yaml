@@ -1,52 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: "AgendaF\xE1cil SaaS - Teste Simples"
+Description: "AgendaF\xE1cil SaaS - Simple Backend"
 Parameters:
   Environment:
     Type: String
     Default: dev
-Globals:
-  Function:
-    Runtime: nodejs18.x
-    MemorySize: 256
-    Timeout: 30
-    Environment:
-      Variables:
-        MAIN_TABLE:
-          Ref: MainTable
-        ENVIRONMENT:
-          Ref: Environment
 Resources:
-  ApiGateway:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name:
-        Fn::Sub: ${AWS::StackName}-api
-      StageName:
-        Ref: Environment
-      Cors:
-        AllowMethods: '''GET,POST,OPTIONS'''
-        AllowHeaders: '''Content-Type,Authorization'''
-        AllowOrigin: '''*'''
-  AuthFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: AuthFunction
-      Handler: index.handler
-      Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: MainTable
-      Events:
-        AuthApi:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: ApiGateway
-            Path: /auth/{proxy+}
-            Method: ANY
-    Metadata:
-      SamResourceId: AuthFunction
   MainTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -63,12 +22,36 @@ Resources:
         KeyType: HASH
       - AttributeName: SK
         KeyType: RANGE
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: AuthFunction
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          MAIN_TABLE:
+            Ref: MainTable
+          ENVIRONMENT:
+            Ref: Environment
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: MainTable
+      Events:
+        AuthApi:
+          Type: Api
+          Properties:
+            Path: /auth/{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: AuthFunction
 Outputs:
-  ApiUrl:
+  ApiGatewayUrl:
     Description: API Gateway URL
     Value:
-      Fn::Sub: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
-  TableName:
-    Description: DynamoDB Table Name
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+  MainTableName:
+    Description: Main DynamoDB Table Name
     Value:
       Ref: MainTable

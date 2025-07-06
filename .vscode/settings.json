@@ -8,5 +8,6 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "leorecoa",
     "projectKey": "leorecoa_flutter_application_1"
-  }
+  },
+  "git.ignoreLimitWarning": true
 }

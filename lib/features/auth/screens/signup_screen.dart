@@ -1,11 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'dart:convert';
 
-import '../../../core/routes/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../widgets/input_field.dart';
-import '../../../widgets/primary_button.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,77 +10,56 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen>
-    with SingleTickerProviderStateMixin {
+class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _businessTypeController = TextEditingController();
+
   bool _isLoading = false;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  String _errorMessage = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
+  static const String _apiUrl = 'https://jx861oyl5g.execute-api.us-east-1.amazonaws.com/Prod/auth/register';
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleSignup() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
+  Future<void> _registerUser() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
     try {
-      // Simular cadastro
-      await Future.delayed(const Duration(seconds: 1));
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+          'name': _nameController.text.trim(),
+          'businessName': _businessNameController.text.trim(),
+          'businessType': _businessTypeController.text.trim(),
+        }),
+      );
 
-      if (mounted) {
-        context.go(AppRoutes.dashboard);
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cadastro realizado com sucesso!')),
+          );
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      } else {
+        setState(() {
+          _errorMessage = data['error']?['message'] ?? 'Erro no cadastro';
+        });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao fazer cadastro: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      setState(() {
+        _errorMessage = 'Erro de conexão. Tente novamente.';
+      });
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -94,190 +69,127 @@ class _SignupScreenState extends State<SignupScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isDesktop = size.width > 1024;
-    final isTablet = size.width > 768 && size.width <= 1024;
-
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.grey50,
-              AppColors.grey100,
-              AppColors.primary.withAlpha(13), // 5% opacity
-            ],
-          ),
-        ),
-        child: Center(
+      appBar: AppBar(title: const Text('Criar Conta')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Container(
-                  width: isDesktop ? 520 : (isTablet ? 480 : double.infinity),
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: AppColors.cardShadow,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome Completo',
+                    border: OutlineInputBorder(),
                   ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Logo
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary
-                                    .withAlpha(76), // 30% opacity
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.calendar_today,
-                            color: AppColors.white,
-                            size: 40,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Título
-                        Text('Criar Conta', style: AppTextStyles.h3),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Preencha os dados abaixo para criar sua conta',
-                          style: AppTextStyles.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Campos
-                        InputField(
-                          label: 'Nome da Empresa',
-                          hint: 'Digite o nome da sua empresa',
-                          controller: _nomeController,
-                          prefixIcon: Icons.business,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'Nome é obrigatório';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        InputField(
-                          label: 'E-mail',
-                          hint: 'Digite seu e-mail',
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          prefixIcon: Icons.email_outlined,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'E-mail é obrigatório';
-                            }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                .hasMatch(value!)) {
-                              return 'E-mail inválido';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        InputField(
-                          label: 'Senha',
-                          hint: 'Digite sua senha',
-                          controller: _passwordController,
-                          obscureText: true,
-                          prefixIcon: Icons.lock_outline,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'Senha é obrigatória';
-                            }
-                            if (value!.length < 6) {
-                              return 'Senha deve ter pelo menos 6 caracteres';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        InputField(
-                          label: 'Confirmar Senha',
-                          hint: 'Confirme sua senha',
-                          controller: _confirmPasswordController,
-                          obscureText: true,
-                          prefixIcon: Icons.lock_outline,
-                          isRequired: true,
-                          validator: (value) {
-                            if (value?.isEmpty ?? true) {
-                              return 'Confirmação de senha é obrigatória';
-                            }
-                            if (value != _passwordController.text) {
-                              return 'As senhas não coincidem';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Botão Cadastrar
-                        PrimaryButton(
-                          text: 'Criar Conta',
-                          onPressed: _handleSignup,
-                          isLoading: _isLoading,
-                          width: double.infinity,
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Link Login
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Já tem conta? ',
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                            GestureDetector(
-                              onTap: () => context.go(AppRoutes.login),
-                              child: Text(
-                                'Faça login',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  validator: (value) => 
+                      value?.isEmpty == true ? 'Informe seu nome' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value?.isEmpty == true) return 'Informe o email';
+                    if (!value!.contains('@')) return 'Email inválido';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Senha',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                  validator: (value) => 
+                      value!.length < 8 ? 'Mínimo 8 caracteres' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _businessNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do Negócio',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => 
+                      value?.isEmpty == true ? 'Informe o nome do negócio' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de Negócio',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'barbearia', child: Text('Barbearia')),
+                    DropdownMenuItem(value: 'salao', child: Text('Salão de Beleza')),
+                    DropdownMenuItem(value: 'estetica', child: Text('Estética')),
+                    DropdownMenuItem(value: 'clinica', child: Text('Clínica')),
+                    DropdownMenuItem(value: 'outros', child: Text('Outros')),
+                  ],
+                  onChanged: (value) => _businessTypeController.text = value ?? '',
+                  validator: (value) => 
+                      value?.isEmpty == true ? 'Selecione o tipo' : null,
+                ),
+                const SizedBox(height: 24),
+                if (_errorMessage.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      border: Border.all(color: Colors.red.shade200),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _errorMessage,
+                      style: TextStyle(color: Colors.red.shade700),
                     ),
                   ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              _registerUser();
+                            }
+                          },
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Cadastrar'),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                  child: const Text('Já tem conta? Faça login'),
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _businessNameController.dispose();
+    _businessTypeController.dispose();
+    super.dispose();
   }
 }
