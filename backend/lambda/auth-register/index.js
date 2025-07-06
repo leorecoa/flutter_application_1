@@ -3,7 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-exports.handler = async (event) => {
+exports.handler = async (event, context) => {
+  console.log('RegisterUser Event:', JSON.stringify(event, null, 2));
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
@@ -12,22 +14,27 @@ exports.handler = async (event) => {
   };
 
   if (event.httpMethod === 'OPTIONS') {
-    return { 
-      statusCode: 200, 
-      headers, 
+    return {
+      statusCode: 200,
+      headers,
       body: JSON.stringify({})
     };
   }
 
   try {
-    const body = JSON.parse(event.body);
+    const body = JSON.parse(event.body || '{}');
     const { name, email, businessName, password } = body;
+
+    console.log('Parsed body:', { name, email, businessName, password: '***' });
 
     if (!name || !email || !businessName || !password) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ message: "Campos obrigatórios ausentes" }),
+        body: JSON.stringify({
+          success: false,
+          message: 'Campos obrigatórios ausentes: name, email, businessName, password'
+        })
       };
     }
 
@@ -35,39 +42,50 @@ exports.handler = async (event) => {
     const createdAt = new Date().toISOString();
 
     const params = {
-      TableName: "Users",
+      TableName: process.env.USERS_TABLE || 'Users',
       Item: {
         id,
         name,
         email,
         businessName,
         password,
-        createdAt,
-      },
+        createdAt
+      }
     };
 
+    console.log('DynamoDB params:', params);
+
     await dynamodb.put(params).promise();
+
+    console.log('User created successfully:', id);
 
     return {
       statusCode: 201,
       headers,
       body: JSON.stringify({
-        message: "Usuário criado com sucesso!",
+        success: true,
+        message: 'Usuário criado com sucesso!',
         user: {
           id,
           name,
           email,
           businessName,
-          createdAt,
-        },
-      }),
+          createdAt
+        }
+      })
     };
+
   } catch (error) {
-    console.error("Erro no cadastro:", error);
+    console.error('RegisterUser Error:', error);
+    
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ message: "Erro interno ao criar o usuário" }),
+      body: JSON.stringify({
+        success: false,
+        message: 'Erro interno do servidor',
+        error: error.message
+      })
     };
   }
 };

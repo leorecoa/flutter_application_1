@@ -1,7 +1,6 @@
 {
-  "name": "register-user",
+  "name": "auth-register",
   "version": "1.0.0",
-  "description": "RegisterUser Lambda function",
   "main": "index.js",
   "dependencies": {
     "uuid": "^9.0.1"
