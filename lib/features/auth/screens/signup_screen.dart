@@ -16,12 +16,12 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _businessNameController = TextEditingController();
-  final _businessTypeController = TextEditingController();
+
 
   bool _isLoading = false;
   String _errorMessage = '';
 
-  static const String _apiUrl = 'https://jx861oyl5g.execute-api.us-east-1.amazonaws.com/Prod/auth/register';
+  static const String _apiUrl = 'https://bwa3zt1qvb.execute-api.us-east-1.amazonaws.com/Prod/auth';
 
   Future<void> _registerUser() async {
     setState(() {
@@ -34,11 +34,10 @@ class _SignupScreenState extends State<SignupScreen> {
         Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text.trim(),
           'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
           'businessName': _businessNameController.text.trim(),
-          'businessType': _businessTypeController.text.trim(),
+          'password': _passwordController.text.trim(),
         }),
       );
 
@@ -123,22 +122,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       value?.isEmpty == true ? 'Informe o nome do negócio' : null,
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo de Negócio',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'barbearia', child: Text('Barbearia')),
-                    DropdownMenuItem(value: 'salao', child: Text('Salão de Beleza')),
-                    DropdownMenuItem(value: 'estetica', child: Text('Estética')),
-                    DropdownMenuItem(value: 'clinica', child: Text('Clínica')),
-                    DropdownMenuItem(value: 'outros', child: Text('Outros')),
-                  ],
-                  onChanged: (value) => _businessTypeController.text = value ?? '',
-                  validator: (value) => 
-                      value?.isEmpty == true ? 'Selecione o tipo' : null,
-                ),
                 const SizedBox(height: 24),
                 if (_errorMessage.isNotEmpty)
                   Container(
@@ -189,7 +172,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _nameController.dispose();
     _businessNameController.dispose();
-    _businessTypeController.dispose();
+
     super.dispose();
   }
 }

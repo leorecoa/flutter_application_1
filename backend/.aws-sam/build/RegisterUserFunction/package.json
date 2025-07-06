@@ -1,7 +1,7 @@
 {
-  "name": "agenda-facil-auth",
+  "name": "register-user",
   "version": "1.0.0",
-  "description": "Authentication Lambda function",
+  "description": "RegisterUser Lambda function",
   "main": "index.js",
   "dependencies": {
     "uuid": "^9.0.1"

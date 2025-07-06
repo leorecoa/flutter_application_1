@@ -1,53 +1,47 @@
+const { v4: uuidv4 } = require('uuid');
+
+// Use AWS SDK v2 que está disponível no runtime
 const AWS = require('aws-sdk');
-const ResponseHelper = require('./shared/response');
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const MAIN_TABLE = process.env.MAIN_TABLE;
 
-exports.handler = async (event, context) => {
-  context.log('AuthFunction Event:', JSON.stringify(event, null, 2));
+exports.handler = async (event) => {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Content-Type': 'application/json'
+  };
 
   if (event.httpMethod === 'OPTIONS') {
-    return ResponseHelper.cors();
+    return { statusCode: 200, headers, body: '' };
   }
 
   try {
-    const { httpMethod, pathParameters, body } = event;
-    const path = pathParameters?.proxy || '';
-    const requestBody = body ? JSON.parse(body) : {};
+    const body = JSON.parse(event.body);
+    const { name, email, businessName, password } = body;
 
-    switch (`${httpMethod}:${path}`) {
-      case 'POST:register':
-        return await handleRegister(requestBody);
-      case 'POST:login':
-        return await handleLogin(requestBody);
-      case 'GET:health':
-        return ResponseHelper.success({ status: 'healthy', service: 'auth' });
-      default:
-        return ResponseHelper.notFound('Endpoint not found');
+    if (!name || !email || !businessName || !password) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: { message: 'Todos os campos são obrigatórios.' }
+        })
+      };
     }
-  } catch (error) {
-    context.log('AuthFunction Error:', error);
-    return ResponseHelper.serverError(error.message);
-  }
-};
 
-async function handleRegister(body) {
-  const { email, password, name, businessName, businessType } = body;
+    const userId = uuidv4();
+    const tenantId = uuidv4();
 
-  if (!email || !password || !name || !businessName || !businessType) {
-    return ResponseHelper.error('Missing required fields: email, password, name, businessName, businessType');
-  }
-
-  try {
-    const userId = `user_${Date.now()}`;
-    const tenantId = `tenant_${Date.now()}`;
-    
     const tenant = {
       PK: `TENANT#${tenantId}`,
       SK: 'PROFILE',
       tenantId,
       businessName,
-      businessType,
+      businessType: 'barbearia',
       email,
       ownerId: userId,
       createdAt: new Date().toISOString(),
@@ -58,8 +52,8 @@ async function handleRegister(body) {
       PK: `TENANT#${tenantId}`,
       SK: `USER#${userId}`,
       userId,
-      email,
       name,
+      email,
       role: 'admin',
       tenantId,
       createdAt: new Date().toISOString(),
@@ -67,39 +61,32 @@ async function handleRegister(body) {
     };
 
     await Promise.all([
-      dynamodb.put({
-        TableName: process.env.MAIN_TABLE,
-        Item: tenant
-      }).promise(),
-      dynamodb.put({
-        TableName: process.env.MAIN_TABLE,
-        Item: userProfile
-      }).promise()
+      dynamoDb.put({ TableName: MAIN_TABLE, Item: tenant }).promise(),
+      dynamoDb.put({ TableName: MAIN_TABLE, Item: userProfile }).promise()
     ]);
 
-    return ResponseHelper.success({
-      user: { ...userProfile, tenantId },
-      tenant,
-      message: 'Registration successful'
-    }, 201);
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        success: true,
+        data: {
+          message: 'Usuário registrado com sucesso!',
+          userId,
+          tenantId
+        }
+      })
+    };
 
   } catch (error) {
-    console.error('Registration error:', error);
-    return ResponseHelper.serverError('Registration failed');
+    console.error('Erro no cadastro:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        success: false,
+        error: { message: 'Erro ao registrar usuário. Tente novamente.' }
+      })
+    };
   }
-}
-
-async function handleLogin(body) {
-  const { email, password } = body;
-
-  if (!email || !password) {
-    return ResponseHelper.error('Email and password are required');
-  }
-
-  // Simplified login - in production use proper authentication
-  return ResponseHelper.success({
-    token: 'mock-jwt-token',
-    user: { email, name: 'Test User' },
-    message: 'Login successful'
-  });
-}
+};

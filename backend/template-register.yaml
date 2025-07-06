@@ -1,42 +1,43 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: RegisterUser Lambda Function
+
 Resources:
+  # DynamoDB Table
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: Users
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
+        - AttributeName: id
+          AttributeType: S
       KeySchema:
-      - AttributeName: id
-        KeyType: HASH
+        - AttributeName: id
+          KeyType: HASH
+
+  # RegisterUser Function
   RegisterUserFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: RegisterUserFunction
+      CodeUri: lambda/register-user/
       Handler: index.handler
       Runtime: nodejs18.x
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
       Events:
         RegisterApi:
           Type: Api
           Properties:
             Path: /auth
             Method: POST
-    Metadata:
-      SamResourceId: RegisterUserFunction
+
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway URL
-    Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
   UsersTableName:
     Description: Users DynamoDB Table Name
-    Value:
-      Ref: UsersTable
+    Value: !Ref UsersTable
