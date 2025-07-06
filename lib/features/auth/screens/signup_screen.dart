@@ -22,6 +22,11 @@ class _SignupScreenState extends State<SignupScreen> {
   String _errorMessage = '';
 
   static const String _apiUrl = 'https://bwa3zt1qvb.execute-api.us-east-1.amazonaws.com/Prod/auth';
+  
+  static const Map<String, String> _headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   Future<void> _registerUser() async {
     setState(() {
@@ -32,7 +37,7 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final response = await http.post(
         Uri.parse(_apiUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: _headers,
         body: json.encode({
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),

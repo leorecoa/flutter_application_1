@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: RegisterUser Lambda Function
+Description: RegisterUser Lambda with CORS Fix
 Resources:
   UsersTable:
     Type: AWS::DynamoDB::Table
@@ -13,6 +13,28 @@ Resources:
       KeySchema:
       - AttributeName: id
         KeyType: HASH
+  ApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: '''POST,OPTIONS'''
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+        AllowOrigin: '''*'''
+        MaxAge: '''600'''
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+              Access-Control-Allow-Methods: '''POST,OPTIONS'''
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: '''*'''
+              Access-Control-Allow-Headers: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+              Access-Control-Allow-Methods: '''POST,OPTIONS'''
   RegisterUserFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -27,15 +49,24 @@ Resources:
         RegisterApi:
           Type: Api
           Properties:
+            RestApiId:
+              Ref: ApiGateway
             Path: /auth
             Method: POST
+        OptionsApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /auth
+            Method: OPTIONS
     Metadata:
       SamResourceId: RegisterUserFunction
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway URL
     Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+      Fn::Sub: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod
   UsersTableName:
     Description: Users DynamoDB Table Name
     Value:
