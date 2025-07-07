@@ -1,30 +1,85 @@
+import '../../../core/services/api_service.dart';
+
 class PixService {
-  static Future<Map<String, dynamic>> generatePix({
-    required String empresaId,
-    required double valor,
-    required String descricao,
+  final _apiService = ApiService();
+
+  Future<Map<String, dynamic>> generatePixPayment({
+    required double amount,
+    required String description,
+    String? clientId,
+    String? appointmentId,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    return {
-      'transaction_id': 'mock_${DateTime.now().millisecondsSinceEpoch}',
-      'pix_code': '00020126580014BR.GOV.BCB.PIX...',
-      'valor': valor,
-      'vencimento': '2025-08-01',
-    };
+    final response = await _apiService.generatePix(
+      valor: amount,
+      descricao: description,
+    );
+
+    if (response['success'] == true) {
+      return {
+        'success': true,
+        'qr_code': response['data']['qr_code'],
+        'qr_code_image': response['data']['qr_code_image'],
+        'pix_key': response['data']['pix_key'],
+        'transaction_id': response['data']['transaction_id'],
+        'amount': amount,
+        'description': description,
+        'expires_at': response['data']['expires_at'],
+        'status': 'pending',
+      };
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao gerar PIX');
+    }
   }
-  
-  static Future<List<Map<String, dynamic>>> getHistory() async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    return [
-      {
-        'empresa_id': 'clinica-abc-123',
-        'valor': 99.90,
-        'status': 'PAGO',
-        'vencimento': '2025-07-01',
-        'descricao': 'Mensalidade Julho 2025',
-      },
-    ];
+
+  Future<Map<String, dynamic>> checkPaymentStatus(String transactionId) async {
+    final response = await _apiService.get('/payments/pix/$transactionId/status');
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao verificar status do pagamento');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPaymentHistory({
+    int page = 0,
+    int limit = 20,
+    String? status,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+      if (status != null) 'status': status,
+      if (startDate != null) 'start_date': startDate.toIso8601String(),
+      if (endDate != null) 'end_date': endDate.toIso8601String(),
+    };
+
+    final uri = Uri.parse('/payments/pix/history').replace(
+      queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())),
+    );
+
+    final response = await _apiService.get(uri.toString());
+
+    if (response['success'] == true) {
+      return {
+        'payments': response['data']['payments'] ?? [],
+        'total': response['data']['total'] ?? 0,
+        'hasMore': response['data']['hasMore'] ?? false,
+      };
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao carregar histórico de pagamentos');
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelPayment(String transactionId) async {
+    final response = await _apiService.put('/payments/pix/$transactionId/cancel', {});
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao cancelar pagamento');
+    }
   }
 }

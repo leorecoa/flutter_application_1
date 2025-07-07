@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/splash/screens/splash_screen.dart';
 import '../widgets/main_layout.dart';
+import '../services/auth_guard.dart';
 
 // Deferred imports for lazy loading
 import '../../features/auth/screens/login_screen.dart' deferred as login;
@@ -15,6 +16,7 @@ import '../../features/settings/screens/settings_screen.dart' deferred as settin
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    redirect: AuthGuard.redirectLogic,
     routes: [
       GoRoute(
         path: '/splash',
@@ -22,7 +24,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/',
-        redirect: (context, state) => '/login',
+        redirect: (context, state) => '/dashboard',
       ),
       GoRoute(
         path: '/login',
@@ -171,8 +173,8 @@ class AppRouter {
             const Text('Página não encontrada'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Voltar ao Login'),
+              onPressed: () => context.go('/dashboard'),
+              child: const Text('Voltar ao Dashboard'),
             ),
           ],
         ),

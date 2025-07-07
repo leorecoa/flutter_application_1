@@ -1,11 +1,12 @@
-const CACHE_NAME = 'agendemais-v3.2-optimized';
-const STATIC_CACHE_NAME = 'agendemais-static-v3.2';
-const DYNAMIC_CACHE_NAME = 'agendemais-dynamic-v3.2';
+const CACHE_NAME = 'agendemais-production-v1.0';
+const STATIC_CACHE_NAME = 'agendemais-static-v1.0';
+const DYNAMIC_CACHE_NAME = 'agendemais-dynamic-v1.0';
 
-// Static assets that rarely change
+// Static assets that are safe to cache (public resources)
 const staticAssets = [
   '/',
   '/manifest.json',
+  '/favicon.ico',
   '/icons/Icon-192.png',
   '/icons/Icon-512.png',
   '/icons/Icon-maskable-192.png',
@@ -14,10 +15,29 @@ const staticAssets = [
   '/flutter_bootstrap.js'
 ];
 
-// Large assets that should be cached but can be updated
+// Safe dynamic assets that can be cached
 const dynamicAssets = [
   '/main.dart.js',
   '/flutter_service_worker.js'
+];
+
+// Routes that should never be cached (require authentication)
+const protectedRoutes = [
+  '/dashboard',
+  '/appointments',
+  '/reports',
+  '/pix',
+  '/settings'
+];
+
+// API endpoints that should never be cached
+const protectedApiPatterns = [
+  '/api/',
+  '/auth/',
+  '/dashboard/',
+  '/appointments/',
+  '/payments/',
+  'amazonaws.com'
 ];
 
 self.addEventListener('install', (event) => {
@@ -27,7 +47,7 @@ self.addEventListener('install', (event) => {
       caches.open(DYNAMIC_CACHE_NAME).then(cache => cache.addAll(dynamicAssets))
     ])
   );
-  self.skipWaiting(); // Activate immediately
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -45,7 +65,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim(); // Take control immediately
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -54,10 +74,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Don't cache API calls or external requests
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('amazonaws.com') ||
-      event.request.url.includes('http') && !event.request.url.includes(self.location.origin)) {
+  const url = new URL(event.request.url);
+  
+  // Never cache protected API endpoints
+  if (protectedApiPatterns.some(pattern => url.pathname.includes(pattern) || url.hostname.includes(pattern))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Never cache protected routes (requires auth)
+  if (protectedRoutes.some(route => url.pathname.startsWith(route))) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Never cache external requests (except for allowed CDNs)
+  if (url.origin !== self.location.origin && !isAllowedExternalResource(url)) {
     event.respondWith(fetch(event.request));
     return;
   }
@@ -75,78 +107,124 @@ self.addEventListener('fetch', (event) => {
         }
 
         const responseClone = fetchResponse.clone();
-        const url = new URL(event.request.url);
 
         // Determine which cache to use
         let cacheName = DYNAMIC_CACHE_NAME;
-        if (staticAssets.some(asset => url.pathname.includes(asset))) {
+        if (staticAssets.some(asset => url.pathname === asset || url.pathname.includes(asset))) {
           cacheName = STATIC_CACHE_NAME;
         }
 
-        // Cache based on file type
-        if (url.pathname.endsWith('.js') || 
-            url.pathname.endsWith('.css') || 
-            url.pathname.endsWith('.png') || 
-            url.pathname.endsWith('.ico') ||
-            url.pathname.endsWith('.json')) {
-          
+        // Only cache safe file types
+        if (isSafeToCache(url.pathname)) {
           caches.open(cacheName).then(cache => {
             cache.put(event.request, responseClone);
           });
         }
 
         return fetchResponse;
+      }).catch(() => {
+        // Return offline page for navigation requests
+        if (event.request.destination === 'document') {
+          return caches.match('/');
+        }
+        throw error;
       });
     })
   );
 });
 
-// Optimized push notification handling
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const options = {
-    body: data.body || 'Nova notificação do AGENDEMAIS',
-    icon: '/icons/Icon-192.png',
-    badge: '/icons/Icon-192.png',
-    vibrate: [100, 50, 100],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: data.id || 1,
-      url: data.url || '/dashboard'
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: data.actionTitle || 'Ver Agendamentos',
-        icon: '/icons/Icon-192.png'
-      },
-      {
-        action: 'close',
-        title: 'Fechar',
-        icon: '/icons/Icon-192.png'
-      }
-    ],
-    requireInteraction: data.requireInteraction || false,
-    silent: data.silent || false
-  };
+function isAllowedExternalResource(url) {
+  const allowedDomains = [
+    'fonts.googleapis.com',
+    'fonts.gstatic.com',
+    'cdn.jsdelivr.net'
+  ];
+  
+  return allowedDomains.some(domain => url.hostname.includes(domain));
+}
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'AGENDEMAIS', options)
-  );
+function isSafeToCache(pathname) {
+  const safeExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.woff2', '.ttf', '.eot'];
+  const safeFiles = ['manifest.json', 'favicon.ico'];
+  
+  // Check file extensions
+  if (safeExtensions.some(ext => pathname.endsWith(ext))) {
+    return true;
+  }
+  
+  // Check specific files
+  if (safeFiles.some(file => pathname.includes(file))) {
+    return true;
+  }
+  
+  // Allow caching of assets directory
+  if (pathname.startsWith('/assets/')) {
+    return true;
+  }
+  
+  // Allow caching of icons directory
+  if (pathname.startsWith('/icons/')) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Push notification handling (production-ready)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || 'Nova notificação do AGENDEMAIS',
+      icon: '/icons/Icon-192.png',
+      badge: '/icons/Icon-192.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: data.id || Date.now(),
+        url: data.url || '/dashboard'
+      },
+      actions: [
+        {
+          action: 'view',
+          title: data.actionTitle || 'Ver',
+          icon: '/icons/Icon-192.png'
+        },
+        {
+          action: 'dismiss',
+          title: 'Dispensar',
+          icon: '/icons/Icon-192.png'
+        }
+      ],
+      requireInteraction: data.requireInteraction || false,
+      silent: data.silent || false,
+      tag: data.tag || 'agendemais-notification'
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'AGENDEMAIS', options)
+    );
+  } catch (error) {
+    console.error('Error processing push notification:', error);
+  }
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  if (event.action === 'explore') {
-    const url = event.notification.data.url || '/appointments';
+  if (event.action === 'view' || !event.action) {
+    const url = event.notification.data.url || '/dashboard';
     event.waitUntil(
-      clients.matchAll().then(clientList => {
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+        // Check if there's already a window/tab open with the target URL
         for (const client of clientList) {
           if (client.url === url && 'focus' in client) {
             return client.focus();
           }
         }
+        // If not, open a new window/tab
         if (clients.openWindow) {
           return clients.openWindow(url);
         }
@@ -163,19 +241,6 @@ self.addEventListener('sync', (event) => {
 });
 
 function doBackgroundSync() {
-  // Implement background sync logic here
+  // Implement offline data sync when connection is restored
   return Promise.resolve();
-}
-
-// Periodic background sync for cache updates
-self.addEventListener('periodicsync', (event) => {
-  if (event.tag === 'cache-update') {
-    event.waitUntil(updateCache());
-  }
-});
-
-function updateCache() {
-  return caches.open(DYNAMIC_CACHE_NAME).then(cache => {
-    return cache.addAll(dynamicAssets);
-  });
 }

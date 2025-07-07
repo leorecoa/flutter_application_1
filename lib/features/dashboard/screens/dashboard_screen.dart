@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/auth_guard.dart';
 import '../../../core/constants/app_constants.dart';
 import '../services/dashboard_service.dart';
 
@@ -13,20 +14,23 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAliveClientMixin {
   final _apiService = ApiService();
+  final _dashboardService = DashboardService();
   Map<String, dynamic>? _stats;
   List<dynamic> _nextAppointments = [];
   bool _isLoading = true;
   bool _isLoadingAppointments = false;
+  bool _hasError = false;
+  String? _errorMessage;
   int _currentPage = 0;
   final ScrollController _scrollController = ScrollController();
 
   @override
-  bool get wantKeepAlive => true; // Keep state alive for performance
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _loadDashboard();
+    _checkAuthAndLoadData();
     _scrollController.addListener(_onScroll);
   }
 
@@ -34,6 +38,13 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkAuthAndLoadData() async {
+    await AuthGuard.requireAuth(context);
+    if (mounted) {
+      _loadDashboard();
+    }
   }
 
   void _onScroll() {
@@ -45,15 +56,17 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   Future<void> _loadDashboard() async {
     if (!mounted) return;
     
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = null;
+    });
     
     try {
-      final dashboardService = DashboardService();
-      
       // Load stats and initial appointments in parallel
       final futures = await Future.wait([
-        dashboardService.getDashboardStats(),
-        dashboardService.getNextAppointments(page: 0, limit: AppConstants.pageSize),
+        _dashboardService.getDashboardStats(),
+        _dashboardService.getNextAppointments(page: 0, limit: AppConstants.pageSize),
       ]);
       
       if (mounted) {
@@ -62,24 +75,27 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
           _nextAppointments = (futures[1] as Map<String, dynamic>)['appointments'] as List<dynamic>;
           _currentPage = 0;
           _isLoading = false;
+          _hasError = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        _showErrorSnackbar('Erro ao carregar dashboard');
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
       }
     }
   }
 
   Future<void> _loadMoreAppointments() async {
-    if (_isLoadingAppointments) return;
+    if (_isLoadingAppointments || _hasError) return;
     
     setState(() => _isLoadingAppointments = true);
     
     try {
-      final dashboardService = DashboardService();
-      final response = await dashboardService.getNextAppointments(
+      final response = await _dashboardService.getNextAppointments(
         page: _currentPage + 1, 
         limit: AppConstants.pageSize,
       );
@@ -98,6 +114,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingAppointments = false);
+        _showErrorSnackbar('Erro ao carregar mais agendamentos');
       }
     }
   }
@@ -116,13 +133,12 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   }
 
   Future<void> _logout() async {
-    await _apiService.clearAuthToken();
-    if (mounted) context.go('/login');
+    AuthGuard.logout(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
     
     return Scaffold(
       appBar: MediaQuery.of(context).size.width > 768 ? null : AppBar(
@@ -145,61 +161,108 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadDashboard,
-              child: CustomScrollView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Visão Geral',
-                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildStatsGrid(),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Próximos Agendamentos',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Carregando dashboard...'),
+          ],
+        ),
+      );
+    }
+
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Erro ao carregar dados',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage ?? 'Verifique sua conexão e tente novamente',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadDashboard,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadDashboard,
+      child: CustomScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Visão Geral',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
-                  _buildAppointmentsList(),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Ações Rápidas',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildQuickActions(),
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  _buildStatsGrid(),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Próximos Agendamentos',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
+          ),
+          _buildAppointmentsList(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Ações Rápidas',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActions(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildStatsGrid() {
+    if (_stats == null) {
+      return const SizedBox.shrink();
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 768 ? 3 : 2;
@@ -224,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
             ),
             _StatCard(
               title: 'Receita do Mês',
-              value: 'R\$ ${(_stats?['monthlyRevenue'] ?? 0).toStringAsFixed(2).replaceAll('.', ',')}',
+              value: 'R\$ ${(_stats?['monthlyRevenue'] ?? 0.0).toStringAsFixed(2).replaceAll('.', ',')}',
               icon: Icons.attach_money,
               color: Colors.orange,
             ),
@@ -253,11 +316,22 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
   }
 
   Widget _buildAppointmentsList() {
-    if (_nextAppointments.isEmpty) {
+    if (_nextAppointments.isEmpty && !_isLoadingAppointments) {
       return const SliverToBoxAdapter(
         child: Padding(
           padding: EdgeInsets.all(16),
-          child: Text('Nenhum agendamento encontrado'),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(Icons.calendar_today, size: 48, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Nenhum agendamento encontrado',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -295,14 +369,9 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
           onTap: () => context.push('/appointments'),
         ),
         _ActionButton(
-          title: 'Gerenciar Clientes',
-          icon: Icons.people_outline,
-          onTap: () => _showClientsDialog(),
-        ),
-        _ActionButton(
           title: 'Relatórios',
           icon: Icons.analytics,
-          onTap: () => _showReportsDialog(),
+          onTap: () => context.push('/reports'),
         ),
         _ActionButton(
           title: 'PIX Pagamentos',
@@ -323,31 +392,7 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Novo Agendamento'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Cliente',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Serviço',
-                prefixIcon: Icon(Icons.build),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Data e Hora',
-                prefixIcon: Icon(Icons.schedule),
-              ),
-            ),
-          ],
-        ),
+        content: const Text('Redirecionando para a tela de agendamentos...'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -356,26 +401,13 @@ class _DashboardScreenState extends State<DashboardScreen> with AutomaticKeepAli
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Agendamento criado com sucesso!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              context.push('/appointments');
             },
-            child: const Text('Salvar'),
+            child: const Text('Ir para Agendamentos'),
           ),
         ],
       ),
     );
-  }
-
-  void _showClientsDialog() {
-    context.push('/clients');
-  }
-
-  void _showReportsDialog() {
-    context.push('/reports');
   }
 }
 
@@ -427,6 +459,8 @@ class _AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dateTime = DateTime.tryParse(appointment['dateTime'] ?? '') ?? DateTime.now();
+    
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -434,10 +468,10 @@ class _AppointmentCard extends StatelessWidget {
               ? Colors.green : Colors.orange,
           child: const Icon(Icons.schedule, color: Colors.white),
         ),
-        title: Text(appointment['clientName']),
-        subtitle: Text('${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
+        title: Text(appointment['clientName'] ?? 'Cliente'),
+        subtitle: Text('${appointment['service'] ?? 'Serviço'} - R\$ ${(appointment['price'] ?? 0.0).toStringAsFixed(2)}'),
         trailing: Text(
-          '${DateTime.parse(appointment['dateTime']).hour.toString().padLeft(2, '0')}:${DateTime.parse(appointment['dateTime']).minute.toString().padLeft(2, '0')}',
+          '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,

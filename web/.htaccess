@@ -66,6 +66,37 @@
     </FilesMatch>
 </IfModule>
 
+# PWA and Public Assets - Always Allow Access
+<Files "manifest.json">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+    Header always set Cache-Control "public, max-age=604800"
+</Files>
+
+<Files "favicon.ico">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</Files>
+
+# Allow access to PWA icons
+<FilesMatch "^(icons/|Icon-).*\.(png|ico|svg)$">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</FilesMatch>
+
+# Allow access to service worker and PWA files
+<FilesMatch "^(sw\.js|flutter\.js|flutter_bootstrap\.js|flutter_service_worker\.js)$">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# Allow access to assets directory
+<Files ~ "^assets/">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</Files>
+
 # Flutter Web routing
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
