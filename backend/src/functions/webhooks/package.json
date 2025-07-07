@@ -1,0 +1,23 @@
+{
+  "name": "agendemais-webhooks",
+  "version": "1.0.0",
+  "description": "AGENDEMAIS Webhook Functions - PIX and Stripe Payment Confirmations",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1491.0",
+    "stripe": "^14.8.0"
+  },
+  "author": "AGENDEMAIS Team",
+  "license": "ISC",
+  "keywords": [
+    "aws",
+    "lambda",
+    "webhooks",
+    "pix",
+    "stripe",
+    "payments"
+  ]
+}

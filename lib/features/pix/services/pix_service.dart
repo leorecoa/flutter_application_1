@@ -10,7 +10,7 @@ class PixService {
     String? clientId,
     String? appointmentId,
   }) async {
-    final response = await _apiService.post('/payments/pix/generate', {
+    final response = await _apiService.post('/payments/pix', {
       'amount': amount,
       'description': description,
       if (clientId != null) 'clientId': clientId,
@@ -24,8 +24,24 @@ class PixService {
     }
   }
 
-  Future<Map<String, dynamic>> checkPaymentStatus(String transactionId) async {
-    final response = await _apiService.get('/payments/pix/$transactionId/status');
+  Future<Map<String, dynamic>> generateStripePayment({
+    required double amount,
+    String description = 'Plano Premium - Corte + Barba',
+  }) async {
+    final response = await _apiService.post('/payments/stripe', {
+      'amount': amount,
+      'description': description,
+    });
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao gerar pagamento Stripe');
+    }
+  }
+
+  Future<Map<String, dynamic>> checkPaymentStatus(String paymentId) async {
+    final response = await _apiService.get('/payments/$paymentId/status');
 
     if (response['success'] == true) {
       return response['data'];
@@ -49,7 +65,7 @@ class PixService {
       if (endDate != null) 'end_date': endDate.toIso8601String(),
     };
 
-    final uri = Uri.parse('/payments/pix/history').replace(
+    final uri = Uri.parse('/payments/history').replace(
       queryParameters: queryParams.map((key, value) => MapEntry(key, value.toString())),
     );
 

@@ -1,0 +1,27 @@
+{
+  "name": "agendemais-payments",
+  "version": "1.0.0",
+  "description": "AGENDEMAIS Payment Functions - PIX and Stripe Integration",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1491.0",
+    "stripe": "^14.8.0",
+    "axios": "^1.6.2",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1",
+    "bcryptjs": "^2.4.3"
+  },
+  "author": "AGENDEMAIS Team",
+  "license": "ISC",
+  "keywords": [
+    "aws",
+    "lambda",
+    "payments",
+    "pix",
+    "stripe",
+    "dynamodb"
+  ]
+}
