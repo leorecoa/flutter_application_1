@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
+import '../services/dashboard_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,11 +23,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     try {
-      final response = await _apiService.get('/dashboard/stats');
+      final dashboardService = DashboardService();
+      final stats = await dashboardService.getDashboardStats();
       
-      if (response['success'] == true && mounted) {
+      if (mounted) {
         setState(() {
-          _stats = response['data'];
+          _stats = stats;
           _isLoading = false;
         });
       }

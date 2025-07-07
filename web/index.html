@@ -56,11 +56,29 @@
   <script src="flutter_bootstrap.js" async></script>
   
   <script>
-    console.log('🚀 AGENDEMAIS v2.0 - API Local Ativa');
+    console.log('🚀 AGENDEMAIS v3.0 - PWA com Notificações');
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(function(registration) {
+          console.log('✅ Service Worker registrado:', registration.scope);
+        })
+        .catch(function(error) {
+          console.log('❌ Erro ao registrar Service Worker:', error);
+        });
+    }
+    
+    // Request notification permission
+    if ('Notification' in window && navigator.serviceWorker) {
+      Notification.requestPermission().then(function(permission) {
+        console.log('📱 Permissão de notificação:', permission);
+      });
+    }
     
     // Hide loading after Flutter loads
     window.addEventListener('flutter-first-frame', function() {
-      console.log('✅ Flutter carregado com API local!');
+      console.log('✅ Flutter carregado com PWA!');
       document.getElementById('loading').style.display = 'none';
     });
     

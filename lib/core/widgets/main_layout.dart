@@ -40,6 +40,10 @@ class MainLayout extends StatelessWidget {
                 label: Text('Agendamentos'),
               ),
               NavigationRailDestination(
+                icon: Icon(Icons.analytics),
+                label: Text('Relatórios'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.qr_code),
                 label: Text('PIX'),
               ),
@@ -73,6 +77,10 @@ class MainLayout extends StatelessWidget {
             label: 'Agendamentos',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Relatórios',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.qr_code),
             label: 'PIX',
           ),
@@ -91,10 +99,12 @@ class MainLayout extends StatelessWidget {
         return 0;
       case '/appointments':
         return 1;
-      case '/pix':
+      case '/reports':
         return 2;
-      case '/settings':
+      case '/pix':
         return 3;
+      case '/settings':
+        return 4;
       default:
         return 0;
     }
@@ -109,9 +119,12 @@ class MainLayout extends StatelessWidget {
         context.go('/appointments');
         break;
       case 2:
-        context.go('/pix');
+        context.go('/reports');
         break;
       case 3:
+        context.go('/pix');
+        break;
+      case 4:
         context.go('/settings');
         break;
     }
