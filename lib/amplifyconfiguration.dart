@@ -1,3 +1,5 @@
+import '../core/constants/app_constants.dart';
+
 const amplifyconfig = '''
 {
   "UserAgent": "aws-amplify-cli/2.0",
@@ -7,8 +9,8 @@ const amplifyconfig = '''
       "awsAPIPlugin": {
         "agendemais": {
           "endpointType": "REST",
-          "endpoint": "${String.fromEnvironment('AWS_API_ENDPOINT', defaultValue: 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod')}",
-          "region": "${String.fromEnvironment('AWS_REGION', defaultValue: 'us-east-1')}",
+          "endpoint": "${AppConstants.apiBaseUrl}",
+          "region": "${AppConstants.awsRegion}",
           "authorizationType": "AMAZON_COGNITO_USER_POOLS"
         }
       }
@@ -25,16 +27,16 @@ const amplifyconfig = '''
         "CredentialsProvider": {
           "CognitoIdentity": {
             "Default": {
-              "PoolId": "${String.fromEnvironment('COGNITO_IDENTITY_POOL_ID', defaultValue: 'us-east-1:YOUR_IDENTITY_POOL_ID')}",
-              "Region": "${String.fromEnvironment('AWS_REGION', defaultValue: 'us-east-1')}"
+              "PoolId": "${AppConstants.cognitoIdentityPoolId}",
+              "Region": "${AppConstants.awsRegion}"
             }
           }
         },
         "CognitoUserPool": {
           "Default": {
-            "PoolId": "${String.fromEnvironment('COGNITO_USER_POOL_ID', defaultValue: 'us-east-1_YOUR_USER_POOL_ID')}",
-            "AppClientId": "${String.fromEnvironment('COGNITO_APP_CLIENT_ID', defaultValue: 'YOUR_APP_CLIENT_ID')}",
-            "Region": "${String.fromEnvironment('AWS_REGION', defaultValue: 'us-east-1')}"
+            "PoolId": "${AppConstants.cognitoUserPoolId}",
+            "AppClientId": "${AppConstants.cognitoAppClientId}",
+            "Region": "${AppConstants.awsRegion}"
           }
         },
         "Auth": {

@@ -1,4 +1,5 @@
 import '../../../core/services/api_service.dart';
+import '../../../core/constants/app_constants.dart';
 
 class PixService {
   final _apiService = ApiService();
@@ -9,23 +10,15 @@ class PixService {
     String? clientId,
     String? appointmentId,
   }) async {
-    final response = await _apiService.generatePix(
-      valor: amount,
-      descricao: description,
-    );
+    final response = await _apiService.post('/payments/pix/generate', {
+      'amount': amount,
+      'description': description,
+      if (clientId != null) 'clientId': clientId,
+      if (appointmentId != null) 'appointmentId': appointmentId,
+    });
 
     if (response['success'] == true) {
-      return {
-        'success': true,
-        'qr_code': response['data']['qr_code'],
-        'qr_code_image': response['data']['qr_code_image'],
-        'pix_key': response['data']['pix_key'],
-        'transaction_id': response['data']['transaction_id'],
-        'amount': amount,
-        'description': description,
-        'expires_at': response['data']['expires_at'],
-        'status': 'pending',
-      };
+      return response['data'];
     } else {
       throw Exception(response['message'] ?? 'Erro ao gerar PIX');
     }
@@ -80,6 +73,45 @@ class PixService {
       return response['data'];
     } else {
       throw Exception(response['message'] ?? 'Erro ao cancelar pagamento');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPaymentDetails(String transactionId) async {
+    final response = await _apiService.get('/payments/pix/$transactionId');
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao carregar detalhes do pagamento');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPixConfiguration() async {
+    final response = await _apiService.get('/payments/pix/config');
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao carregar configuração PIX');
+    }
+  }
+
+  Future<Map<String, dynamic>> updatePixSettings({
+    String? pixKey,
+    String? bankName,
+    String? accountType,
+  }) async {
+    final data = <String, dynamic>{};
+    if (pixKey != null) data['pixKey'] = pixKey;
+    if (bankName != null) data['bankName'] = bankName;
+    if (accountType != null) data['accountType'] = accountType;
+
+    final response = await _apiService.put('/payments/pix/settings', data);
+
+    if (response['success'] == true) {
+      return response['data'];
+    } else {
+      throw Exception(response['message'] ?? 'Erro ao atualizar configurações PIX');
     }
   }
 }

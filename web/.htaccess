@@ -49,9 +49,78 @@
     ExpiresByType text/html "access plus 1 hour"
 </IfModule>
 
-# Security headers
+# PWA and Public Assets - SEMPRE PÚBLICO (Fix 401 Error)
+<Files "manifest.json">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    # Set headers for PWA
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+    Header always set Cache-Control "public, max-age=604800"
+    Header always set Content-Type "application/manifest+json"
+</Files>
+
+<Files "favicon.ico">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</Files>
+
+# Allow access to PWA icons (Fix 401 Error)
+<FilesMatch "^(icons/|Icon-).*\.(png|ico|svg)$">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</FilesMatch>
+
+# Allow access to service worker and PWA files (Fix 401 Error)
+<FilesMatch "^(sw\.js|flutter\.js|flutter_bootstrap\.js|flutter_service_worker\.js|version\.json)$">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# Allow access to assets directory (Fix 401 Error)
+<Directory "assets">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</Directory>
+
+# Allow access to canvaskit directory (Fix 401 Error)
+<Directory "canvaskit">
+    # Remove any authentication requirements
+    Satisfy Any
+    Allow from all
+    Require all granted
+    
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Cache-Control "public, max-age=31536000"
+</Directory>
+
+# Security headers for protected content
 <IfModule mod_headers.c>
-    # Add security headers
+    # Add security headers only for non-public resources
     Header always set X-Content-Type-Options nosniff
     Header always set X-Frame-Options DENY
     Header always set X-XSS-Protection "1; mode=block"
@@ -61,44 +130,30 @@
     Header always set Vary "Accept-Encoding"
     
     # Add cache control for static assets
-    <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf|woff|woff2)$">
+    <FilesMatch "\.(pdf|flv|jpg|jpeg|gif|js|css|swf|woff|woff2)$">
         Header set Cache-Control "max-age=31536000, public, immutable"
     </FilesMatch>
 </IfModule>
 
-# PWA and Public Assets - Always Allow Access
-<Files "manifest.json">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
-    Header always set Access-Control-Allow-Headers "Content-Type"
-    Header always set Cache-Control "public, max-age=604800"
-</Files>
-
-<Files "favicon.ico">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Cache-Control "public, max-age=31536000"
-</Files>
-
-# Allow access to PWA icons
-<FilesMatch "^(icons/|Icon-).*\.(png|ico|svg)$">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Cache-Control "public, max-age=31536000"
-</FilesMatch>
-
-# Allow access to service worker and PWA files
-<FilesMatch "^(sw\.js|flutter\.js|flutter_bootstrap\.js|flutter_service_worker\.js)$">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Cache-Control "public, max-age=86400"
-</FilesMatch>
-
-# Allow access to assets directory
-<Files ~ "^assets/">
-    Header always set Access-Control-Allow-Origin "*"
-    Header always set Cache-Control "public, max-age=31536000"
-</Files>
+# Options for all requests (Fix CORS and OPTIONS)
+<IfModule mod_headers.c>
+    # Handle preflight OPTIONS requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    
+    # Set CORS headers for preflight
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Max-Age "3600"
+</IfModule>
 
 # Flutter Web routing
 RewriteEngine On
+
+# Allow public assets without rewrite
+RewriteCond %{REQUEST_URI} !^/(manifest\.json|favicon\.ico|icons/|sw\.js|flutter\.js|flutter_bootstrap\.js|flutter_service_worker\.js|assets/|canvaskit/)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.html [QSA,L]
+
+# Custom error pages
+ErrorDocument 404 /index.html
