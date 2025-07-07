@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/services/api_service.dart';
-import '../services/pix_service.dart';
+import '../../payments/services/pagamento_service.dart';
 
 class PixScreen extends StatefulWidget {
   const PixScreen({super.key});
@@ -15,7 +15,7 @@ class _PixScreenState extends State<PixScreen> {
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _apiService = ApiService();
-  final _pixService = PixService();
+  final _pagamentoService = PagamentoService();
   
   bool _isLoading = false;
   bool _isLoadingHistory = true;
@@ -33,10 +33,10 @@ class _PixScreenState extends State<PixScreen> {
     setState(() => _isLoadingHistory = true);
     
     try {
-      final response = await _pixService.getPaymentHistory();
+      final response = await _pagamentoService.obterHistoricoPagamentos();
       if (mounted) {
         setState(() {
-          _historico = List<Map<String, dynamic>>.from(response['payments'] ?? []);
+          _historico = response;
           _isLoadingHistory = false;
         });
       }
@@ -59,15 +59,15 @@ class _PixScreenState extends State<PixScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await _pixService.generatePixPayment(
-        amount: double.parse(_valorController.text.replaceAll(',', '.')),
-        description: _descricaoController.text,
+      final response = await _pagamentoService.criarPagamentoPix(
+        valor: double.parse(_valorController.text.replaceAll(',', '.')),
+        descricao: _descricaoController.text,
       );
 
       if (mounted) {
         setState(() {
-          _pixCode = response['qr_code'];
-          _qrCodeImage = response['qr_code_image'];
+          _pixCode = response['codigoCopiaECola'];
+          _qrCodeImage = response['qrCode'];
         });
 
         ScaffoldMessenger.of(context).showSnackBar(

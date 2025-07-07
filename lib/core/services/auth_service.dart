@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../constants/app_constants.dart';
@@ -266,6 +267,31 @@ class AuthService {
     } catch (e) {
       debugPrint('Erro ao salvar tokens: $e');
     }
+  }
+
+  // Método para obter token de autenticação (usado pelos serviços)
+  Future<String?> getAuthToken() async {
+    // Se não tem token em memória, tentar carregar do storage
+    if (_accessToken == null) {
+      await init();
+    }
+    
+    // Se ainda não tem token, retornar null
+    if (_accessToken == null) {
+      return null;
+    }
+    
+    // Verificar se o token ainda é válido
+    final isValid = await _validateToken();
+    if (!isValid) {
+      // Tentar renovar o token
+      final renewed = await refreshAccessToken();
+      if (!renewed) {
+        return null;
+      }
+    }
+    
+    return _accessToken;
   }
 
   // Método para atualizar dados do usuário

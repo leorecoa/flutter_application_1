@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../pix/services/pix_service.dart';
+import '../services/pagamento_service.dart';
 
 class PixPaymentDialog extends StatefulWidget {
   final Map<String, dynamic> pixData;
@@ -18,10 +18,10 @@ class PixPaymentDialog extends StatefulWidget {
 }
 
 class _PixPaymentDialogState extends State<PixPaymentDialog> {
-  final _pixService = PixService();
+  final _pagamentoService = PagamentoService();
   Timer? _statusCheckTimer;
   bool _isCheckingStatus = false;
-  int _timeRemaining = 300; // 5 minutos
+  int _timeRemaining = 1800; // 30 minutos
   Timer? _countdownTimer;
 
   @override
@@ -39,12 +39,20 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
   }
 
   void _startStatusCheck() {
-    _statusCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _statusCheckTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       await _checkPaymentStatus();
     });
   }
 
   void _startCountdown() {
+    final expiresAt = widget.pixData['expiresAt'];
+    if (expiresAt != null) {
+      final expiry = DateTime.parse(expiresAt);
+      final now = DateTime.now();
+      final diff = expiry.difference(now);
+      _timeRemaining = diff.inSeconds > 0 ? diff.inSeconds : 0;
+    }
+
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
@@ -65,11 +73,11 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
     setState(() => _isCheckingStatus = true);
     
     try {
-      final paymentId = widget.pixData['paymentId'];
-      if (paymentId != null) {
-        final statusData = await _pixService.checkPaymentStatus(paymentId);
+      final transacaoId = widget.pixData['transacaoId'];
+      if (transacaoId != null) {
+        final statusData = await _pagamentoService.verificarStatusPagamento(transacaoId);
         
-        if (statusData['status'] == 'paid' && mounted) {
+        if (statusData != null && statusData['status'] == 'pago' && mounted) {
           _statusCheckTimer?.cancel();
           _countdownTimer?.cancel();
           widget.onPaymentCompleted();
@@ -77,6 +85,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
       }
     } catch (e) {
       // Silencioso - continua verificando
+      print('Erro ao verificar status: $e');
     } finally {
       if (mounted) {
         setState(() => _isCheckingStatus = false);
@@ -85,6 +94,8 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
   }
 
   void _showExpiredDialog() {
+    if (!mounted) return;
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -114,7 +125,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
   }
 
   void _copyPixCode() {
-    final pixCode = widget.pixData['qr_code'];
+    final pixCode = widget.pixData['codigoCopiaECola'];
     if (pixCode != null) {
       Clipboard.setData(ClipboardData(text: pixCode));
       ScaffoldMessenger.of(context).showSnackBar(
@@ -123,21 +134,31 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
           backgroundColor: Colors.green,
         ),
       );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Código PIX não disponível'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final pixCode = widget.pixData['qr_code'] ?? '';
-    final amount = widget.pixData['amount'] ?? 0.0;
-    final description = widget.pixData['description'] ?? '';
+    final pixCode = widget.pixData['codigoCopiaECola'] ?? '';
+    final valor = widget.pixData['valor'] ?? 0.0;
+    final descricao = widget.pixData['descricao'] ?? '';
+    final nomeBeneficiario = widget.pixData['nomeBeneficiario'] ?? '';
+    final chavePix = widget.pixData['chavePix'] ?? '';
+    final banco = widget.pixData['banco'] ?? '';
 
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 450),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -187,7 +208,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
               child: Column(
                 children: [
                   Text(
-                    'R\$ ${amount.toStringAsFixed(2)}',
+                    'R\$ ${valor.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -196,9 +217,54 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    description,
+                    descricao,
                     style: const TextStyle(fontSize: 14),
                     textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Dados PIX
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.account_balance, size: 16, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(
+                        banco,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    nomeBeneficiario,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'PIX: $chavePix',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -210,7 +276,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _timeRemaining < 60 ? Colors.red.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                color: _timeRemaining < 300 ? Colors.red.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -219,7 +285,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
                   Icon(
                     Icons.timer,
                     size: 16,
-                    color: _timeRemaining < 60 ? Colors.red : Colors.orange,
+                    color: _timeRemaining < 300 ? Colors.red : Colors.orange,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -227,7 +293,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: _timeRemaining < 60 ? Colors.red : Colors.orange,
+                      color: _timeRemaining < 300 ? Colors.red : Colors.orange,
                     ),
                   ),
                 ],
@@ -236,7 +302,7 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
 
             const SizedBox(height: 20),
 
-            // QR Code (Placeholder)
+            // QR Code ou Placeholder
             Container(
               width: 200,
               height: 200,
@@ -245,11 +311,11 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: widget.pixData['qr_code_image'] != null
+              child: widget.pixData['qrCode'] != null && widget.pixData['qrCode'].isNotEmpty
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        widget.pixData['qr_code_image'],
+                        widget.pixData['qrCode'],
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => _buildQrPlaceholder(),
                       ),
@@ -262,62 +328,67 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
             // Instruções
             const Text(
               '1. Abra o app do seu banco\n'
-              '2. Escaneie o QR Code ou copie o código\n'
-              '3. Confirme o pagamento',
-              style: TextStyle(fontSize: 14),
+              '2. Acesse a área PIX\n'
+              '3. Escolha "Pagar com QR Code" ou "Copia e Cola"\n'
+              '4. Escaneie o código ou cole o texto abaixo\n'
+              '5. Confirme o pagamento',
+              style: TextStyle(fontSize: 13),
               textAlign: TextAlign.center,
             ),
 
             const SizedBox(height: 20),
 
             // Código PIX
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Código PIX (Copia e Cola):',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+            if (pixCode.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Código PIX (Copia e Cola):',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    pixCode,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontFamily: 'monospace',
+                    const SizedBox(height: 8),
+                    Text(
+                      pixCode,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                      ),
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Botão Copiar
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _copyPixCode,
-                icon: const Icon(Icons.copy),
-                label: const Text('Copiar Código PIX'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(16),
+                  ],
                 ),
               ),
-            ),
+
+              const SizedBox(height: 16),
+
+              // Botão Copiar
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _copyPixCode,
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Copiar Código PIX'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                ),
+              ),
+            ],
 
             // Status Check Indicator
             if (_isCheckingStatus) ...[
@@ -344,6 +415,19 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
                 ],
               ),
             ],
+
+            const SizedBox(height: 8),
+
+            // Info adicional
+            Text(
+              'O status do pagamento será atualizado automaticamente',
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
@@ -365,6 +449,14 @@ class _PixPaymentDialogState extends State<PixPaymentDialog> {
           style: TextStyle(
             color: Colors.grey,
             fontSize: 12,
+          ),
+        ),
+        SizedBox(height: 4),
+        Text(
+          '(Use o código copia e cola abaixo)',
+          style: TextStyle(
+            color: Colors.grey,
+            fontSize: 10,
           ),
         ),
       ],

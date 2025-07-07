@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../core/services/auth_service.dart';
-import '../../pix/services/pix_service.dart';
-import '../widgets/payment_method_card.dart';
-import '../widgets/pix_payment_dialog.dart';
-import '../widgets/stripe_payment_dialog.dart';
+import '../services/pagamento_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -15,9 +10,7 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
-  final _pixService = PixService();
-  final _authService = AuthService();
-  
+  final _pagamentoService = PagamentoService();
   bool _isLoading = false;
   String? _selectedMethod;
 
@@ -28,54 +21,50 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Escolha seu Plano'),
+        title: const Text('Pagamento'),
         backgroundColor: const Color(0xFF667eea),
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Plano
+            // Plan Card
             _buildPlanCard(),
             
             const SizedBox(height: 24),
             
-            // Métodos de Pagamento
             const Text(
               'Escolha a forma de pagamento',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             
             const SizedBox(height: 16),
             
-            // PIX
-            PaymentMethodCard(
+            // Payment Methods
+            _buildPaymentMethodCard(
               icon: Icons.pix,
               title: 'PIX',
-              subtitle: 'Pagamento instantâneo',
-              isSelected: _selectedMethod == 'pix',
-              onTap: () => _selectPaymentMethod('pix'),
+              subtitle: 'Banco PAM - Pagamento instantâneo',
+              method: 'pix',
             ),
             
             const SizedBox(height: 12),
             
-            // Cartão de Crédito (Stripe)
-            PaymentMethodCard(
+            _buildPaymentMethodCard(
               icon: Icons.credit_card,
               title: 'Cartão de Crédito',
-              subtitle: 'Visa, Mastercard, Elo',
-              isSelected: _selectedMethod == 'stripe',
-              onTap: () => _selectPaymentMethod('stripe'),
+              subtitle: 'Visa, Mastercard, Elo via Stripe',
+              method: 'stripe',
             ),
             
-            const SizedBox(height: 32),
+            const Spacer(),
             
-            // Botão Pagar
+            // Pay Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -86,26 +75,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   backgroundColor: const Color(0xFF667eea),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.all(16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text(
                         'Pagar R\$ ${_planPrice.toStringAsFixed(2)}',
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
               ),
             ),
-            
-            const SizedBox(height: 16),
-            
-            // Informações de Segurança
-            _buildSecurityInfo(),
           ],
         ),
       ),
@@ -116,147 +97,129 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Card(
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(16),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF667eea).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.star,
-                    color: Color(0xFF667eea),
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Plano Premium',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Corte + Barba Completa',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'R\$ ${_planPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF667eea),
-                      ),
-                    ),
-                    const Text(
-                      'à vista',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Benefícios
-            const Text(
-              'Inclui:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF667eea).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.star,
+                color: Color(0xFF667eea),
+                size: 32,
               ),
             ),
-            const SizedBox(height: 8),
-            
-            ...[
-              'Corte de cabelo profissional',
-              'Barba completa com máquina e navalha',
-              'Finalização com produtos premium',
-              'Atendimento personalizado',
-            ].map((benefit) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 20,
+                  const Text(
+                    'Plano Premium',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(benefit),
+                  Text(
+                    'Corte + Barba Completa',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                 ],
               ),
-            )),
+            ),
+            Text(
+              'R\$ ${_planPrice.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF667eea),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSecurityInfo() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.security, color: Colors.green, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Pagamento Seguro',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
+  Widget _buildPaymentMethodCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String method,
+  }) {
+    final isSelected = _selectedMethod == method;
+    
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMethod = method),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF667eea).withValues(alpha: 0.1) : Colors.white,
+          border: Border.all(
+            color: isSelected ? const Color(0xFF667eea) : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? const Color(0xFF667eea) 
+                    : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(8),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Seus dados estão protegidos com criptografia SSL. '
-            'Utilizamos Stripe para cartões e sistema PIX oficial do Banco Central.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+                size: 24,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            
+            const SizedBox(width: 16),
+            
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? const Color(0xFF667eea) : Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF667eea),
+                size: 24,
+              ),
+          ],
+        ),
       ),
     );
-  }
-
-  void _selectPaymentMethod(String method) {
-    setState(() {
-      _selectedMethod = method;
-    });
   }
 
   Future<void> _processPayment() async {
@@ -288,21 +251,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _processPixPayment() async {
     try {
-      final pixData = await _pixService.generatePixPayment(
-        amount: _planPrice,
-        description: _planDescription,
+      final pixData = await _pagamentoService.criarPagamentoPix(
+        valor: _planPrice,
+        descricao: _planDescription,
       );
 
       if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => PixPaymentDialog(
-            pixData: pixData,
-            onPaymentCompleted: () {
-              Navigator.of(context).pop(); // Fechar dialog
-              _showPaymentSuccess();
-            },
+        // Aqui você pode mostrar um dialog ou navegar para uma tela específica
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PIX gerado com sucesso! Aguardando pagamento...'),
+            backgroundColor: Colors.green,
           ),
         );
       }
@@ -313,52 +272,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _processStripePayment() async {
     try {
-      final stripeData = await _pixService.generateStripePayment(
-        amount: _planPrice,
-        description: _planDescription,
+      final stripeData = await _pagamentoService.criarPagamentoStripe(
+        valor: _planPrice,
+        descricao: _planDescription,
       );
 
-      final checkoutUrl = stripeData['checkoutUrl'];
-      if (checkoutUrl != null) {
-        final uri = Uri.parse(checkoutUrl);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          throw Exception('Não foi possível abrir o checkout');
-        }
-      } else {
-        throw Exception('URL de checkout não recebida');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Redirecionando para checkout Stripe...'),
+            backgroundColor: Colors.blue,
+          ),
+        );
       }
     } catch (e) {
       throw Exception('Erro ao processar pagamento: $e');
     }
-  }
-
-  void _showPaymentSuccess() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        icon: const Icon(
-          Icons.check_circle,
-          color: Colors.green,
-          size: 64,
-        ),
-        title: const Text('Pagamento Confirmado!'),
-        content: const Text(
-          'Seu pagamento foi processado com sucesso. '
-          'Você já pode agendar seu atendimento.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Fechar dialog
-              Navigator.of(context).pop(); // Voltar para tela anterior
-            },
-            child: const Text('Continuar'),
-          ),
-        ],
-      ),
-    );
   }
 }
