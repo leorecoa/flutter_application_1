@@ -7,7 +7,7 @@ frontend:
         - flutter pub get
     build:
       commands:
-        - flutter build web --release --dart-define=USE_REAL_API=true
+        - flutter build web --release
   artifacts:
     baseDirectory: build/web
     files:
