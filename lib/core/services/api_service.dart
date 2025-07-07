@@ -167,6 +167,15 @@ class ApiService {
     };
   }
   
+  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> data) async {
+    if (AppConstants.useRealApi) {
+      return await _makeRealApiCall('PUT', path, data);
+    }
+    
+    await Future.delayed(const Duration(milliseconds: 500));
+    return {'success': true, 'message': 'Atualizado com sucesso'};
+  }
+  
   Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
     try {
       final url = Uri.parse('${AppConstants.apiBaseUrl}$path');

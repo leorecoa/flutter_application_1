@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
+import '../services/appointments_service.dart';
+import '../widgets/add_appointment_dialog.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key});
@@ -10,6 +12,7 @@ class AppointmentsScreen extends StatefulWidget {
 }
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
+  final _appointmentsService = AppointmentsService();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
 
@@ -22,37 +25,21 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   Future<void> _loadAppointments() async {
     setState(() => _isLoading = true);
     
-    // Mock data - substituir por API real
-    await Future.delayed(const Duration(seconds: 1));
-    
-    final mockAppointments = [
-      Appointment(
-        id: '1',
-        clientName: 'Maria Silva',
-        clientPhone: '(11) 99999-9999',
-        service: 'Corte + Escova',
-        dateTime: DateTime.now().add(const Duration(hours: 2)),
-        price: 80.0,
-        status: AppointmentStatus.confirmed,
-        createdAt: DateTime.now(),
-      ),
-      Appointment(
-        id: '2',
-        clientName: 'João Santos',
-        clientPhone: '(11) 88888-8888',
-        service: 'Barba',
-        dateTime: DateTime.now().add(const Duration(hours: 4)),
-        price: 35.0,
-        status: AppointmentStatus.scheduled,
-        createdAt: DateTime.now(),
-      ),
-    ];
-    
-    if (mounted) {
-      setState(() {
-        _appointments = mockAppointments;
-        _isLoading = false;
-      });
+    try {
+      final appointments = await _appointmentsService.getAppointments();
+      if (mounted) {
+        setState(() {
+          _appointments = appointments;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao carregar agendamentos: $e')),
+        );
+      }
     }
   }
 
@@ -185,15 +172,12 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
   void _showAddAppointmentDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Novo Agendamento'),
-        content: const Text('Funcionalidade em desenvolvimento'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+      builder: (context) => AddAppointmentDialog(
+        onAppointmentAdded: (appointment) {
+          setState(() {
+            _appointments.add(appointment);
+          });
+        },
       ),
     );
   }

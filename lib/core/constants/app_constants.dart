@@ -9,7 +9,7 @@ class AppConstants {
     defaultValue: 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod',
   );
   
-  static const bool useRealApi = String.fromEnvironment('USE_REAL_API') == 'true';
+  static const bool useRealApi = true; // Sempre usar API real agora
   static const Duration requestTimeout = Duration(seconds: 30);
   
   // Storage Keys
