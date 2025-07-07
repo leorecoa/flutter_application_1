@@ -6,7 +6,7 @@ class AppConstants {
   // API Configuration
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://your-api-gateway-url.execute-api.us-east-1.amazonaws.com/prod',
+    defaultValue: 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod',
   );
   
   static const bool useRealApi = String.fromEnvironment('USE_REAL_API') == 'true';
