@@ -1,10 +1,17 @@
 version: 1
 frontend:
   phases:
+    preBuild:
+      commands:
+        - flutter --version
+        - flutter pub get
     build:
       commands:
-        - echo "Serving pre-built Flutter Web files"
+        - flutter build web --release --dart-define=USE_REAL_API=true
   artifacts:
-    baseDirectory: web
+    baseDirectory: build/web
     files:
       - '**/*'
+  cache:
+    paths:
+      - ~/.pub-cache/**/*
