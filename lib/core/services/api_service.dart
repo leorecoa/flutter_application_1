@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/user_model.dart';
@@ -41,6 +42,10 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
+    if (AppConstants.useRealApi) {
+      return await _makeRealApiCall('POST', path, data);
+    }
+    
     try {
       await Future.delayed(const Duration(milliseconds: 800));
       
@@ -96,6 +101,10 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> get(String path) async {
+    if (AppConstants.useRealApi) {
+      return await _makeRealApiCall('GET', path, null);
+    }
+    
     try {
       await Future.delayed(const Duration(milliseconds: 300));
       
@@ -156,5 +165,56 @@ class ApiService {
       'success': true,
       'pixCode': '00020126580014br.gov.bcb.pix0136${DateTime.now().millisecondsSinceEpoch}520400005303986540${valor.toStringAsFixed(2)}5802BR5925AGENDEMAIS LTDA6009SAO PAULO62070503***6304ABCD',
     };
+  }
+  
+  Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
+    try {
+      final url = Uri.parse('${AppConstants.apiBaseUrl}$path');
+      final headers = {
+        'Content-Type': 'application/json',
+        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+      };
+      
+      http.Response response;
+      
+      switch (method) {
+        case 'GET':
+          response = await http.get(url, headers: headers).timeout(AppConstants.requestTimeout);
+          break;
+        case 'POST':
+          response = await http.post(
+            url,
+            headers: headers,
+            body: data != null ? jsonEncode(data) : null,
+          ).timeout(AppConstants.requestTimeout);
+          break;
+        case 'PUT':
+          response = await http.put(
+            url,
+            headers: headers,
+            body: data != null ? jsonEncode(data) : null,
+          ).timeout(AppConstants.requestTimeout);
+          break;
+        default:
+          throw Exception('Método HTTP não suportado: $method');
+      }
+      
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return responseData;
+      } else {
+        return {
+          'success': false,
+          'message': responseData['message'] ?? 'Erro na requisição',
+        };
+      }
+      
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Erro de conexão: $e',
+      };
+    }
   }
 }

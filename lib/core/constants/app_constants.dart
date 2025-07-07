@@ -3,8 +3,13 @@ class AppConstants {
   static const String appSlogan = 'Seu negócio sempre em primeiro lugar';
   static const String version = '1.0.0';
   
-  // API
-  static const String baseUrl = 'https://api.agendemais.com';
+  // API Configuration
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://your-api-gateway-url.execute-api.us-east-1.amazonaws.com/prod',
+  );
+  
+  static const bool useRealApi = String.fromEnvironment('USE_REAL_API') == 'true';
   static const Duration requestTimeout = Duration(seconds: 30);
   
   // Storage Keys
