@@ -3,19 +3,18 @@ frontend:
   phases:
     preBuild:
       commands:
-        - git clone https://github.com/flutter/flutter.git -b stable --depth 1
+        - apt-get update
+        - apt-get install -y curl git unzip xz-utils zip libglu1-mesa
+        - curl -o flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.16.9-stable.tar.xz
+        - tar xf flutter.tar.xz
         - export PATH="$PATH:`pwd`/flutter/bin"
-        - flutter precache --web
+        - flutter doctor
         - flutter pub get
     build:
       commands:
         - export PATH="$PATH:`pwd`/flutter/bin"
-        - flutter build web --release --web-renderer canvaskit
+        - flutter build web --release --web-renderer html
   artifacts:
     baseDirectory: build/web
     files:
       - '**/*'
-  cache:
-    paths:
-      - flutter/**/*
-      - ~/.pub-cache/**/*
