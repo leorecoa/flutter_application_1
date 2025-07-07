@@ -6,6 +6,8 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/pix/screens/pix_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
+import '../../features/appointments/screens/appointments_screen.dart';
+import '../widgets/main_layout.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -27,17 +29,31 @@ class AppRouter {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
-      GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: '/pix',
-        builder: (context, state) => const PixScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+      ShellRoute(
+        builder: (context, state, child) {
+          return MainLayout(
+            currentPath: state.uri.path,
+            child: child,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/dashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: '/pix',
+            builder: (context, state) => const PixScreen(),
+          ),
+          GoRoute(
+            path: '/appointments',
+            builder: (context, state) => const AppointmentsScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

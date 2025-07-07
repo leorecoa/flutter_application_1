@@ -22,25 +22,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      final mockStats = {
-        'appointmentsToday': 12,
-        'totalClients': 248,
-        'monthlyRevenue': 15420.50,
-        'activeServices': 8,
-        'weeklyGrowth': 12.5,
-        'satisfactionRate': 4.8,
-        'nextAppointment': {
-          'client': 'Maria Silva',
-          'service': 'Corte + Escova',
-          'time': '14:30',
-        },
-      };
-
-      if (mounted) {
+      final response = await _apiService.get('/dashboard/stats');
+      
+      if (response['success'] == true && mounted) {
         setState(() {
-          _stats = mockStats;
+          _stats = response['data'];
           _isLoading = false;
         });
       }
@@ -62,11 +48,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
+      appBar: MediaQuery.of(context).size.width > 768 ? null : AppBar(
+        title: Text('Olá, ${_apiService.currentUser?.name ?? 'Usuário'}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.public),
+            icon: const Icon(Icons.add),
+            onPressed: () => _showNewAppointmentDialog(),
+            tooltip: 'Novo Agendamento',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),
             tooltip: 'Configurações',
           ),
@@ -139,31 +130,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    if (_stats?['nextAppointment'] != null) ...[
+                    if (_stats?['nextAppointments'] != null) ...[
                       const Text(
-                        'Próximo Agendamento',
+                        'Próximos Agendamentos',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
-                      Card(
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.blue,
-                            child: Icon(Icons.person, color: Colors.white),
-                          ),
-                          title: Text(_stats!['nextAppointment']['client']),
-                          subtitle: Text(_stats!['nextAppointment']['service']),
-                          trailing: Text(
-                            _stats!['nextAppointment']['time'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                      for (final appointment in _stats!['nextAppointments'] as List)
+                        Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: appointment['status'] == 'confirmed' 
+                                  ? Colors.green : Colors.orange,
+                              child: const Icon(Icons.schedule, color: Colors.white),
+                            ),
+                            title: Text(appointment['clientName']),
+                            subtitle: Text('${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
+                            trailing: Text(
+                              '${DateTime.parse(appointment['dateTime']).hour.toString().padLeft(2, '0')}:${DateTime.parse(appointment['dateTime']).minute.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                     const SizedBox(height: 32),
                     const Text(
@@ -177,9 +170,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       runSpacing: 16,
                       children: [
                         _buildActionButton(
-                          'Novo Agendamento',
-                          Icons.add_circle,
-                          () => _showNewAppointmentDialog(),
+                          'Agendamentos',
+                          Icons.calendar_today,
+                          () => context.push('/appointments'),
                         ),
                         _buildActionButton(
                           'Gerenciar Clientes',

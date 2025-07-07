@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,11 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       
       if (response['success'] == true) {
-        await _apiService.setAuthToken(response['token']);
+        final user = User.fromJson(response['user']);
+        await _apiService.setAuthToken(response['token'], user);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response['message'] ?? 'Login realizado!'),
+              content: Text('Bem-vindo, ${user.name}!'),
               backgroundColor: Colors.green,
             ),
           );
