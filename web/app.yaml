@@ -1,18 +1,47 @@
-runtime: custom
-env: flex
+runtime: python39
 
+# Performance optimizations
 automatic_scaling:
-  min_num_instances: 1
-  max_num_instances: 10
+  min_instances: 0
+  max_instances: 10
+  target_cpu_utilization: 0.6
 
 handlers:
+# Static assets with long cache
+- url: /assets/.*
+  static_dir: assets
+  expiration: "365d"
+  
+# JavaScript and CSS with shorter cache
+- url: /.*\.(js|css)$
+  static_files: \1
+  upload: .*\.(js|css)$
+  expiration: "30d"
+  
+# Images with long cache
+- url: /.*\.(png|jpg|jpeg|gif|ico|svg)$
+  static_files: \1
+  upload: .*\.(png|jpg|jpeg|gif|ico|svg)$
+  expiration: "365d"
+  
+# Fonts with long cache
+- url: /.*\.(woff|woff2|ttf|eot)$
+  static_files: \1
+  upload: .*\.(woff|woff2|ttf|eot)$
+  expiration: "365d"
+  
+# Service worker - short cache for updates
+- url: /sw\.js$
+  static_files: sw.js
+  upload: sw\.js$
+  expiration: "1d"
+  
+# Main app files
 - url: /.*
-  static_files: build/web/index.html
-  upload: build/web/index.html
-  secure: always
-  redirect_http_response_code: 301
+  static_files: index.html
+  upload: index\.html
+  expiration: "1h"
 
-- url: /(.*)
-  static_files: build/web/\1
-  upload: build/web/(.*)
-  secure: always
+# Enable compression
+env_variables:
+  GZIP_COMPRESSION: true
