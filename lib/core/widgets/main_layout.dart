@@ -27,7 +27,7 @@ class MainLayout extends StatelessWidget {
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: _getSelectedIndex(),
+            selectedIndex: _getSelectedIndex(context),
             onDestinationSelected: (index) => _navigateToIndex(context, index),
             labelType: NavigationRailLabelType.all,
             destinations: const [
@@ -65,7 +65,7 @@ class MainLayout extends StatelessWidget {
       body: child,
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _getSelectedIndex(),
+        currentIndex: _getSelectedIndex(context),
         onTap: (index) => _navigateToIndex(context, index),
         items: const [
           BottomNavigationBarItem(
@@ -75,10 +75,6 @@ class MainLayout extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Agendamentos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Relatórios',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.qr_code),
@@ -93,40 +89,47 @@ class MainLayout extends StatelessWidget {
     );
   }
 
-  int _getSelectedIndex() {
-    switch (currentPath) {
-      case '/dashboard':
-        return 0;
-      case '/appointments':
-        return 1;
-      case '/reports':
-        return 2;
-      case '/pix':
-        return 3;
-      case '/settings':
-        return 4;
-      default:
-        return 0;
+  int _getSelectedIndex(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 768;
+    
+    if (isDesktop) {
+      switch (currentPath) {
+        case '/dashboard': return 0;
+        case '/appointments': return 1;
+        case '/reports': return 2;
+        case '/pix': return 3;
+        case '/settings': return 4;
+        default: return 0;
+      }
+    } else {
+      switch (currentPath) {
+        case '/dashboard': return 0;
+        case '/appointments': return 1;
+        case '/pix': return 2;
+        case '/settings': return 3;
+        default: return 0;
+      }
     }
   }
 
   void _navigateToIndex(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        context.go('/dashboard');
-        break;
-      case 1:
-        context.go('/appointments');
-        break;
-      case 2:
-        context.go('/reports');
-        break;
-      case 3:
-        context.go('/pix');
-        break;
-      case 4:
-        context.go('/settings');
-        break;
+    final isDesktop = MediaQuery.of(context).size.width > 768;
+    
+    if (isDesktop) {
+      switch (index) {
+        case 0: context.go('/dashboard'); break;
+        case 1: context.go('/appointments'); break;
+        case 2: context.go('/reports'); break;
+        case 3: context.go('/pix'); break;
+        case 4: context.go('/settings'); break;
+      }
+    } else {
+      switch (index) {
+        case 0: context.go('/dashboard'); break;
+        case 1: context.go('/appointments'); break;
+        case 2: context.go('/pix'); break;
+        case 3: context.go('/settings'); break;
+      }
     }
   }
 }

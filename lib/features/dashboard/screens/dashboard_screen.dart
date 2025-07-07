@@ -22,6 +22,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboard() async {
+    if (!mounted) return;
+    
+    setState(() => _isLoading = true);
+    
     try {
       final dashboardService = DashboardService();
       final stats = await dashboardService.getDashboardStats();
@@ -36,7 +40,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar dashboard: $e')),
+          SnackBar(
+            content: Text('Erro ao carregar dashboard'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Tentar novamente',
+              onPressed: _loadDashboard,
+            ),
+          ),
         );
       }
     }

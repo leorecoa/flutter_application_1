@@ -7,7 +7,15 @@ import 'core/services/api_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize services
   await ApiService().init();
+  
+  // Error handling
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
+  
   runApp(const ProviderScope(child: AgendemaisApp()));
 }
 
