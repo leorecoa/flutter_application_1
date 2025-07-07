@@ -1,8 +1,8 @@
 {
-  "name": "agendemais-webhooks",
+  "name": "agendemais-webhooks-stripe",
   "version": "1.0.0",
-  "description": "AGENDEMAIS Webhook Functions - PIX and Stripe Payment Confirmations",
-  "main": "index.js",
+  "description": "AGENDEMAIS Stripe Webhook Functions - Payment Confirmations",
+  "main": "stripe.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,8 +16,12 @@
     "aws",
     "lambda",
     "webhooks",
-    "pix",
     "stripe",
-    "payments"
-  ]
+    "payments",
+    "dynamodb",
+    "cognito"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

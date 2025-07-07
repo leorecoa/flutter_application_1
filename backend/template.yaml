@@ -160,70 +160,87 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref AppointmentsTable
 
-  PaymentsFunction:
+  PaymentsPixFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/functions/payments/
-      Handler: index.handler
+      Handler: pix.handler
+      Timeout: 30
       Environment:
         Variables:
-          STRIPE_SECRET_KEY: '{{resolve:secretsmanager:agendemais/payments:SecretString:STRIPE_SECRET_KEY}}'
-          OPENPIX_APP_ID: '{{resolve:secretsmanager:agendemais/payments:SecretString:OPENPIX_APP_ID}}'
+          PAYMENTS_TABLE: !Ref PaymentsTable
+          PIX_CHAVE_CPF: '05359566493'
+          PIX_BENEFICIARIO: 'Leandro Jesse da Silva'
+          PIX_BANCO: 'Banco PAM'
+          FRONTEND_URL: 'https://main.d31iho7gw23enq.amplifyapp.com'
+          JWT_SECRET: 'agendemais-secret-key-2024'
       Events:
         CreatePixPayment:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /payments/pix
+            Path: /api/pagamento/pix
             Method: post
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PaymentsTable
+        - Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:agendemais/payments*'
+
+  PaymentsStripeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/functions/payments/
+      Handler: stripe.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          PAYMENTS_TABLE: !Ref PaymentsTable
+          FRONTEND_URL: 'https://main.d31iho7gw23enq.amplifyapp.com'
+          JWT_SECRET: 'agendemais-secret-key-2024'
+      Events:
         CreateStripePayment:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /payments/stripe
+            Path: /api/pagamento/stripe
             Method: post
-        GetPaymentHistory:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /payments/history
-            Method: get
-        GetPaymentStatus:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /payments/{id}/status
-            Method: get
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PaymentsTable
+        - Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:agendemais/payments*'
 
-  WebhooksFunction:
+  WebhooksStripeFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/functions/webhooks/
-      Handler: index.handler
+      Handler: stripe.handler
+      Timeout: 30
       Environment:
         Variables:
-          STRIPE_SECRET_KEY: '{{resolve:secretsmanager:agendemais/payments:SecretString:STRIPE_SECRET_KEY}}'
-          STRIPE_WEBHOOK_SECRET: '{{resolve:secretsmanager:agendemais/payments:SecretString:STRIPE_WEBHOOK_SECRET}}'
-          PIX_WEBHOOK_SECRET: '{{resolve:secretsmanager:agendemais/payments:SecretString:PIX_WEBHOOK_SECRET}}'
+          PAYMENTS_TABLE: !Ref PaymentsTable
       Events:
-        PixWebhook:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /webhooks/pix
-            Method: post
         StripeWebhook:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
-            Path: /webhooks/stripe
+            Path: /api/webhook/stripe
             Method: post
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref PaymentsTable
+        - Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:agendemais/payments*'
 
 Outputs:
   ApiUrl:

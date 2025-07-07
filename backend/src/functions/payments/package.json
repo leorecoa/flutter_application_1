@@ -1,8 +1,8 @@
 {
-  "name": "agendemais-payments",
+  "name": "agendemais-payments-pix-stripe",
   "version": "1.0.0",
-  "description": "AGENDEMAIS Payment Functions - PIX and Stripe Integration",
-  "main": "index.js",
+  "description": "AGENDEMAIS Payment Functions - PIX (Banco PAM) and Stripe Integration",
+  "main": "pix.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,8 +11,7 @@
     "stripe": "^14.8.0",
     "axios": "^1.6.2",
     "jsonwebtoken": "^9.0.2",
-    "uuid": "^9.0.1",
-    "bcryptjs": "^2.4.3"
+    "uuid": "^9.0.1"
   },
   "author": "AGENDEMAIS Team",
   "license": "ISC",
@@ -21,7 +20,13 @@
     "lambda",
     "payments",
     "pix",
+    "banco-pam",
     "stripe",
-    "dynamodb"
-  ]
+    "openpix",
+    "dynamodb",
+    "cognito"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }
