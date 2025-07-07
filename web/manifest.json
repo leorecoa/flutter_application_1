@@ -2,6 +2,7 @@
   "name": "AGENDEMAIS - Sistema de Agendamento",
   "short_name": "AGENDEMAIS",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#6C63FF",
   "theme_color": "#6C63FF",

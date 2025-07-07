@@ -64,11 +64,10 @@ class ApiService {
     required double valor,
     required String descricao,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return {
-      'success': true,
-      'pixCode': '00020126580014br.gov.bcb.pix0136${DateTime.now().millisecondsSinceEpoch}520400005303986540${valor.toStringAsFixed(2)}5802BR5925AGENDEMAIS LTDA6009SAO PAULO62070503***6304ABCD',
-    };
+    return await _makeRealApiCall('POST', '/payments/pix', {
+      'amount': valor,
+      'description': descricao,
+    });
   }
   
   Future<Map<String, dynamic>> put(String path, Map<String, dynamic> data) async {

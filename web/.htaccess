@@ -1,0 +1,23 @@
+# Permitir acesso público ao manifest.json
+<Files "manifest.json">
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+</Files>
+
+# Permitir acesso aos ícones PWA
+<FilesMatch "\.(png|ico|svg)$">
+    Header always set Access-Control-Allow-Origin "*"
+</FilesMatch>
+
+# Cache para recursos estáticos
+<FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+</FilesMatch>
+
+# Não cachear arquivos dinâmicos
+<FilesMatch "\.(html|json)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 0 seconds"
+</FilesMatch>

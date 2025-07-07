@@ -4,15 +4,18 @@ import 'core/constants/app_constants.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
+import 'core/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize services
+  // Initialize services for production
   await ApiService().init();
+  await AuthService().init();
   
-  // Error handling
+  // Global error handling
   FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('Flutter Error: ${details.exception}');
     FlutterError.presentError(details);
   };
   

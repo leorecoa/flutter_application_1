@@ -309,106 +309,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showClientsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clientes'),
-        content: SizedBox(
-          width: 400,
-          height: 300,
-          child: ListView(
-            children: const [
-              ListTile(
-                leading: CircleAvatar(child: Text('MS')),
-                title: Text('Maria Silva'),
-                subtitle: Text('(11) 99999-9999'),
-                trailing: Icon(Icons.edit),
-              ),
-              ListTile(
-                leading: CircleAvatar(child: Text('JS')),
-                title: Text('João Santos'),
-                subtitle: Text('(11) 88888-8888'),
-                trailing: Icon(Icons.edit),
-              ),
-              ListTile(
-                leading: CircleAvatar(child: Text('AL')),
-                title: Text('Ana Lima'),
-                subtitle: Text('(11) 77777-7777'),
-                trailing: Icon(Icons.edit),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Novo Cliente'),
-          ),
-        ],
-      ),
-    );
+    context.push('/clients');
   }
 
   void _showReportsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Relatórios'),
-        content: SizedBox(
-          width: 300,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.calendar_month),
-                title: const Text('Relatório Mensal'),
-                subtitle: const Text('Agendamentos e receita'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Gerando relatório mensal...')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Relatório de Clientes'),
-                subtitle: const Text('Lista completa de clientes'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Gerando relatório de clientes...')),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.attach_money),
-                title: const Text('Relatório Financeiro'),
-                subtitle: const Text('Receitas e despesas'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Gerando relatório financeiro...')),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-        ],
-      ),
-    );
+    context.push('/reports');
   }
 }
