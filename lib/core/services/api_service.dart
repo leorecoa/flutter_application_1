@@ -42,119 +42,23 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
-    if (AppConstants.useRealApi) {
-      return await _makeRealApiCall('POST', path, data);
+    final response = await _makeRealApiCall('POST', path, data);
+    
+    // Se for login bem-sucedido, salvar dados
+    if (path == '/auth/login' && response['success'] == true) {
+      await setAuthToken(response['token'], User.fromJson(response['user']));
     }
     
-    try {
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      if (path == '/auth/login') {
-        return _mockLogin(data);
-      }
-      
-      if (path == '/auth/register') {
-        return _mockRegister(data);
-      }
-      
-      return {'success': true, 'message': 'Operação realizada'};
-    } catch (e) {
-      return {'success': false, 'message': 'Erro na requisição'};
-    }
+    return response;
   }
   
-  Map<String, dynamic> _mockLogin(Map<String, dynamic> data) {
-    final email = data['email']?.toString() ?? '';
-    final password = data['password']?.toString() ?? '';
-    
-    if (email.contains('@') && password.length >= AppConstants.minPasswordLength) {
-      final user = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        email: email,
-        name: email.split('@')[0].replaceAll('.', ' ').toUpperCase(),
-        businessName: 'Minha Empresa',
-        phone: '(11) 99999-9999',
-        createdAt: DateTime.now(),
-      );
-      
-      return {
-        'success': true,
-        'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'user': user.toJson(),
-        'message': 'Login realizado com sucesso'
-      };
-    }
-    
-    return {'success': false, 'message': 'Credenciais inválidas'};
-  }
-  
-  Map<String, dynamic> _mockRegister(Map<String, dynamic> data) {
-    final email = data['email']?.toString() ?? '';
-    final password = data['password']?.toString() ?? '';
-    final name = data['name']?.toString() ?? '';
-    
-    if (email.contains('@') && password.length >= AppConstants.minPasswordLength && name.isNotEmpty) {
-      return {'success': true, 'message': 'Conta criada com sucesso!'};
-    }
-    
-    return {'success': false, 'message': 'Dados inválidos'};
-  }
+
   
   Future<Map<String, dynamic>> get(String path) async {
-    if (AppConstants.useRealApi) {
-      return await _makeRealApiCall('GET', path, null);
-    }
-    
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      if (path == '/dashboard/stats') {
-        return _mockDashboardStats();
-      }
-      
-      return {'success': true, 'data': {}};
-    } catch (e) {
-      return {'success': false, 'message': 'Erro na requisição'};
-    }
+    return await _makeRealApiCall('GET', path, null);
   }
   
-  Map<String, dynamic> _mockDashboardStats() {
-    final now = DateTime.now();
-    return {
-      'success': true,
-      'data': {
-        'appointmentsToday': now.day % 15 + 5,
-        'totalClients': now.month * 25 + 150,
-        'monthlyRevenue': (now.month * 2500.0) + 8000.0,
-        'activeServices': 12,
-        'weeklyGrowth': (now.day % 25) + 8.0,
-        'satisfactionRate': 4.6 + (now.millisecond % 4) / 10,
-        'nextAppointments': _getMockAppointments(),
-      }
-    };
-  }
-  
-  List<Map<String, dynamic>> _getMockAppointments() {
-    final now = DateTime.now();
-    return [
-      {
-        'id': '1',
-        'clientName': 'Maria Silva',
-        'service': 'Corte + Escova',
-        'dateTime': now.add(const Duration(hours: 2)).toIso8601String(),
-        'price': 80.0,
-        'status': 'confirmed',
-      },
-      {
-        'id': '2',
-        'clientName': 'João Santos',
-        'service': 'Barba',
-        'dateTime': now.add(const Duration(hours: 4)).toIso8601String(),
-        'price': 35.0,
-        'status': 'scheduled',
-      },
-    ];
-  }
+
   
   Future<Map<String, dynamic>> generatePix({
     required double valor,
@@ -168,12 +72,7 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> put(String path, Map<String, dynamic> data) async {
-    if (AppConstants.useRealApi) {
-      return await _makeRealApiCall('PUT', path, data);
-    }
-    
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {'success': true, 'message': 'Atualizado com sucesso'};
+    return await _makeRealApiCall('PUT', path, data);
   }
   
   Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
