@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       
       if (response['success'] == true) {
-        _apiService.setAuthToken(response['token']);
+        await _apiService.setAuthToken(response['token']);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

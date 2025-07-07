@@ -1,9 +1,0 @@
-{
-  "name": "agendafacil-saas-payment",
-  "version": "1.0.0",
-  "dependencies": {
-    "aws-sdk": "^2.1490.0",
-    "qrcode": "^1.5.3",
-    "uuid": "^9.0.1"
-  }
-}

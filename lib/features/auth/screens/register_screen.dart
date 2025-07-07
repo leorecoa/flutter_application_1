@@ -42,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           );
           // Aguarda um pouco antes de redirecionar
           await Future.delayed(const Duration(seconds: 1));
-          context.go('/login');
+          if (mounted) context.go('/login');
         }
       } else {
         throw Exception(response['message'] ?? 'Erro no registro');

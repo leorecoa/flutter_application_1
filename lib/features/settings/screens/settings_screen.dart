@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../core/routes/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../widgets/app_scaffold.dart';
-import '../../../widgets/input_field.dart';
-import '../../../widgets/primary_button.dart';
+import '../../../core/services/api_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,33 +9,18 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen>
-    with SingleTickerProviderStateMixin {
+class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _pixKeyController = TextEditingController();
+  final _apiService = ApiService();
   bool _isLoading = true;
   bool _isSaving = false;
-
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
     _loadSettings();
   }
 
@@ -50,7 +29,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     _nomeController.dispose();
     _emailController.dispose();
     _pixKeyController.dispose();
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -58,26 +36,24 @@ class _SettingsScreenState extends State<SettingsScreen>
     setState(() => _isLoading = true);
 
     try {
-      // Simular carregamento de configurações
       await Future.delayed(const Duration(seconds: 1));
 
       setState(() {
-        _nomeController.text = 'Clínica Bella Vista';
-        _emailController.text = 'contato@bellavista.com';
-        _pixKeyController.text = '05359566493';
+        _nomeController.text = 'Minha Empresa';
+        _emailController.text = 'contato@minhaempresa.com';
+        _pixKeyController.text = '11999999999';
       });
-
-      _animationController.forward();
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao carregar configurações: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao carregar configurações: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -87,34 +63,48 @@ class _SettingsScreenState extends State<SettingsScreen>
     setState(() => _isSaving = true);
 
     try {
-      // Simular salvamento de configurações
       await Future.delayed(const Duration(seconds: 1));
 
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Configurações salvas com sucesso!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Configurações salvas com sucesso!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao salvar configurações: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao salvar configurações: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Future<void> _logout() async {
+    await _apiService.clearAuthToken();
+    if (mounted) context.go('/login');
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: 'Configurações',
-      currentPath: AppRoutes.settings,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Configurações'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Sair',
+          ),
+        ],
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _buildContent(),
@@ -123,343 +113,94 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Widget _buildContent() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Configurações',
-              style: AppTextStyles.h3,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Gerencie as configurações da sua conta',
-              style: AppTextStyles.bodyMedium,
-            ),
-            const SizedBox(height: 32),
-
-            // Seção de Perfil
-            _buildSection(
-              title: 'Perfil da Empresa',
-              icon: Icons.business,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    InputField(
-                      label: 'Nome da Empresa',
-                      hint: 'Digite o nome da sua empresa',
-                      controller: _nomeController,
-                      prefixIcon: Icons.business,
-                      isRequired: true,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Nome é obrigatório';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    InputField(
-                      label: 'E-mail',
-                      hint: 'Digite seu e-mail',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.email_outlined,
-                      isRequired: true,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'E-mail é obrigatório';
-                        }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                            .hasMatch(value!)) {
-                          return 'E-mail inválido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    InputField(
-                      label: 'Chave PIX',
-                      hint: 'Digite sua chave PIX',
-                      controller: _pixKeyController,
-                      prefixIcon: Icons.qr_code,
-                      isRequired: true,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Chave PIX é obrigatória';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      text: 'Salvar Alterações',
-                      onPressed: _saveSettings,
-                      isLoading: _isSaving,
-                      width: double.infinity,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Seção de Segurança
-            _buildSection(
-              title: 'Segurança',
-              icon: Icons.security,
-              child: Column(
-                children: [
-                  _buildSettingItem(
-                    title: 'Alterar Senha',
-                    subtitle: 'Altere sua senha de acesso',
-                    icon: Icons.lock_outline,
-                    onTap: () {
-                      // Implementar alteração de senha
-                    },
-                  ),
-                  const Divider(),
-                  _buildSettingItem(
-                    title: 'Autenticação de Dois Fatores',
-                    subtitle: 'Ative a verificação em duas etapas',
-                    icon: Icons.verified_user_outlined,
-                    onTap: () {
-                      // Implementar 2FA
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Seção de Plano
-            _buildSection(
-              title: 'Plano e Assinatura',
-              icon: Icons.card_membership,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(13), // 5% opacity
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.primary.withAlpha(25), // 10% opacity
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.star,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Plano Premium',
-                                style: AppTextStyles.cardTitle,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Válido até 31/12/2025',
-                                style: AppTextStyles.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.success.withAlpha(25), // 10% opacity
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            'Ativo',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  PrimaryButton(
-                    text: 'Gerenciar Assinatura',
-                    onPressed: () {
-                      // Implementar gerenciamento de assinatura
-                    },
-                    isOutlined: true,
-                    width: double.infinity,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Seção de Conta
-            _buildSection(
-              title: 'Conta',
-              icon: Icons.account_circle,
-              child: Column(
-                children: [
-                  _buildSettingItem(
-                    title: 'Exportar Dados',
-                    subtitle: 'Baixe seus dados em formato CSV',
-                    icon: Icons.download,
-                    onTap: () {
-                      // Implementar exportação de dados
-                    },
-                  ),
-                  const Divider(),
-                  _buildSettingItem(
-                    title: 'Sair',
-                    subtitle: 'Encerrar sessão atual',
-                    icon: Icons.logout,
-                    iconColor: AppColors.error,
-                    textColor: AppColors.error,
-                    onTap: () => context.go(AppRoutes.login),
-                  ),
-                  const Divider(),
-                  _buildSettingItem(
-                    title: 'Excluir Conta',
-                    subtitle: 'Remover permanentemente sua conta',
-                    icon: Icons.delete_forever,
-                    iconColor: AppColors.error,
-                    textColor: AppColors.error,
-                    onTap: () {
-                      // Implementar exclusão de conta
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    required IconData icon,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: AppColors.cardShadow,
-      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
+          const Text(
+            'Configurações da Empresa',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 24),
+          Form(
+            key: _formKey,
+            child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(13), // 5% opacity
-                    borderRadius: BorderRadius.circular(10),
+                TextFormField(
+                  controller: _nomeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome da Empresa',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.business),
                   ),
-                  child: Icon(
-                    icon,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
+                  validator: (value) => value?.isEmpty ?? true ? 'Nome obrigatório' : null,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: AppTextStyles.h5,
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) return 'E-mail obrigatório';
+                    if (!value!.contains('@')) return 'E-mail inválido';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _pixKeyController,
+                  decoration: const InputDecoration(
+                    labelText: 'Chave PIX',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.qr_code),
+                  ),
+                  validator: (value) => value?.isEmpty ?? true ? 'Chave PIX obrigatória' : null,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _saveSettings,
+                    child: _isSaving
+                        ? const CircularProgressIndicator()
+                        : const Text('Salvar Alterações'),
+                  ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: child,
+          const SizedBox(height: 32),
+          const Text(
+            'Ações da Conta',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('Alterar Senha'),
+            subtitle: const Text('Altere sua senha de acesso'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Sair', style: TextStyle(color: Colors.red)),
+            subtitle: const Text('Encerrar sessão atual'),
+            onTap: _logout,
           ),
         ],
       ),
     );
   }
-
-  Widget _buildSettingItem({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-    Color? iconColor,
-    Color? textColor,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary)
-                    .withAlpha(13), // 5% opacity
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: iconColor ?? AppColors.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: textColor ?? AppColors.grey800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: AppTextStyles.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppColors.grey400,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
+
+

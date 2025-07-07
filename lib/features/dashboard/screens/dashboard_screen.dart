@@ -54,9 +54,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _logout() {
-    _apiService.clearAuthToken();
-    context.go('/');
+  Future<void> _logout() async {
+    await _apiService.clearAuthToken();
+    if (mounted) context.go('/login');
   }
 
   @override
@@ -68,7 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.public),
             onPressed: () => context.push('/settings'),
-            tooltip: 'Região: ${_apiService.currentRegion}',
+            tooltip: 'Configurações',
           ),
           IconButton(
             icon: const Icon(Icons.logout),

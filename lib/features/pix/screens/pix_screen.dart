@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/services/api_service.dart';
 
 class PixScreen extends StatefulWidget {
   const PixScreen({super.key});
@@ -12,6 +13,7 @@ class _PixScreenState extends State<PixScreen> {
   final _formKey = GlobalKey<FormState>();
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
+  final _apiService = ApiService();
   bool _isLoading = false;
   String? _pixCode;
 
@@ -44,21 +46,37 @@ class _PixScreenState extends State<PixScreen> {
 
     setState(() => _isLoading = true);
 
-    // Simula geração do PIX
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _pixCode = '00020126580014br.gov.bcb.pix013636c4c14e-1234-4321-abcd-123456789012520400005303986540${_valorController.text}5802BR5925AGENDA FACIL LTDA6009SAO PAULO62070503***6304ABCD';
-      _isLoading = false;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PIX gerado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final response = await _apiService.generatePix(
+        valor: double.parse(_valorController.text),
+        descricao: _descricaoController.text,
       );
+
+      if (response['success'] == true) {
+        setState(() {
+          _pixCode = response['pixCode'];
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('PIX gerado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro ao gerar PIX: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -222,8 +240,8 @@ class _PixScreenState extends State<PixScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: item['status'] == 'Pago' 
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.orange.withOpacity(0.1),
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
