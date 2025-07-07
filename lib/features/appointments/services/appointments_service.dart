@@ -4,19 +4,8 @@ import '../../../core/models/appointment_model.dart';
 class AppointmentsService {
   final _apiService = ApiService();
 
-  Future<List<Appointment>> getAppointments() async {
-    try {
-      final response = await _apiService.get('/appointments');
-      
-      if (response['success'] == true) {
-        final List<dynamic> data = response['data'] ?? [];
-        return data.map((json) => Appointment.fromJson(json)).toList();
-      }
-      
-      throw Exception(response['message'] ?? 'Erro ao buscar agendamentos');
-    } catch (e) {
-      throw Exception('Erro de conexão: $e');
-    }
+  Future<Map<String, dynamic>> getAppointments() async {
+    return await _apiService.get('/appointments');
   }
 
   Future<Appointment> createAppointment({

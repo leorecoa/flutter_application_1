@@ -8,6 +8,8 @@ import '../../features/pix/screens/pix_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
+import '../../features/clients/screens/clients_screen.dart';
+import '../../features/services/screens/services_screen.dart';
 import '../widgets/main_layout.dart';
 
 class AppRouter {
@@ -53,6 +55,14 @@ class AppRouter {
           GoRoute(
             path: '/appointments',
             builder: (context, state) => const AppointmentsScreen(),
+          ),
+          GoRoute(
+            path: '/clients',
+            builder: (context, state) => const ClientsScreen(),
+          ),
+          GoRoute(
+            path: '/services',
+            builder: (context, state) => const ServicesScreen(),
           ),
           GoRoute(
             path: '/settings',

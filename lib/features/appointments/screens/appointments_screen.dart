@@ -26,8 +26,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     setState(() => _isLoading = true);
     
     try {
-      final appointments = await _appointmentsService.getAppointments();
-      if (mounted) {
+      final response = await _appointmentsService.getAppointments();
+      if (response['success'] == true && mounted) {
+        final appointmentsData = List<Map<String, dynamic>>.from(response['data'] ?? []);
+        final appointments = appointmentsData.map((data) => Appointment.fromJson(data)).toList();
         setState(() {
           _appointments = appointments;
           _isLoading = false;
