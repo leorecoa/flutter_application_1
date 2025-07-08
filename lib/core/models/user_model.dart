@@ -17,15 +17,21 @@ class User {
     this.isActive = true,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
+  factory User.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      throw ArgumentError('JSON não pode ser nulo');
+    }
+    
     return User(
-      id: json['id'],
-      email: json['email'],
-      name: json['name'],
-      businessName: json['businessName'],
-      phone: json['phone'],
-      createdAt: DateTime.parse(json['createdAt']),
-      isActive: json['isActive'] ?? true,
+      id: json['id']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Usuário',
+      businessName: json['businessName']?.toString(),
+      phone: json['phone']?.toString(),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      isActive: json['isActive'] == true,
     );
   }
 

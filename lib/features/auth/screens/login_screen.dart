@@ -27,40 +27,69 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    
+    if (email.isEmpty || password.isEmpty) {
+      _showError('Email e senha são obrigatórios');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final response = await _apiService.post('/auth/login', {
-        'email': _emailController.text,
-        'password': _passwordController.text,
+        'email': email,
+        'password': password,
       });
       
-      if (response['success'] == true) {
-        final user = User.fromJson(response['user']);
-        await _apiService.setAuthToken(response['token'], user);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Bem-vindo, ${user.name}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          context.go('/dashboard');
+      if (response != null && response['success'] == true) {
+        final userData = response['user'];
+        final token = response['token'];
+        
+        if (userData != null && token != null) {
+          final user = User.fromJson(userData);
+          await _apiService.setAuthToken(token, user);
+          
+          if (mounted) {
+            _showSuccess('Bem-vindo, ${user.name ?? 'Usuário'}!');
+            context.go('/dashboard');
+          }
+        } else {
+          _showError('Dados de login inválidos');
         }
       } else {
-        throw Exception(response['message'] ?? 'Erro no login');
+        final message = response?['message'] ?? 'Credenciais inválidas';
+        _showError(message);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showError('Erro de conexão. Tente novamente.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+  
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+  
+  void _showSuccess(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -108,13 +137,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
+                  hintText: 'Digite seu email',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
                 keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
                 validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Email obrigatório';
-                  if (!value!.contains('@')) return 'Email inválido';
+                  final email = value?.trim() ?? '';
+                  if (email.isEmpty) return 'Email obrigatório';
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+                    return 'Email inválido';
+                  }
                   return null;
                 },
               ),
@@ -123,13 +159,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Senha',
+                  hintText: 'Digite sua senha',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
                 obscureText: true,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
+                enableSuggestions: false,
+                onFieldSubmitted: (_) => _login(),
                 validator: (value) {
-                  if (value?.isEmpty ?? true) return 'Senha obrigatória';
-                  if (value!.length < 6) return 'Senha deve ter pelo menos 6 caracteres';
+                  final password = value?.trim() ?? '';
+                  if (password.isEmpty) return 'Senha obrigatória';
+                  if (password.length < 6) return 'Mínimo 6 caracteres';
                   return null;
                 },
               ),

@@ -23,13 +23,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboard() async {
     if (!mounted) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final dashboardService = DashboardService();
       final stats = await dashboardService.getDashboardStats();
-      
+
       if (mounted) {
         setState(() {
           _stats = stats;
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao carregar dashboard'),
+            content: const Text('Erro ao carregar dashboard'),
             backgroundColor: Colors.red,
             action: SnackBarAction(
               label: 'Tentar novamente',
@@ -61,26 +61,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width > 768 ? null : AppBar(
-        title: Text('Olá, ${_apiService.currentUser?.name ?? 'Usuário'}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showNewAppointmentDialog(),
-            tooltip: 'Novo Agendamento',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
-            tooltip: 'Configurações',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Sair',
-          ),
-        ],
-      ),
+      appBar: MediaQuery.of(context).size.width > 768
+          ? null
+          : AppBar(
+              title: Text('Olá, ${_apiService.currentUser?.name ?? 'Usuário'}'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => _showNewAppointmentDialog(),
+                  tooltip: 'Novo Agendamento',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () => context.push('/settings'),
+                  tooltip: 'Configurações',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: _logout,
+                  tooltip: 'Sair',
+                ),
+              ],
+            ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -150,16 +152,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
-                      for (final appointment in _stats!['nextAppointments'] as List)
+                      for (final appointment
+                          in _stats!['nextAppointments'] as List)
                         Card(
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: appointment['status'] == 'confirmed' 
-                                  ? Colors.green : Colors.orange,
-                              child: const Icon(Icons.schedule, color: Colors.white),
+                              backgroundColor:
+                                  appointment['status'] == 'confirmed'
+                                      ? Colors.green
+                                      : Colors.orange,
+                              child: const Icon(Icons.schedule,
+                                  color: Colors.white),
                             ),
                             title: Text(appointment['clientName']),
-                            subtitle: Text('${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
+                            subtitle: Text(
+                                '${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
                             trailing: Text(
                               '${DateTime.parse(appointment['dateTime']).hour.toString().padLeft(2, '0')}:${DateTime.parse(appointment['dateTime']).minute.toString().padLeft(2, '0')}',
                               style: const TextStyle(

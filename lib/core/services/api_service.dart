@@ -106,14 +106,28 @@ class ApiService {
           throw Exception('Método HTTP não suportado: $method');
       }
       
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.body.isEmpty) {
+        return {
+          'success': false,
+          'message': 'Resposta vazia do servidor',
+        };
+      }
+      
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>?;
+      
+      if (responseData == null) {
+        return {
+          'success': false,
+          'message': 'Resposta inválida do servidor',
+        };
+      }
       
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return responseData;
       } else {
         return {
           'success': false,
-          'message': responseData['message'] ?? 'Erro na requisição',
+          'message': responseData['message']?.toString() ?? 'Erro na requisição (${response.statusCode})',
         };
       }
       

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,9 +15,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _businessController = TextEditingController();
   final _apiService = ApiService();
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -24,33 +32,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
+      print('📝 Tentando registro com: ${_emailController.text}');
+      
       final response = await _apiService.post('/auth/register', {
         'name': _nameController.text,
         'email': _emailController.text,
         'password': _passwordController.text,
-        'businessName': _businessController.text,
       });
-
+      
+      print('📡 Resposta da API: $response');
+      
       if (response['success'] == true) {
+        final user = User.fromJson(response['user']);
+        await _apiService.setAuthToken(response['token'], user);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response['message'] ?? 'Conta criada com sucesso!'),
+              content: Text('Conta criada com sucesso! Bem-vindo, ${user.name}!'),
               backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
             ),
           );
-          // Aguarda um pouco antes de redirecionar
-          await Future.delayed(const Duration(seconds: 1));
-          if (mounted) context.go('/login');
+          context.go('/dashboard');
         }
       } else {
         throw Exception(response['message'] ?? 'Erro no registro');
       }
     } catch (e) {
+      print('❌ Erro no registro: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
+          SnackBar(
+            content: Text('Erro: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -62,9 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AGENDEMAIS'),
-        backgroundColor: const Color(0xFF667eea),
-        foregroundColor: Colors.white,
+        title: const Text('Criar Conta'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -73,13 +85,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.business, size: 80, color: Color(0xFF667eea)),
+              const Icon(Icons.person_add, size: 80, color: Colors.blue),
               const SizedBox(height: 32),
               const Text(
-                'Crie sua conta no AGENDEMAIS',
+                'Criar sua conta no AGENDEMAIS',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(
@@ -87,7 +99,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) => value?.isEmpty ?? true ? 'Nome obrigatório' : null,
+                validator: (value) {
+                  if (value?.isEmpty ?? true) return 'Nome obrigatório';
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -103,16 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (!value!.contains('@')) return 'Email inválido';
                   return null;
                 },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _businessController,
-                decoration: const InputDecoration(
-                  labelText: 'Nome do seu negócio',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.business),
-                ),
-                validator: (value) => value?.isEmpty ?? true ? 'Nome do negócio obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -135,18 +140,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF667eea),
-                    foregroundColor: Colors.white,
-                  ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const CircularProgressIndicator()
                       : const Text('Criar Conta'),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () => context.pop(),
                 child: const Text('Já tem conta? Faça login'),
               ),
             ],
@@ -154,14 +155,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _businessController.dispose();
-    super.dispose();
   }
 }

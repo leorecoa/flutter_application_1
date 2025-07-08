@@ -18,8 +18,4 @@ class ServicesService {
   Future<Map<String, dynamic>> deleteService(String serviceId) async {
     return await _apiService.post('/services/$serviceId/delete', {});
   }
-
-  Future<Map<String, dynamic>> getServiceById(String serviceId) async {
-    return await _apiService.get('/services/$serviceId');
-  }
 }

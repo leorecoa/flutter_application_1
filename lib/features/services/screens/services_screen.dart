@@ -73,16 +73,17 @@ class _ServicesScreenState extends State<ServicesScreen> {
                         final service = _services[index];
                         return Card(
                           child: ListTile(
-                            leading: CircleAvatar(
+                            leading: const CircleAvatar(
                               backgroundColor: Colors.blue,
-                              child: const Icon(Icons.build, color: Colors.white),
+                              child: Icon(Icons.build, color: Colors.white),
                             ),
                             title: Text(service['name']),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Duração: ${service['duration']} min'),
-                                Text('R\$ ${service['price'].toStringAsFixed(2)}'),
+                                Text(
+                                    'R\$ ${service['price'].toStringAsFixed(2)}'),
                               ],
                             ),
                             trailing: PopupMenuButton(
@@ -166,8 +167,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   void _showEditServiceDialog(Map<String, dynamic> service) {
     final nameController = TextEditingController(text: service['name']);
-    final priceController = TextEditingController(text: service['price'].toString());
-    final durationController = TextEditingController(text: service['duration'].toString());
+    final priceController =
+        TextEditingController(text: service['price'].toString());
+    final durationController =
+        TextEditingController(text: service['duration'].toString());
 
     showDialog(
       context: context,
