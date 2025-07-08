@@ -5,196 +5,134 @@ const { v4: uuidv4 } = require('uuid');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'agendemais-secret-key';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
-};
-
 exports.handler = async (event) => {
-  console.log('Appointments Event:', JSON.stringify(event, null, 2));
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders, body: '' };
-  }
-
-  try {
-    const token = event.headers.Authorization?.replace('Bearer ', '');
-    if (!token) {
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ success: false, message: 'Token não fornecido' })
-      };
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const userId = decoded.userId;
-
-    const { httpMethod, body, pathParameters } = event;
-    const data = JSON.parse(body || '{}');
-
-    if (httpMethod === 'GET') {
-      return await getAppointments(userId);
-    }
-
-    if (httpMethod === 'POST') {
-      return await createAppointment(userId, data);
-    }
-
-    if (httpMethod === 'PUT' && pathParameters?.id) {
-      return await updateAppointment(userId, pathParameters.id, data);
-    }
-
-    return {
-      statusCode: 404,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Endpoint não encontrado' })
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
     };
 
-  } catch (error) {
-    console.error('Appointments Error:', error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro interno do servidor' })
-    };
-  }
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers };
+    }
+
+    try {
+        const userId = await getUserId(event);
+        const { httpMethod } = event;
+        const body = JSON.parse(event.body || '{}');
+
+        if (httpMethod === 'GET') {
+            return await getAppointments(userId);
+        } else if (httpMethod === 'POST') {
+            return await createAppointment(userId, body);
+        } else if (httpMethod === 'PUT') {
+            const appointmentId = event.pathParameters?.id;
+            return await updateAppointment(userId, appointmentId, body);
+        }
+
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ success: false, message: 'Método não permitido' })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ success: false, message: error.message })
+        };
+    }
 };
+
+async function getUserId(event) {
+    const token = event.headers.Authorization?.replace('Bearer ', '');
+    if (!token) throw new Error('Token não fornecido');
+    
+    const decoded = jwt.verify(token, JWT_SECRET);
+    return decoded.userId;
+}
 
 async function getAppointments(userId) {
-  try {
-    const result = await dynamodb.query({
-      TableName: process.env.APPOINTMENTS_TABLE,
-      IndexName: 'userId-index',
-      KeyConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: { ':userId': userId },
-      ScanIndexForward: false
-    }).promise();
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        data: result.Items
-      })
+    const params = {
+        TableName: process.env.APPOINTMENTS_TABLE,
+        IndexName: 'userId-index',
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: { ':userId': userId }
     };
 
-  } catch (error) {
-    console.error('Get Appointments Error:', error);
+    const result = await dynamodb.query(params).promise();
+
     return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro ao buscar agendamentos' })
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+        },
+        body: JSON.stringify({
+            success: true,
+            data: result.Items
+        })
     };
-  }
 }
 
-async function createAppointment(userId, { clientName, clientPhone, service, dateTime, price, notes }) {
-  if (!clientName || !service || !dateTime || !price) {
-    return {
-      statusCode: 400,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Dados obrigatórios não fornecidos' })
-    };
-  }
-
-  try {
+async function createAppointment(userId, data) {
     const appointmentId = uuidv4();
-    const appointment = {
-      id: appointmentId,
-      userId,
-      clientName,
-      clientPhone: clientPhone || '',
-      service,
-      dateTime,
-      price: parseFloat(price),
-      status: 'scheduled',
-      notes: notes || '',
-      createdAt: new Date().toISOString()
+    
+    const params = {
+        TableName: process.env.APPOINTMENTS_TABLE,
+        Item: {
+            id: appointmentId,
+            userId,
+            clientName: data.clientName,
+            clientPhone: data.clientPhone,
+            service: data.service,
+            dateTime: data.dateTime,
+            price: data.price,
+            status: 'scheduled',
+            notes: data.notes || '',
+            createdAt: new Date().toISOString()
+        }
     };
 
-    await dynamodb.put({
-      TableName: process.env.APPOINTMENTS_TABLE,
-      Item: appointment
-    }).promise();
+    await dynamodb.put(params).promise();
 
     return {
-      statusCode: 201,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        data: appointment,
-        message: 'Agendamento criado com sucesso'
-      })
+        statusCode: 201,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+        },
+        body: JSON.stringify({
+            success: true,
+            data: params.Item
+        })
     };
-
-  } catch (error) {
-    console.error('Create Appointment Error:', error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro ao criar agendamento' })
-    };
-  }
 }
 
-async function updateAppointment(userId, appointmentId, { status, notes }) {
-  try {
-    const updateExpression = [];
-    const expressionAttributeValues = {};
-    const expressionAttributeNames = {};
-
-    if (status) {
-      updateExpression.push('#status = :status');
-      expressionAttributeNames['#status'] = 'status';
-      expressionAttributeValues[':status'] = status;
-    }
-
-    if (notes !== undefined) {
-      updateExpression.push('notes = :notes');
-      expressionAttributeValues[':notes'] = notes;
-    }
-
-    if (updateExpression.length === 0) {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({ success: false, message: 'Nenhum campo para atualizar' })
-      };
-    }
-
-    const result = await dynamodb.update({
-      TableName: process.env.APPOINTMENTS_TABLE,
-      Key: { id: appointmentId },
-      UpdateExpression: `SET ${updateExpression.join(', ')}`,
-      ExpressionAttributeValues: expressionAttributeValues,
-      ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined,
-      ConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
-        ...expressionAttributeValues,
-        ':userId': userId
-      },
-      ReturnValues: 'ALL_NEW'
-    }).promise();
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        data: result.Attributes,
-        message: 'Agendamento atualizado com sucesso'
-      })
+async function updateAppointment(userId, appointmentId, data) {
+    const params = {
+        TableName: process.env.APPOINTMENTS_TABLE,
+        Key: { id: appointmentId },
+        UpdateExpression: 'SET #status = :status, notes = :notes',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':status': data.status || 'scheduled',
+            ':notes': data.notes || ''
+        },
+        ReturnValues: 'ALL_NEW'
     };
 
-  } catch (error) {
-    console.error('Update Appointment Error:', error);
+    const result = await dynamodb.update(params).promise();
+
     return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro ao atualizar agendamento' })
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+        },
+        body: JSON.stringify({
+            success: true,
+            data: result.Attributes
+        })
     };
-  }
 }

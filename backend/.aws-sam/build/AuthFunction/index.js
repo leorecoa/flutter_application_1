@@ -6,168 +6,111 @@ const { v4: uuidv4 } = require('uuid');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'agendemais-secret-key';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
-};
-
 exports.handler = async (event) => {
-  console.log('Auth Event:', JSON.stringify(event, null, 2));
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: corsHeaders, body: '' };
-  }
-
-  try {
-    const { path, httpMethod, body } = event;
-    const data = JSON.parse(body || '{}');
-
-    if (path.includes('/auth/login') && httpMethod === 'POST') {
-      return await handleLogin(data);
-    }
-
-    if (path.includes('/auth/register') && httpMethod === 'POST') {
-      return await handleRegister(data);
-    }
-
-    return {
-      statusCode: 404,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Endpoint não encontrado' })
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
     };
 
-  } catch (error) {
-    console.error('Auth Error:', error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro interno do servidor' })
-    };
-  }
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 200, headers };
+    }
+
+    try {
+        const { httpMethod, path } = event;
+        const body = JSON.parse(event.body || '{}');
+
+        if (path.includes('/auth/login')) {
+            return await login(body);
+        } else if (path.includes('/auth/register')) {
+            return await register(body);
+        }
+
+        return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ success: false, message: 'Endpoint não encontrado' })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ success: false, message: error.message })
+        };
+    }
 };
 
-async function handleLogin({ email, password }) {
-  if (!email || !password) {
-    return {
-      statusCode: 400,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Email e senha são obrigatórios' })
+async function login({ email, password }) {
+    const params = {
+        TableName: process.env.USERS_TABLE,
+        IndexName: 'email-index',
+        KeyConditionExpression: 'email = :email',
+        ExpressionAttributeValues: { ':email': email }
     };
-  }
 
-  try {
-    const result = await dynamodb.query({
-      TableName: process.env.USERS_TABLE,
-      IndexName: 'email-index',
-      KeyConditionExpression: 'email = :email',
-      ExpressionAttributeValues: { ':email': email }
-    }).promise();
-
+    const result = await dynamodb.query(params).promise();
+    
     if (result.Items.length === 0) {
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ success: false, message: 'Credenciais inválidas' })
-      };
+        throw new Error('Usuário não encontrado');
     }
 
     const user = result.Items[0];
     const validPassword = await bcrypt.compare(password, user.password);
-
+    
     if (!validPassword) {
-      return {
-        statusCode: 401,
-        headers: corsHeaders,
-        body: JSON.stringify({ success: false, message: 'Credenciais inválidas' })
-      };
+        throw new Error('Senha incorreta');
     }
 
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
 
-    const { password: _, ...userWithoutPassword } = user;
-
     return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        token,
-        user: userWithoutPassword,
-        message: 'Login realizado com sucesso'
-      })
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+        },
+        body: JSON.stringify({
+            success: true,
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email
+            }
+        })
     };
-
-  } catch (error) {
-    console.error('Login Error:', error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro no login' })
-    };
-  }
 }
 
-async function handleRegister({ email, password, name, businessName, phone }) {
-  if (!email || !password || !name) {
-    return {
-      statusCode: 400,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Email, senha e nome são obrigatórios' })
-    };
-  }
-
-  try {
-    // Verificar se email já existe
-    const existingUser = await dynamodb.query({
-      TableName: process.env.USERS_TABLE,
-      IndexName: 'email-index',
-      KeyConditionExpression: 'email = :email',
-      ExpressionAttributeValues: { ':email': email }
-    }).promise();
-
-    if (existingUser.Items.length > 0) {
-      return {
-        statusCode: 409,
-        headers: corsHeaders,
-        body: JSON.stringify({ success: false, message: 'Email já cadastrado' })
-      };
-    }
-
+async function register({ name, email, password }) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = uuidv4();
 
-    const user = {
-      id: userId,
-      email,
-      password: hashedPassword,
-      name,
-      businessName: businessName || '',
-      phone: phone || '',
-      createdAt: new Date().toISOString(),
-      isActive: true
+    const params = {
+        TableName: process.env.USERS_TABLE,
+        Item: {
+            id: userId,
+            name,
+            email,
+            password: hashedPassword,
+            createdAt: new Date().toISOString()
+        }
     };
 
-    await dynamodb.put({
-      TableName: process.env.USERS_TABLE,
-      Item: user
-    }).promise();
+    await dynamodb.put(params).promise();
+
+    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '24h' });
 
     return {
-      statusCode: 201,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        message: 'Usuário criado com sucesso'
-      })
+        statusCode: 201,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+        },
+        body: JSON.stringify({
+            success: true,
+            token,
+            user: { id: userId, name, email }
+        })
     };
-
-  } catch (error) {
-    console.error('Register Error:', error);
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ success: false, message: 'Erro no cadastro' })
-    };
-  }
 }

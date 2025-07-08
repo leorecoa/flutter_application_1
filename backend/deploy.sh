@@ -1,20 +1,26 @@
 #!/bin/bash
 
-echo "🚀 DEPLOY AGENDEMAIS BACKEND - AWS LAMBDA + DYNAMODB"
+echo "🚀 DEPLOYING AGENDEMAIS BACKEND..."
 
-# Instalar dependências
-echo "📦 Instalando dependências..."
+# Check if SAM CLI is installed
+if ! command -v sam &> /dev/null; then
+    echo "❌ SAM CLI not found. Installing..."
+    pip install aws-sam-cli
+fi
+
+# Install dependencies
+echo "📦 Installing dependencies..."
 cd src/functions/auth && npm install && cd ../../..
 cd src/functions/appointments && npm install && cd ../../..
 cd src/functions/dashboard && npm install && cd ../../..
 
-# Build e Deploy com SAM
-echo "🔨 Building com SAM..."
+# Build
+echo "🔨 Building SAM application..."
 sam build
 
-echo "🚀 Deploy para AWS..."
+# Deploy
+echo "🚀 Deploying to AWS..."
 sam deploy --guided --stack-name agendemais-backend
 
-echo "✅ Deploy concluído!"
-echo "📋 Para obter a URL da API:"
-echo "aws cloudformation describe-stacks --stack-name agendemais-backend --query 'Stacks[0].Outputs'"
+echo "✅ BACKEND DEPLOYED SUCCESSFULLY!"
+echo "📋 Check AWS Console for API Gateway URL"

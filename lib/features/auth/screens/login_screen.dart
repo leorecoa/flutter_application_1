@@ -30,9 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Simula login real
-      await Future.delayed(const Duration(seconds: 1));
-      
       final response = await _apiService.post('/auth/login', {
         'email': _emailController.text,
         'password': _passwordController.text,

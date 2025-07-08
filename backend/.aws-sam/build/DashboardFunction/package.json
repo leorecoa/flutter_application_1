@@ -1,8 +1,8 @@
 {
-  "name": "agendemais-dashboard",
+  "name": "dashboard-function",
   "version": "1.0.0",
   "dependencies": {
-    "aws-sdk": "^2.1490.0",
+    "aws-sdk": "^2.1691.0",
     "jsonwebtoken": "^9.0.2"
   }
 }

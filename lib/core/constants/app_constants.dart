@@ -4,10 +4,7 @@ class AppConstants {
   static const String version = '1.0.0';
   
   // API Configuration
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod',
-  );
+  static const String apiBaseUrl = 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod';
   
   static const bool useRealApi = true; // Sempre usar API real agora
   static const Duration requestTimeout = Duration(seconds: 30);
