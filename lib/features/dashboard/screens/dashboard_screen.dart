@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
 import '../services/dashboard_service.dart';
+import '../../../core/widgets/loading_widget.dart';
+import '../../../core/widgets/error_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,6 +16,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _apiService = ApiService();
   Map<String, dynamic>? _stats;
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -34,21 +37,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _stats = stats;
           _isLoading = false;
+          _error = null;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Erro ao carregar dashboard'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Tentar novamente',
-              onPressed: _loadDashboard,
-            ),
-          ),
-        );
+        setState(() {
+          _isLoading = false;
+          _error = e.toString();
+        });
       }
     }
   }
@@ -84,8 +81,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
+          ? const LoadingWidget(message: 'Carregando dashboard...')
+          : _error != null
+              ? ErrorDisplayWidget(
+                  message: 'Erro ao carregar dados do dashboard',
+                  onRetry: _loadDashboard,
+                )
+              : RefreshIndicator(
               onRefresh: _loadDashboard,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),

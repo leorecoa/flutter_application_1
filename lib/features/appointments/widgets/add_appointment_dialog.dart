@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service.dart';
+import '../../../core/utils/validators.dart';
+import '../../../core/widgets/loading_widget.dart';
+import '../../../core/widgets/error_widget.dart';
 
 class AddAppointmentDialog extends StatefulWidget {
   final Function(Appointment) onAppointmentAdded;
@@ -38,34 +42,89 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
             children: [
               TextFormField(
                 controller: _clientNameController,
-                decoration: const InputDecoration(labelText: 'Nome do Cliente'),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Nome do Cliente',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: Validators.name,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _clientPhoneController,
-                decoration: const InputDecoration(labelText: 'Telefone'),
+                decoration: const InputDecoration(
+                  labelText: 'Telefone',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
+                  hintText: '(11) 99999-9999',
+                ),
                 keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
+                validator: Validators.phone,
+                onChanged: (value) {
+                  final formatted = InputFormatters.formatPhone(value);
+                  if (formatted != value) {
+                    _clientPhoneController.value = TextEditingValue(
+                      text: formatted,
+                      selection: TextSelection.collapsed(offset: formatted.length),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _serviceController,
-                decoration: const InputDecoration(labelText: 'Serviço'),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                decoration: const InputDecoration(
+                  labelText: 'Serviço',
+                  prefixIcon: Icon(Icons.content_cut),
+                  border: OutlineInputBorder(),
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: (value) => Validators.required(value, 'Serviço'),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Preço (R\$)'),
+                decoration: const InputDecoration(
+                  labelText: 'Preço',
+                  prefixIcon: Icon(Icons.attach_money),
+                  border: OutlineInputBorder(),
+                  prefixText: 'R\$ ',
+                ),
                 keyboardType: TextInputType.number,
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                validator: Validators.price,
+                onChanged: (value) {
+                  final formatted = InputFormatters.formatPrice(value);
+                  if (formatted != value) {
+                    _priceController.value = TextEditingValue(
+                      text: formatted,
+                      selection: TextSelection.collapsed(offset: formatted.length),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 16),
-              ListTile(
-                title: const Text('Data e Hora'),
-                subtitle: Text('${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year} ${_selectedDate.hour}:${_selectedDate.minute.toString().padLeft(2, '0')}'),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _selectDateTime,
+              Card(
+                child: ListTile(
+                  title: const Text('Data e Hora'),
+                  subtitle: Text(
+                    '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year} às ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  leading: const Icon(Icons.event),
+                  trailing: const Icon(Icons.edit),
+                  onTap: _selectDateTime,
+                ),
               ),
             ],
           ),
@@ -76,11 +135,11 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _saveAppointment,
-          child: _isLoading 
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Salvar'),
+        LoadingButton(
+          isLoading: _isLoading,
+          onPressed: _saveAppointment,
+          text: 'Salvar Agendamento',
+          icon: Icons.save,
         ),
       ],
     );
@@ -125,19 +184,13 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
       widget.onAppointmentAdded(appointment);
       
       if (mounted) {
-        final navigator = Navigator.of(context);
-        final messenger = ScaffoldMessenger.of(context);
-        navigator.pop();
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Agendamento criado com sucesso!')),
-        );
+        Navigator.of(context).pop();
+        SuccessSnackBar.show(context, 'Agendamento criado com sucesso!');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e')),
-        );
+        ErrorSnackBar.show(context, 'Erro ao criar agendamento: ${e.toString()}');
       }
     }
   }
