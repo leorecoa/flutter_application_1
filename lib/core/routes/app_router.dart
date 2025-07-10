@@ -18,11 +18,11 @@ import '../widgets/main_layout.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/',
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const SplashScreen(),
+        redirect: (context, state) => '/',
       ),
       GoRoute(
         path: '/onboarding',
@@ -30,7 +30,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/',
-        redirect: (context, state) => '/login',
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/login',
