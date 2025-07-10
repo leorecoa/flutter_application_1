@@ -108,9 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.calendar_today, size: 80, color: Colors.blue),
@@ -134,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
+                key: const Key('email_field'),
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
@@ -145,6 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
                 enableSuggestions: false,
+                autofillHints: const [AutofillHints.email],
                 validator: (value) {
                   final email = value?.trim() ?? '';
                   if (email.isEmpty) return 'Email obrigatório';
@@ -156,6 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                key: const Key('password_field'),
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Senha',
@@ -167,6 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 textInputAction: TextInputAction.done,
                 autocorrect: false,
                 enableSuggestions: false,
+                autofillHints: const [AutofillHints.password],
                 onFieldSubmitted: (_) => _login(),
                 validator: (value) {
                   final password = value?.trim() ?? '';
@@ -194,6 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -33,10 +33,18 @@ exports.handler = async (event) => {
             body: JSON.stringify({ success: false, message: 'Endpoint não encontrado' })
         };
     } catch (error) {
+        console.error('Erro na função auth:', error);
         return {
             statusCode: 500,
-            headers,
-            body: JSON.stringify({ success: false, message: error.message })
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                success: false, 
+                message: error.message || 'Erro interno do servidor'
+            })
         };
     }
 };
@@ -68,7 +76,8 @@ async function login({ email, password }) {
         statusCode: 200,
         headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             success: true,
@@ -105,7 +114,8 @@ async function register({ name, email, password }) {
         statusCode: 201,
         headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             success: true,

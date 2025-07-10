@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AGENDEMAIS - Security and Backup'
+
+Resources:
+  # DynamoDB Backup
+  BackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: agendemais-backup-vault
+      EncryptionKeyArn: alias/aws/backup
+
+  BackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: agendemais-backup-plan
+        BackupPlanRule:
+          - RuleName: daily-backup
+            TargetBackupVault: !Ref BackupVault
+            ScheduleExpression: cron(0 2 * * ? *)
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 30
+
+  # WAF for API Gateway
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: agendemais-waf
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: RateLimitRule
+          Priority: 1
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          Action:
+            Block: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+
+  # Lambda Environment Variables Encryption
+  KMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: AGENDEMAIS Lambda encryption key
+      KeyPolicy:
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+
+  KMSAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/agendemais-lambda
+      TargetKeyId: !Ref KMSKey

@@ -80,9 +80,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
+        child: AutofillGroup(
+          child: Form(
+            key: _formKey,
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.person_add, size: 80, color: Colors.blue),
@@ -93,12 +94,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 24),
               TextFormField(
+                key: const Key('name_field'),
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Nome completo',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
+                autofillHints: const [AutofillHints.name],
                 validator: (value) {
                   if (value?.isEmpty ?? true) return 'Nome obrigatório';
                   return null;
@@ -106,6 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                key: const Key('email_field_register'),
                 controller: _emailController,
                 decoration: const InputDecoration(
                   labelText: 'Email',
@@ -113,6 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.email),
                 ),
                 keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
                 validator: (value) {
                   if (value?.isEmpty ?? true) return 'Email obrigatório';
                   if (!value!.contains('@')) return 'Email inválido';
@@ -121,6 +126,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                key: const Key('password_field_register'),
                 controller: _passwordController,
                 decoration: const InputDecoration(
                   labelText: 'Senha',
@@ -128,6 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: Icon(Icons.lock),
                 ),
                 obscureText: true,
+                autofillHints: const [AutofillHints.newPassword],
                 validator: (value) {
                   if (value?.isEmpty ?? true) return 'Senha obrigatória';
                   if (value!.length < 6) return 'Senha deve ter pelo menos 6 caracteres';
@@ -153,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

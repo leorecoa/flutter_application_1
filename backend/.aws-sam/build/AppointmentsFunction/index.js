@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
-const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'agendemais-secret-key';
@@ -9,7 +9,8 @@ exports.handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+        'Content-Type': 'application/json'
     };
 
     if (event.httpMethod === 'OPTIONS') {
@@ -17,17 +18,28 @@ exports.handler = async (event) => {
     }
 
     try {
-        const userId = await getUserId(event);
+        const authHeader = event.headers.Authorization || event.headers.authorization;
+        if (!authHeader) {
+            return {
+                statusCode: 401,
+                headers,
+                body: JSON.stringify({ success: false, message: 'Token necessário' })
+            };
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const userId = decoded.userId;
         const { httpMethod } = event;
         const body = JSON.parse(event.body || '{}');
 
         if (httpMethod === 'GET') {
-            return await getAppointments(userId);
+            return await getAppointments(userId, headers);
         } else if (httpMethod === 'POST') {
-            return await createAppointment(userId, body);
+            return await createAppointment(userId, body, headers);
         } else if (httpMethod === 'PUT') {
             const appointmentId = event.pathParameters?.id;
-            return await updateAppointment(userId, appointmentId, body);
+            return await updateAppointment(userId, appointmentId, body, headers);
         }
 
         return {
@@ -36,10 +48,14 @@ exports.handler = async (event) => {
             body: JSON.stringify({ success: false, message: 'Método não permitido' })
         };
     } catch (error) {
+        console.error('Appointments error:', error);
         return {
-            statusCode: 500,
+            statusCode: error.message.includes('jwt') ? 401 : 500,
             headers,
-            body: JSON.stringify({ success: false, message: error.message })
+            body: JSON.stringify({ 
+                success: false, 
+                message: error.message.includes('jwt') ? 'Token inválido' : 'Erro interno'
+            })
         };
     }
 };
@@ -52,7 +68,7 @@ async function getUserId(event) {
     return decoded.userId;
 }
 
-async function getAppointments(userId) {
+async function getAppointments(userId, headers) {
     const params = {
         TableName: process.env.APPOINTMENTS_TABLE,
         IndexName: 'userId-index',
@@ -64,10 +80,7 @@ async function getAppointments(userId) {
 
     return {
         statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-        },
+        headers,
         body: JSON.stringify({
             success: true,
             data: result.Items
@@ -98,10 +111,7 @@ async function createAppointment(userId, data) {
 
     return {
         statusCode: 201,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-        },
+        headers,
         body: JSON.stringify({
             success: true,
             data: params.Item
@@ -126,10 +136,7 @@ async function updateAppointment(userId, appointmentId, data) {
 
     return {
         statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization'
-        },
+        headers,
         body: JSON.stringify({
             success: true,
             data: result.Attributes

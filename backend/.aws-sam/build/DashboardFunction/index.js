@@ -8,7 +8,8 @@ exports.handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+        'Content-Type': 'application/json'
     };
 
     if (event.httpMethod === 'OPTIONS') {
@@ -16,26 +17,36 @@ exports.handler = async (event) => {
     }
 
     try {
-        const userId = await getUserId(event);
-        return await getDashboardStats(userId);
+        const authHeader = event.headers.Authorization || event.headers.authorization;
+        if (!authHeader) {
+            return {
+                statusCode: 401,
+                headers,
+                body: JSON.stringify({ success: false, message: 'Token necessário' })
+            };
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const userId = decoded.userId;
+        
+        return await getDashboardStats(userId, headers);
     } catch (error) {
+        console.error('Dashboard error:', error);
         return {
-            statusCode: 500,
+            statusCode: error.message.includes('jwt') ? 401 : 500,
             headers,
-            body: JSON.stringify({ success: false, message: error.message })
+            body: JSON.stringify({ 
+                success: false, 
+                message: error.message.includes('jwt') ? 'Token inválido' : 'Erro interno'
+            })
         };
     }
 };
 
-async function getUserId(event) {
-    const token = event.headers.Authorization?.replace('Bearer ', '');
-    if (!token) throw new Error('Token não fornecido');
-    
-    const decoded = jwt.verify(token, JWT_SECRET);
-    return decoded.userId;
-}
 
-async function getDashboardStats(userId) {
+
+async function getDashboardStats(userId, headers) {
     const params = {
         TableName: process.env.APPOINTMENTS_TABLE,
         IndexName: 'userId-index',

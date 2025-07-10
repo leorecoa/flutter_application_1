@@ -139,6 +139,28 @@ Resources:
             Ref: AppointmentsTable
     Metadata:
       SamResourceId: DashboardFunction
+  ClientsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ClientsFunction
+      Handler: index.handler
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /clients
+            Method: get
+        CreateClient:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /clients
+            Method: post
+    Metadata:
+      SamResourceId: ClientsFunction
 Outputs:
   ApiUrl:
     Description: API Gateway endpoint URL
