@@ -10,6 +10,10 @@ import '../../features/settings/screens/settings_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/clients/screens/clients_screen.dart';
 import '../../features/services/screens/services_screen.dart';
+import '../../features/onboarding/screens/onboarding_screen.dart';
+import '../../features/subscription/screens/plans_screen.dart';
+import '../../features/analytics/screens/analytics_screen.dart';
+import '../../features/notifications/screens/notifications_screen.dart';
 import '../widgets/main_layout.dart';
 
 class AppRouter {
@@ -19,6 +23,10 @@ class AppRouter {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/',
@@ -67,6 +75,18 @@ class AppRouter {
           GoRoute(
             path: '/settings',
             builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/plans',
+            builder: (context, state) => const PlansScreen(),
+          ),
+          GoRoute(
+            path: '/analytics',
+            builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
           ),
         ],
       ),

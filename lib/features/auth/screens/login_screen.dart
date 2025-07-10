@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/models/user_model.dart';
 
@@ -53,7 +54,16 @@ class _LoginScreenState extends State<LoginScreen> {
           
           if (mounted) {
             _showSuccess('Bem-vindo, ${user.name ?? 'Usuário'}!');
-            context.go('/dashboard');
+            
+            // Check if user needs onboarding
+            final prefs = await SharedPreferences.getInstance();
+            final hasSeenOnboarding = prefs.getBool('onboarding_completed') ?? false;
+            
+            if (!hasSeenOnboarding) {
+              context.go('/onboarding');
+            } else {
+              context.go('/dashboard');
+            }
           }
         } else {
           _showError('Dados de login inválidos');
