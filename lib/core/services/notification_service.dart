@@ -1,178 +1,132 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import '../models/appointment_model.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final List<AppNotification> _notifications = [];
-  final List<Function(AppNotification)> _listeners = [];
+  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
 
-  List<AppNotification> get notifications => List.unmodifiable(_notifications);
-  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+  Future<void> init() async {
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
-  void addListener(Function(AppNotification) listener) {
-    _listeners.add(listener);
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    await _notifications.initialize(initSettings);
   }
 
-  void removeListener(Function(AppNotification) listener) {
-    _listeners.remove(listener);
-  }
-
-  Future<void> initialize() async {
-    await _loadNotifications();
-    _generateSampleNotifications();
-  }
-
-  void addNotification(AppNotification notification) {
-    _notifications.insert(0, notification);
-    _saveNotifications();
-    for (final listener in _listeners) {
-      listener(notification);
-    }
-  }
-
-  void markAsRead(String id) {
-    final index = _notifications.indexWhere((n) => n.id == id);
-    if (index != -1) {
-      _notifications[index] = _notifications[index].copyWith(isRead: true);
-      _saveNotifications();
-    }
-  }
-
-  void markAllAsRead() {
-    for (int i = 0; i < _notifications.length; i++) {
-      _notifications[i] = _notifications[i].copyWith(isRead: true);
-    }
-    _saveNotifications();
-  }
-
-  void removeNotification(String id) {
-    _notifications.removeWhere((n) => n.id == id);
-    _saveNotifications();
-  }
-
-  Future<void> _loadNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    final notificationsJson = prefs.getStringList('notifications') ?? [];
+  Future<void> scheduleAppointmentReminder(Appointment appointment) async {
+    // Lembrete 1 hora antes
+    final reminderTime = appointment.dateTime.subtract(const Duration(hours: 1));
     
-    _notifications.clear();
-    for (final json in notificationsJson) {
-      try {
-        // Simplified loading - in real app would parse JSON
-        _notifications.add(AppNotification.sample());
-      } catch (e) {
-        // Ignore invalid notifications
-      }
+    if (reminderTime.isAfter(DateTime.now())) {
+      await _notifications.zonedSchedule(
+        appointment.id.hashCode,
+        'Lembrete de Agendamento',
+        'Você tem um agendamento em 1 hora: ${appointment.service} com ${appointment.clientName}',
+        tz.TZDateTime.from(reminderTime, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'appointment_reminders',
+            'Lembretes de Agendamento',
+            channelDescription: 'Notificações de lembretes de agendamentos',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+
+    // Lembrete no dia anterior
+    final dayBeforeReminder = DateTime(
+      appointment.dateTime.year,
+      appointment.dateTime.month,
+      appointment.dateTime.day - 1,
+      20, // 20:00
+    );
+
+    if (dayBeforeReminder.isAfter(DateTime.now())) {
+      await _notifications.zonedSchedule(
+        appointment.id.hashCode + 1,
+        'Agendamento Amanhã',
+        'Você tem um agendamento amanhã às ${appointment.dateTime.hour}:${appointment.dateTime.minute.toString().padLeft(2, '0')} - ${appointment.service}',
+        tz.TZDateTime.from(dayBeforeReminder, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'appointment_reminders',
+            'Lembretes de Agendamento',
+            channelDescription: 'Notificações de lembretes de agendamentos',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
     }
   }
 
-  Future<void> _saveNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-    final notificationsJson = _notifications.map((n) => n.id).toList();
-    await prefs.setStringList('notifications', notificationsJson);
+  Future<void> cancelAppointmentNotification(String appointmentId) async {
+    await _notifications.cancel(appointmentId.hashCode);
+    await _notifications.cancel(appointmentId.hashCode + 1);
   }
 
-  void _generateSampleNotifications() {
-    if (_notifications.isEmpty) {
-      addNotification(AppNotification(
-        id: '1',
-        title: 'Novo agendamento',
-        message: 'Maria Silva agendou um corte para hoje às 14:00',
-        type: NotificationType.appointment,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-      ));
-      
-      addNotification(AppNotification(
-        id: '2',
-        title: 'Pagamento recebido',
-        message: 'Pagamento de R\$ 85,00 via PIX confirmado',
-        type: NotificationType.payment,
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-      ));
-      
-      addNotification(AppNotification(
-        id: '3',
-        title: 'Lembrete',
-        message: 'Você tem 3 agendamentos para amanhã',
-        type: NotificationType.reminder,
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      ));
-    }
-  }
-}
-
-enum NotificationType { appointment, payment, reminder, system }
-
-class AppNotification {
-  final String id;
-  final String title;
-  final String message;
-  final NotificationType type;
-  final DateTime timestamp;
-  final bool isRead;
-
-  const AppNotification({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.timestamp,
-    this.isRead = false,
-  });
-
-  AppNotification copyWith({
-    String? id,
-    String? title,
-    String? message,
-    NotificationType? type,
-    DateTime? timestamp,
-    bool? isRead,
-  }) {
-    return AppNotification(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      message: message ?? this.message,
-      type: type ?? this.type,
-      timestamp: timestamp ?? this.timestamp,
-      isRead: isRead ?? this.isRead,
+  Future<void> showInstantNotification({
+    required String title,
+    required String body,
+  }) async {
+    await _notifications.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'instant_notifications',
+          'Notificações Instantâneas',
+          channelDescription: 'Notificações imediatas do sistema',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
     );
   }
 
-  IconData get icon {
-    switch (type) {
-      case NotificationType.appointment:
-        return Icons.calendar_today;
-      case NotificationType.payment:
-        return Icons.payment;
-      case NotificationType.reminder:
-        return Icons.notifications;
-      case NotificationType.system:
-        return Icons.info;
+  Future<void> scheduleClientConfirmationReminder(Appointment appointment) async {
+    // Lembrete para cliente confirmar 24h antes
+    final confirmationTime = appointment.dateTime.subtract(const Duration(hours: 24));
+    
+    if (confirmationTime.isAfter(DateTime.now())) {
+      await _notifications.zonedSchedule(
+        appointment.id.hashCode + 2,
+        'Confirmação Necessária',
+        'Cliente ${appointment.clientName} precisa confirmar agendamento de ${appointment.service}',
+        tz.TZDateTime.from(confirmationTime, tz.local),
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'client_confirmations',
+            'Confirmações de Cliente',
+            channelDescription: 'Lembretes para confirmação de clientes',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      );
     }
-  }
-
-  Color get color {
-    switch (type) {
-      case NotificationType.appointment:
-        return Colors.blue;
-      case NotificationType.payment:
-        return Colors.green;
-      case NotificationType.reminder:
-        return Colors.orange;
-      case NotificationType.system:
-        return Colors.grey;
-    }
-  }
-
-  static AppNotification sample() {
-    return AppNotification(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: 'Notificação de exemplo',
-      message: 'Esta é uma notificação de exemplo',
-      type: NotificationType.system,
-      timestamp: DateTime.now(),
-    );
   }
 }

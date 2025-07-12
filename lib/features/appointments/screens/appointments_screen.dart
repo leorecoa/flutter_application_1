@@ -3,6 +3,11 @@ import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service.dart';
 import '../widgets/add_appointment_dialog.dart';
+import '../widgets/calendar_widget.dart';
+import '../widgets/edit_appointment_dialog.dart';
+import '../widgets/recurring_appointment_dialog.dart';
+import '../widgets/client_confirmation_widget.dart';
+import '../../../core/services/notification_service.dart';
 
 class AppointmentsScreen extends StatefulWidget {
   const AppointmentsScreen({super.key});
@@ -13,13 +18,19 @@ class AppointmentsScreen extends StatefulWidget {
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   final _appointmentsService = AppointmentsService();
+  final _notificationService = NotificationService();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _loadAppointments();
+  }
+
+  Future<void> _initializeNotifications() async {
+    await _notificationService.init();
   }
 
   Future<void> _loadAppointments() async {
@@ -47,40 +58,92 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agendamentos'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddAppointmentDialog(),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadAppointments,
-              child: _appointments.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.calendar_today, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Nenhum agendamento encontrado'),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _appointments.length,
-                      itemBuilder: (context, index) {
-                        final appointment = _appointments[index];
-                        return _buildAppointmentCard(appointment);
-                      },
-                    ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Agendamentos'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.repeat),
+              onPressed: () => _showRecurringAppointmentDialog(),
+              tooltip: 'Agendamento Recorrente',
             ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () => _showAddAppointmentDialog(),
+              tooltip: 'Novo Agendamento',
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.calendar_today), text: 'Calendário'),
+              Tab(icon: Icon(Icons.list), text: 'Lista'),
+            ],
+          ),
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : TabBarView(
+                children: [
+                  // Tab Calendário
+                  RefreshIndicator(
+                    onRefresh: _loadAppointments,
+                    child: _appointments.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today, size: 64, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text('Nenhum agendamento encontrado'),
+                              ],
+                            ),
+                          )
+                        : CalendarWidget(
+                            appointments: _appointments,
+                            onDaySelected: (selectedDay) {
+                              // Ação quando dia é selecionado
+                            },
+                            onAppointmentTap: (appointment) => _showAppointmentDetails(appointment, showActions: true),
+                          ),
+                  ),
+                  // Tab Lista
+                  RefreshIndicator(
+                    onRefresh: _loadAppointments,
+                    child: _appointments.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.calendar_today, size: 64, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text('Nenhum agendamento encontrado'),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _appointments.length,
+                            itemBuilder: (context, index) {
+                              final appointment = _appointments[index];
+                              return Column(
+                                children: [
+                                  _buildAppointmentCard(appointment),
+                                  if (appointment.status == AppointmentStatus.scheduled ||
+                                      appointment.status == AppointmentStatus.confirmed)
+                                    ClientConfirmationWidget(
+                                      appointment: appointment,
+                                      onConfirmationChanged: _handleConfirmationChange,
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -184,7 +247,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
-  void _showAppointmentDetails(Appointment appointment) {
+  void _showAppointmentDetails(Appointment appointment, {bool showActions = false}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -198,6 +261,10 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             Text('Data: ${DateFormat('dd/MM/yyyy HH:mm').format(appointment.dateTime)}'),
             Text('Valor: R\$ ${appointment.price.toStringAsFixed(2)}'),
             Text('Status: ${_getStatusText(appointment.status)}'),
+            if (appointment.notes?.isNotEmpty == true) ...[
+              const SizedBox(height: 8),
+              Text('Observações: ${appointment.notes}'),
+            ],
           ],
         ),
         actions: [
@@ -205,8 +272,112 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Fechar'),
           ),
+          if (showActions && appointment.status != AppointmentStatus.completed)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showEditAppointmentDialog(appointment);
+              },
+              child: const Text('Editar'),
+            ),
         ],
       ),
     );
+  }
+
+  void _showEditAppointmentDialog(Appointment appointment) {
+    showDialog(
+      context: context,
+      builder: (context) => EditAppointmentDialog(
+        appointment: appointment,
+        onAppointmentUpdated: (updatedAppointment) {
+          final index = _appointments.indexWhere((a) => a.id == appointment.id);
+          if (index != -1) {
+            setState(() {
+              _appointments[index] = updatedAppointment;
+            });
+            // Reagendar notificações
+            _notificationService.cancelAppointmentNotification(appointment.id);
+            _notificationService.scheduleAppointmentReminder(updatedAppointment);
+          }
+        },
+      ),
+    );
+  }
+
+  void _showRecurringAppointmentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => RecurringAppointmentDialog(
+        onAppointmentsCreated: (appointments) async {
+          for (final appointment in appointments) {
+            try {
+              final response = await _appointmentsService.createAppointment(appointment.toJson());
+              if (response['success'] == true) {
+                setState(() {
+                  _appointments.add(appointment);
+                });
+                // Agendar notificações
+                await _notificationService.scheduleAppointmentReminder(appointment);
+                await _notificationService.scheduleClientConfirmationReminder(appointment);
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Erro ao criar agendamento: $e')),
+              );
+            }
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${appointments.length} agendamentos criados com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _handleConfirmationChange(String appointmentId, bool isConfirmed) async {
+    final index = _appointments.indexWhere((a) => a.id == appointmentId);
+    if (index == -1) return;
+
+    final appointment = _appointments[index];
+    final newStatus = isConfirmed ? AppointmentStatus.confirmed : AppointmentStatus.cancelled;
+    
+    try {
+      final updatedAppointment = appointment.copyWith(status: newStatus);
+      final response = await _appointmentsService.updateAppointment(
+        appointmentId,
+        updatedAppointment.toJson(),
+      );
+
+      if (response['success'] == true) {
+        setState(() {
+          _appointments[index] = updatedAppointment;
+        });
+        
+        final message = isConfirmed 
+            ? 'Agendamento confirmado!' 
+            : 'Agendamento cancelado!';
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: isConfirmed ? Colors.green : Colors.orange,
+          ),
+        );
+        
+        // Notificação instantânea
+        await _notificationService.showInstantNotification(
+          title: 'Status Atualizado',
+          body: message,
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 }

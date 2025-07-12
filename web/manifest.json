@@ -1,38 +1,33 @@
 {
-  "name": "AGENDEMAIS - Sistema de Agendamento",
-  "short_name": "AGENDEMAIS",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "background_color": "#6C63FF",
-  "theme_color": "#6C63FF",
-  "description": "Sistema profissional de agendamento para seu negócio",
-  "orientation": "portrait-primary",
-  "prefer_related_applications": false,
-  "categories": ["business", "productivity"],
-  "lang": "pt-BR",
-  "icons": [
-    {
-      "src": "icons/Icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/Icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/Icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icons/Icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ]
+    "name": "AGENDEMAIS - Sistema de Agendamento",
+    "short_name": "AGENDEMAIS",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#2196F3",
+    "theme_color": "#2196F3",
+    "description": "Sistema profissional de agendamento e pagamentos PIX",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        }
+    ],
+    "categories": ["business", "productivity"],
+    "screenshots": [
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
 }

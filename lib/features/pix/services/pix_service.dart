@@ -1,30 +1,31 @@
+import '../../../core/services/api_service.dart';
+
 class PixService {
-  static Future<Map<String, dynamic>> generatePix({
-    required String empresaId,
-    required double valor,
-    required String descricao,
+  final _apiService = ApiService();
+
+  Future<Map<String, dynamic>> generatePixCode({
+    required double amount,
+    required String description,
+    String? clientName,
+    String? clientEmail,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    return {
-      'transaction_id': 'mock_${DateTime.now().millisecondsSinceEpoch}',
-      'pix_code': '00020126580014BR.GOV.BCB.PIX...',
-      'valor': valor,
-      'vencimento': '2025-08-01',
-    };
+    return await _apiService.post('/payments/pix/generate', {
+      'amount': amount,
+      'description': description,
+      'clientName': clientName,
+      'clientEmail': clientEmail,
+    });
   }
-  
-  static Future<List<Map<String, dynamic>>> getHistory() async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    return [
-      {
-        'empresa_id': 'clinica-abc-123',
-        'valor': 99.90,
-        'status': 'PAGO',
-        'vencimento': '2025-07-01',
-        'descricao': 'Mensalidade Julho 2025',
-      },
-    ];
+
+  Future<Map<String, dynamic>> checkPixStatus(String pixId) async {
+    return await _apiService.get('/payments/pix/$pixId/status');
+  }
+
+  Future<Map<String, dynamic>> getPixHistory() async {
+    return await _apiService.get('/payments/pix/history');
+  }
+
+  Future<Map<String, dynamic>> cancelPix(String pixId) async {
+    return await _apiService.post('/payments/pix/$pixId/cancel', {});
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/notification_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -9,13 +8,24 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  final _notificationService = NotificationService();
-
-  @override
-  void initState() {
-    super.initState();
-    _notificationService.initialize();
-  }
+  final List<Map<String, dynamic>> _notifications = [
+    {
+      'id': '1',
+      'title': 'Agendamento Confirmado',
+      'message': 'João Silva confirmou o agendamento para amanhã às 14:00',
+      'time': DateTime.now().subtract(const Duration(minutes: 30)),
+      'isRead': false,
+      'type': 'confirmation',
+    },
+    {
+      'id': '2',
+      'title': 'Lembrete',
+      'message': 'Você tem 3 agendamentos hoje',
+      'time': DateTime.now().subtract(const Duration(hours: 2)),
+      'isRead': true,
+      'type': 'reminder',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -23,94 +33,105 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         title: const Text('Notificações'),
         actions: [
-          if (_notificationService.unreadCount > 0)
+          if (_notifications.any((n) => !n['isRead']))
             TextButton(
-              onPressed: () {
-                _notificationService.markAllAsRead();
-                setState(() {});
-              },
+              onPressed: _markAllAsRead,
               child: const Text('Marcar todas como lidas'),
             ),
         ],
       ),
-      body: _notificationService.notifications.isEmpty
+      body: _notifications.isEmpty
           ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.notifications_none, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('Nenhuma notificação', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  Text('Nenhuma notificação'),
                 ],
               ),
             )
           : ListView.builder(
-              itemCount: _notificationService.notifications.length,
+              itemCount: _notifications.length,
               itemBuilder: (context, index) {
-                final notification = _notificationService.notifications[index];
+                final notification = _notifications[index];
                 return _buildNotificationTile(notification);
               },
             ),
     );
   }
 
-  Widget _buildNotificationTile(AppNotification notification) {
+  Widget _buildNotificationTile(Map<String, dynamic> notification) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: notification.color.withOpacity(0.1),
-          child: Icon(notification.icon, color: notification.color),
+          backgroundColor: notification['isRead'] ? Colors.grey : Colors.blue,
+          child: Icon(
+            _getNotificationIcon(notification['type']),
+            color: Colors.white,
+          ),
         ),
         title: Text(
-          notification.title,
+          notification['title'],
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight: notification['isRead'] ? FontWeight.normal : FontWeight.bold,
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(notification.message),
+            Text(notification['message']),
             const SizedBox(height: 4),
             Text(
-              _formatTimestamp(notification.timestamp),
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              _formatTime(notification['time']),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
-        trailing: notification.isRead
-            ? null
-            : Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-              ),
-        onTap: () {
-          if (!notification.isRead) {
-            _notificationService.markAsRead(notification.id);
-            setState(() {});
-          }
-        },
+        onTap: () => _markAsRead(notification['id']),
       ),
     );
   }
 
-  String _formatTimestamp(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
+  IconData _getNotificationIcon(String type) {
+    switch (type) {
+      case 'confirmation':
+        return Icons.check_circle;
+      case 'reminder':
+        return Icons.schedule;
+      default:
+        return Icons.notifications;
+    }
+  }
 
-    if (difference.inMinutes < 1) {
-      return 'Agora';
-    } else if (difference.inMinutes < 60) {
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+    
+    if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m atrás';
     } else if (difference.inHours < 24) {
       return '${difference.inHours}h atrás';
     } else {
       return '${difference.inDays}d atrás';
     }
+  }
+
+  void _markAsRead(String id) {
+    setState(() {
+      final index = _notifications.indexWhere((n) => n['id'] == id);
+      if (index != -1) {
+        _notifications[index]['isRead'] = true;
+      }
+    });
+  }
+
+  void _markAllAsRead() {
+    setState(() {
+      for (var notification in _notifications) {
+        notification['isRead'] = true;
+      }
+    });
   }
 }

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/widgets/loading_widget.dart';
-import '../../../core/widgets/error_widget.dart';
 
 class AddAppointmentDialog extends StatefulWidget {
   final Function(Appointment) onAppointmentAdded;
@@ -45,10 +41,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Nome do Cliente',
                   prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
                 ),
-                textCapitalization: TextCapitalization.words,
-                validator: Validators.name,
+                validator: (value) => value?.isEmpty == true ? 'Nome obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -56,75 +50,38 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Telefone',
                   prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
-                  hintText: '(11) 99999-9999',
                 ),
                 keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(11),
-                ],
-                validator: Validators.phone,
-                onChanged: (value) {
-                  final formatted = InputFormatters.formatPhone(value);
-                  if (formatted != value) {
-                    _clientPhoneController.value = TextEditingValue(
-                      text: formatted,
-                      selection: TextSelection.collapsed(offset: formatted.length),
-                    );
-                  }
-                },
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _serviceController,
                 decoration: const InputDecoration(
                   labelText: 'Serviço',
-                  prefixIcon: Icon(Icons.content_cut),
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.build),
                 ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) => Validators.required(value, 'Serviço'),
+                validator: (value) => value?.isEmpty == true ? 'Serviço obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(
-                  labelText: 'Preço',
+                  labelText: 'Preço (R\$)',
                   prefixIcon: Icon(Icons.attach_money),
-                  border: OutlineInputBorder(),
-                  prefixText: 'R\$ ',
                 ),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-                validator: Validators.price,
-                onChanged: (value) {
-                  final formatted = InputFormatters.formatPrice(value);
-                  if (formatted != value) {
-                    _priceController.value = TextEditingValue(
-                      text: formatted,
-                      selection: TextSelection.collapsed(offset: formatted.length),
-                    );
-                  }
+                validator: (value) {
+                  if (value?.isEmpty == true) return 'Preço obrigatório';
+                  if (double.tryParse(value!) == null) return 'Preço inválido';
+                  return null;
                 },
               ),
               const SizedBox(height: 16),
-              Card(
-                child: ListTile(
-                  title: const Text('Data e Hora'),
-                  subtitle: Text(
-                    '${_selectedDate.day.toString().padLeft(2, '0')}/${_selectedDate.month.toString().padLeft(2, '0')}/${_selectedDate.year} às ${_selectedDate.hour.toString().padLeft(2, '0')}:${_selectedDate.minute.toString().padLeft(2, '0')}',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  leading: const Icon(Icons.event),
-                  trailing: const Icon(Icons.edit),
-                  onTap: _selectDateTime,
-                ),
+              ListTile(
+                title: Text('Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                subtitle: Text('Hora: ${_selectedDate.hour}:${_selectedDate.minute.toString().padLeft(2, '0')}'),
+                leading: const Icon(Icons.schedule),
+                onTap: _selectDateTime,
               ),
             ],
           ),
@@ -135,11 +92,15 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        LoadingButton(
-          isLoading: _isLoading,
-          onPressed: _saveAppointment,
-          text: 'Salvar Agendamento',
-          icon: Icons.save,
+        ElevatedButton(
+          onPressed: _isLoading ? null : _saveAppointment,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Salvar'),
         ),
       ],
     );
@@ -172,25 +133,43 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
 
     setState(() => _isLoading = true);
 
-    try {
-      final appointment = await _appointmentsService.createAppointment(
-        clientName: _clientNameController.text,
-        clientPhone: _clientPhoneController.text,
-        service: _serviceController.text,
-        dateTime: _selectedDate,
-        price: double.parse(_priceController.text),
-      );
+    final appointmentData = {
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'clientName': _clientNameController.text,
+      'clientPhone': _clientPhoneController.text,
+      'service': _serviceController.text,
+      'dateTime': _selectedDate.toIso8601String(),
+      'price': double.parse(_priceController.text),
+      'status': 'scheduled',
+      'createdAt': DateTime.now().toIso8601String(),
+    };
 
-      widget.onAppointmentAdded(appointment);
+    try {
+      final response = await _appointmentsService.createAppointment(appointmentData);
       
-      if (mounted) {
-        Navigator.of(context).pop();
-        SuccessSnackBar.show(context, 'Agendamento criado com sucesso!');
+      if (response['success'] == true) {
+        final appointment = Appointment.fromJson(appointmentData);
+        widget.onAppointmentAdded(appointment);
+        
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Agendamento criado com sucesso!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ErrorSnackBar.show(context, 'Erro ao criar agendamento: ${e.toString()}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

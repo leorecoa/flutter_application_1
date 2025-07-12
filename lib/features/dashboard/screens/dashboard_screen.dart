@@ -4,6 +4,8 @@ import '../../../core/services/api_service.dart';
 import '../services/dashboard_service.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../core/widgets/error_widget.dart';
+import '../widgets/revenue_chart.dart';
+import '../widgets/appointments_chart.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -145,6 +147,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Colors.amber,
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 24),
+                    // Gráficos
+                    RevenueChart(
+                      data: _stats?['revenueData'] ?? [],
+                    ),
+                    const SizedBox(height: 16),
+                    AppointmentsChart(
+                      statusData: {
+                        'Agendado': _stats?['scheduledCount'] ?? 0,
+                        'Confirmado': _stats?['confirmedCount'] ?? 0,
+                        'Concluído': _stats?['completedCount'] ?? 0,
+                        'Cancelado': _stats?['cancelledCount'] ?? 0,
+                      },
                     ),
                     const SizedBox(height: 24),
                     if (_stats?['nextAppointments'] != null) ...[

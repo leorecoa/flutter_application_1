@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/services/api_service.dart';
+import '../services/pix_service.dart';
 
 class PixScreen extends StatefulWidget {
   const PixScreen({super.key});
@@ -14,8 +16,11 @@ class _PixScreenState extends State<PixScreen> {
   final _valorController = TextEditingController();
   final _descricaoController = TextEditingController();
   final _apiService = ApiService();
+  final _pixService = PixService();
   bool _isLoading = false;
   String? _pixCode;
+  String? _pixId;
+  Map<String, dynamic>? _pixData;
 
   final List<Map<String, dynamic>> _historico = [
     {
@@ -47,14 +52,16 @@ class _PixScreenState extends State<PixScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await _apiService.generatePix(
-        valor: double.parse(_valorController.text),
-        descricao: _descricaoController.text,
+      final response = await _pixService.generatePixCode(
+        amount: double.parse(_valorController.text),
+        description: _descricaoController.text,
       );
 
       if (response['success'] == true) {
         setState(() {
           _pixCode = response['pixCode'];
+          _pixId = response['pixId'];
+          _pixData = response['data'];
         });
 
         if (mounted) {
@@ -174,24 +181,71 @@ class _PixScreenState extends State<PixScreen> {
                       ),
                       const SizedBox(height: 16),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: Text(
-                          _pixCode!,
-                          style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          children: [
+                            QrImageView(
+                              data: _pixCode!,
+                              version: QrVersions.auto,
+                              size: 200.0,
+                              backgroundColor: Colors.white,
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _pixCode!,
+                                style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _copiarPix,
-                        icon: const Icon(Icons.copy),
-                        label: const Text('Copiar Código PIX'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _copiarPix,
+                            icon: const Icon(Icons.copy),
+                            label: const Text('Copiar'),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: () => _checkPixStatus(),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Verificar'),
+                          ),
+                        ],
                       ),
+                      if (_pixData != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Valor: R\$ ${_pixData!['amount']?.toStringAsFixed(2)}'),
+                              Text('Status: ${_pixData!['status'] ?? 'Pendente'}'),
+                              Text('Criado em: ${_pixData!['createdAt'] ?? ''}'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -263,6 +317,33 @@ class _PixScreenState extends State<PixScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _checkPixStatus() async {
+    if (_pixId == null) return;
+    
+    try {
+      final response = await _pixService.checkPixStatus(_pixId!);
+      if (response['success'] == true && mounted) {
+        setState(() {
+          _pixData = response['data'];
+        });
+        
+        final status = response['data']['status'];
+        if (status == 'PAID') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Pagamento confirmado!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override

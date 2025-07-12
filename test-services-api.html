@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Services API</title>
+</head>
+<body>
+    <h1>🔧 Test Services API</h1>
+    <button onclick="testGetServices()">GET Services</button>
+    <button onclick="testCreateService()">POST Create Service</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'https://5wy56rw801.execute-api.us-east-1.amazonaws.com/prod';
+        
+        async function testGetServices() {
+            try {
+                const response = await fetch(`${API_BASE}/services`);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function testCreateService() {
+            try {
+                const response = await fetch(`${API_BASE}/services`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Corte de Cabelo',
+                        description: 'Corte masculino tradicional',
+                        price: 25.00,
+                        durationMinutes: 30,
+                        category: 'Cabelo'
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -11,6 +11,10 @@ Globals:
           Ref: UsersTable
         APPOINTMENTS_TABLE:
           Ref: AppointmentsTable
+        SERVICES_TABLE:
+          Ref: ServicesTable
+        PIX_TABLE:
+          Ref: PixTable
         CORS_ORIGIN: '*'
 Resources:
   UsersTable:
@@ -53,6 +57,28 @@ Resources:
           KeyType: HASH
         Projection:
           ProjectionType: ALL
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: agendemais-services
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+  PixTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: agendemais-pix
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
@@ -139,6 +165,86 @@ Resources:
             Ref: AppointmentsTable
     Metadata:
       SamResourceId: DashboardFunction
+  ServicesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ServicesFunction
+      Handler: index.handler
+      Events:
+        GetServices:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /services
+            Method: get
+        CreateService:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /services
+            Method: post
+        UpdateService:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /services/{id}
+            Method: put
+        DeleteService:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /services/{id}/delete
+            Method: post
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ServicesTable
+    Metadata:
+      SamResourceId: ServicesFunction
+  PixFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: PixFunction
+      Handler: index.handler
+      Events:
+        GeneratePix:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /payments/pix/generate
+            Method: post
+        GetPixStatus:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /payments/pix/{id}/status
+            Method: get
+        GetPixHistory:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /payments/pix/history
+            Method: get
+        CancelPix:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ApiGateway
+            Path: /payments/pix/{id}/cancel
+            Method: post
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: PixTable
+    Metadata:
+      SamResourceId: PixFunction
   ClientsFunction:
     Type: AWS::Serverless::Function
     Properties:

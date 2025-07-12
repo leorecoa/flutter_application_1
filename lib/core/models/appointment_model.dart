@@ -53,4 +53,28 @@ class Appointment {
       'createdAt': createdAt.toIso8601String(),
     };
   }
+
+  Appointment copyWith({
+    String? id,
+    String? clientName,
+    String? clientPhone,
+    String? service,
+    DateTime? dateTime,
+    double? price,
+    AppointmentStatus? status,
+    String? notes,
+    DateTime? createdAt,
+  }) {
+    return Appointment(
+      id: id ?? this.id,
+      clientName: clientName ?? this.clientName,
+      clientPhone: clientPhone ?? this.clientPhone,
+      service: service ?? this.service,
+      dateTime: dateTime ?? this.dateTime,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

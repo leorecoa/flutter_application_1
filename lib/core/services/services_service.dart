@@ -1,3 +1,4 @@
+import '../models/service_model.dart';
 import 'api_service.dart';
 
 class ServicesService {
@@ -17,5 +18,9 @@ class ServicesService {
 
   Future<Map<String, dynamic>> deleteService(String serviceId) async {
     return await _apiService.post('/services/$serviceId/delete', {});
+  }
+
+  Future<Map<String, dynamic>> getServicesByCategory(String category) async {
+    return await _apiService.get('/services?category=$category');
   }
 }

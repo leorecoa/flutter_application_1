@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/models/service_model.dart';
 import '../../../core/services/services_service.dart';
 
 class ServicesScreen extends StatefulWidget {
@@ -10,8 +11,10 @@ class ServicesScreen extends StatefulWidget {
 
 class _ServicesScreenState extends State<ServicesScreen> {
   final _servicesService = ServicesService();
-  List<Map<String, dynamic>> _services = [];
+  List<Service> _services = [];
   bool _isLoading = true;
+  String _selectedCategory = 'Todos';
+  final List<String> _categories = ['Todos', 'Cabelo', 'Estética', 'Manicure', 'Massagem', 'Outros'];
 
   @override
   void initState() {
@@ -23,20 +26,27 @@ class _ServicesScreenState extends State<ServicesScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await _servicesService.getServices();
-      if (response['success'] == true) {
+      if (response['success'] == true && mounted) {
+        final servicesData = List<Map<String, dynamic>>.from(response['data'] ?? []);
+        final services = servicesData.map((data) => Service.fromJson(data)).toList();
         setState(() {
-          _services = List<Map<String, dynamic>>.from(response['data'] ?? []);
+          _services = services;
           _isLoading = false;
         });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
         );
       }
     }
+  }
+
+  List<Service> get _filteredServices {
+    if (_selectedCategory == 'Todos') return _services;
+    return _services.where((s) => s.category == _selectedCategory).toList();
   }
 
   @override
@@ -47,174 +57,227 @@ class _ServicesScreenState extends State<ServicesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddServiceDialog,
+            onPressed: () => _showServiceDialog(),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadServices,
-              child: _services.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.build, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Nenhum serviço cadastrado'),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _services.length,
-                      itemBuilder: (context, index) {
-                        final service = _services[index];
-                        return Card(
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Colors.blue,
-                              child: Icon(Icons.build, color: Colors.white),
-                            ),
-                            title: Text(service['name']),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Categoria',
+                border: OutlineInputBorder(),
+              ),
+              items: _categories.map((category) {
+                return DropdownMenuItem(value: category, child: Text(category));
+              }).toList(),
+              onChanged: (value) => setState(() => _selectedCategory = value!),
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _loadServices,
+                    child: _filteredServices.isEmpty
+                        ? const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('Duração: ${service['duration']} min'),
-                                Text(
-                                    'R\$ ${service['price'].toStringAsFixed(2)}'),
+                                Icon(Icons.build, size: 64, color: Colors.grey),
+                                SizedBox(height: 16),
+                                Text('Nenhum serviço encontrado'),
                               ],
                             ),
-                            trailing: PopupMenuButton(
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Text('Editar'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('Excluir'),
-                                ),
-                              ],
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _showEditServiceDialog(service);
-                                } else if (value == 'delete') {
-                                  _deleteService(service['id']);
-                                }
-                              },
-                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredServices.length,
+                            itemBuilder: (context, index) {
+                              final service = _filteredServices[index];
+                              return _buildServiceCard(service);
+                            },
                           ),
-                        );
-                      },
-                    ),
-            ),
-    );
-  }
-
-  void _showAddServiceDialog() {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final durationController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Novo Serviço'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome do Serviço'),
-            ),
-            TextField(
-              controller: priceController,
-              decoration: const InputDecoration(labelText: 'Preço (R\$)'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: durationController,
-              decoration: const InputDecoration(labelText: 'Duração (min)'),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await _servicesService.createService({
-                  'name': nameController.text,
-                  'price': double.tryParse(priceController.text) ?? 0.0,
-                  'duration': int.tryParse(durationController.text) ?? 30,
-                });
-                Navigator.pop(context);
-                _loadServices();
-              }
-            },
-            child: const Text('Salvar'),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  void _showEditServiceDialog(Map<String, dynamic> service) {
-    final nameController = TextEditingController(text: service['name']);
-    final priceController =
-        TextEditingController(text: service['price'].toString());
-    final durationController =
-        TextEditingController(text: service['duration'].toString());
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar Serviço'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildServiceCard(Service service) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: service.isActive ? Colors.green : Colors.grey,
+          child: const Icon(Icons.build, color: Colors.white),
+        ),
+        title: Text(service.name),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome do Serviço'),
+            Text(service.description),
+            Text('${service.durationMinutes} min • ${service.category}'),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'R\$ ${service.price.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-            TextField(
-              controller: priceController,
-              decoration: const InputDecoration(labelText: 'Preço (R\$)'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: durationController,
-              decoration: const InputDecoration(labelText: 'Duração (min)'),
-              keyboardType: TextInputType.number,
+            Text(
+              service.isActive ? 'Ativo' : 'Inativo',
+              style: TextStyle(
+                color: service.isActive ? Colors.green : Colors.grey,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await _servicesService.updateService(service['id'], {
-                'name': nameController.text,
-                'price': double.tryParse(priceController.text) ?? 0.0,
-                'duration': int.tryParse(durationController.text) ?? 30,
-              });
-              Navigator.pop(context);
-              _loadServices();
-            },
-            child: const Text('Salvar'),
-          ),
-        ],
+        onTap: () => _showServiceDialog(service: service),
       ),
     );
+  }
+
+  void _showServiceDialog({Service? service}) {
+    final isEditing = service != null;
+    final nameController = TextEditingController(text: service?.name ?? '');
+    final descriptionController = TextEditingController(text: service?.description ?? '');
+    final priceController = TextEditingController(text: service?.price.toString() ?? '');
+    final durationController = TextEditingController(text: service?.durationMinutes.toString() ?? '60');
+    String selectedCategory = service?.category ?? 'Cabelo';
+    bool isActive = service?.isActive ?? true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isEditing ? 'Editar Serviço' : 'Novo Serviço'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Nome do Serviço'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(labelText: 'Descrição'),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(labelText: 'Preço (R\$)'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: durationController,
+                  decoration: const InputDecoration(labelText: 'Duração (minutos)'),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedCategory,
+                  decoration: const InputDecoration(labelText: 'Categoria'),
+                  items: _categories.skip(1).map((category) {
+                    return DropdownMenuItem(value: category, child: Text(category));
+                  }).toList(),
+                  onChanged: (value) => setDialogState(() => selectedCategory = value!),
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Serviço Ativo'),
+                  value: isActive,
+                  onChanged: (value) => setDialogState(() => isActive = value),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (isEditing)
+              TextButton(
+                onPressed: () => _deleteService(service.id),
+                child: const Text('Excluir', style: TextStyle(color: Colors.red)),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => _saveService(
+                isEditing: isEditing,
+                serviceId: service?.id,
+                name: nameController.text,
+                description: descriptionController.text,
+                price: double.tryParse(priceController.text) ?? 0,
+                duration: int.tryParse(durationController.text) ?? 60,
+                category: selectedCategory,
+                isActive: isActive,
+              ),
+              child: const Text('Salvar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveService({
+    required bool isEditing,
+    String? serviceId,
+    required String name,
+    required String description,
+    required double price,
+    required int duration,
+    required String category,
+    required bool isActive,
+  }) async {
+    if (name.isEmpty || price <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos obrigatórios')),
+      );
+      return;
+    }
+
+    final serviceData = {
+      'name': name,
+      'description': description,
+      'price': price,
+      'durationMinutes': duration,
+      'category': category,
+      'isActive': isActive,
+    };
+
+    try {
+      final response = isEditing
+          ? await _servicesService.updateService(serviceId!, serviceData)
+          : await _servicesService.createService(serviceData);
+
+      if (response['success'] == true) {
+        Navigator.pop(context);
+        _loadServices();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isEditing ? 'Serviço atualizado!' : 'Serviço criado!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   Future<void> _deleteService(String serviceId) async {
@@ -237,8 +300,21 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
 
     if (confirm == true) {
-      await _servicesService.deleteService(serviceId);
-      _loadServices();
+      try {
+        await _servicesService.deleteService(serviceId);
+        Navigator.pop(context);
+        _loadServices();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Serviço excluído!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 }
