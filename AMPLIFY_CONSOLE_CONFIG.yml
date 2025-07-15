@@ -17,9 +17,6 @@ frontend:
   phases:
     preBuild:
       commands:
-        - git clone https://github.com/flutter/flutter.git -b 3.32.4 --depth 1
-        - export PATH="$PATH:`pwd`/flutter/bin"
-        - flutter --version
         - flutter pub get
     build:
       commands:
@@ -31,4 +28,3 @@ frontend:
   cache:
     paths:
       - /root/.pub-cache/**/*
-      - flutter/**/*
