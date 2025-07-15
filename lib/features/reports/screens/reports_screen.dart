@@ -11,13 +11,14 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateMixin {
+class _ReportsScreenState extends State<ReportsScreen>
+    with TickerProviderStateMixin {
   final _reportsService = ReportsService();
   late TabController _tabController;
-  
+
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
   DateTime _endDate = DateTime.now();
-  
+
   Map<String, dynamic> _financialData = {};
   List<Map<String, dynamic>> _appointmentsData = [];
   bool _isLoading = false;
@@ -37,22 +38,26 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
 
   Future<void> _loadReports() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final financial = await _reportsService.getFinancialReport(
         startDate: _startDate,
         endDate: _endDate,
       );
-      
+
       final appointments = await _reportsService.getAppointmentsReport(
         startDate: _startDate,
         endDate: _endDate,
       );
-      
+
       if (mounted) {
         setState(() {
-          _financialData = financial['success'] == true ? financial['data'] ?? {} : _getMockFinancialData();
-          _appointmentsData = appointments['success'] == true ? List<Map<String, dynamic>>.from(appointments['data'] ?? []) : _getMockAppointmentsData();
+          _financialData = financial['success'] == true
+              ? financial['data'] ?? {}
+              : _getMockFinancialData();
+          _appointmentsData = appointments['success'] == true
+              ? List<Map<String, dynamic>>.from(appointments['data'] ?? [])
+              : _getMockAppointmentsData();
           _isLoading = false;
         });
       }
@@ -84,9 +89,27 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
 
   List<Map<String, dynamic>> _getMockAppointmentsData() {
     return [
-      {'clientName': 'João Silva', 'service': 'Corte', 'dateTime': '2024-01-15T14:00:00Z', 'price': 25.0, 'status': 'Concluído'},
-      {'clientName': 'Maria Santos', 'service': 'Manicure', 'dateTime': '2024-01-15T15:00:00Z', 'price': 30.0, 'status': 'Concluído'},
-      {'clientName': 'Ana Lima', 'service': 'Escova', 'dateTime': '2024-01-15T16:00:00Z', 'price': 40.0, 'status': 'Agendado'},
+      {
+        'clientName': 'João Silva',
+        'service': 'Corte',
+        'dateTime': '2024-01-15T14:00:00Z',
+        'price': 25.0,
+        'status': 'Concluído'
+      },
+      {
+        'clientName': 'Maria Santos',
+        'service': 'Manicure',
+        'dateTime': '2024-01-15T15:00:00Z',
+        'price': 30.0,
+        'status': 'Concluído'
+      },
+      {
+        'clientName': 'Ana Lima',
+        'service': 'Escova',
+        'dateTime': '2024-01-15T16:00:00Z',
+        'price': 40.0,
+        'status': 'Agendado'
+      },
     ];
   }
 
@@ -203,16 +226,23 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Resumo Financeiro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Resumo Financeiro',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _buildMetricCard('Receita Total', 'R\$ ${(_financialData['totalRevenue'] ?? 0).toStringAsFixed(2)}', Colors.green),
+                  child: _buildMetricCard(
+                      'Receita Total',
+                      'R\$ ${(_financialData['totalRevenue'] ?? 0).toStringAsFixed(2)}',
+                      Colors.green),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildMetricCard('Ticket Médio', 'R\$ ${(_financialData['averageTicket'] ?? 0).toStringAsFixed(2)}', Colors.blue),
+                  child: _buildMetricCard(
+                      'Ticket Médio',
+                      'R\$ ${(_financialData['averageTicket'] ?? 0).toStringAsFixed(2)}',
+                      Colors.blue),
                 ),
               ],
             ),
@@ -232,9 +262,12 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
       ),
       child: Column(
         children: [
-          Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          Text(title,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );
@@ -247,29 +280,31 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Receita Diária', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Receita Diária',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
               child: LineChart(
                 LineChartData(
-                  gridData: const FlGridData(show: true),
                   titlesData: FlTitlesData(
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 40,
-                        getTitlesWidget: (value, meta) => Text('R\$${value.toInt()}'),
+                        getTitlesWidget: (value, meta) =>
+                            Text('R\$${value.toInt()}'),
                       ),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        getTitlesWidget: (value, meta) => Text('${value.toInt() + 1}'),
+                        getTitlesWidget: (value, meta) =>
+                            Text('${value.toInt() + 1}'),
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(),
+                    rightTitles: const AxisTitles(),
                   ),
                   borderData: FlBorderData(show: true),
                   lineBarsData: [
@@ -278,7 +313,6 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
                       isCurved: true,
                       color: Colors.green,
                       barWidth: 3,
-                      dotData: const FlDotData(show: true),
                     ),
                   ],
                 ),
@@ -297,11 +331,14 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Resumo de Agendamentos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Resumo de Agendamentos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Text('Total: ${_appointmentsData.length} agendamentos'),
-            Text('Concluídos: ${_appointmentsData.where((a) => a['status'] == 'Concluído').length}'),
-            Text('Agendados: ${_appointmentsData.where((a) => a['status'] == 'Agendado').length}'),
+            Text(
+                'Concluídos: ${_appointmentsData.where((a) => a['status'] == 'Concluído').length}'),
+            Text(
+                'Agendados: ${_appointmentsData.where((a) => a['status'] == 'Agendado').length}'),
           ],
         ),
       ),
@@ -315,7 +352,8 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         children: [
           const Padding(
             padding: EdgeInsets.all(16),
-            child: Text('Lista de Agendamentos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text('Lista de Agendamentos',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
           ListView.builder(
             shrinkWrap: true,
@@ -325,7 +363,8 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
               final appointment = _appointmentsData[index];
               return ListTile(
                 title: Text(appointment['clientName']),
-                subtitle: Text('${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
+                subtitle: Text(
+                    '${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
                 trailing: Text(appointment['status']),
               );
             },
@@ -342,7 +381,8 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Serviços Mais Populares', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Serviços Mais Populares',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
@@ -350,9 +390,15 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   barGroups: [
-                    BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 8, color: Colors.blue)]),
-                    BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 6, color: Colors.green)]),
-                    BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 4, color: Colors.orange)]),
+                    BarChartGroupData(
+                        x: 0,
+                        barRods: [BarChartRodData(toY: 8, color: Colors.blue)]),
+                    BarChartGroupData(x: 1, barRods: [
+                      BarChartRodData(toY: 6, color: Colors.green)
+                    ]),
+                    BarChartGroupData(x: 2, barRods: [
+                      BarChartRodData(toY: 4, color: Colors.orange)
+                    ]),
                   ],
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
@@ -360,17 +406,23 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
                           switch (value.toInt()) {
-                            case 0: return const Text('Corte');
-                            case 1: return const Text('Manicure');
-                            case 2: return const Text('Escova');
-                            default: return const Text('');
+                            case 0:
+                              return const Text('Corte');
+                            case 1:
+                              return const Text('Manicure');
+                            case 2:
+                              return const Text('Escova');
+                            default:
+                              return const Text('');
                           }
                         },
                       ),
                     ),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: const AxisTitles(
+                        sideTitles:
+                            SideTitles(showTitles: true, reservedSize: 40)),
+                    topTitles: const AxisTitles(),
+                    rightTitles: const AxisTitles(),
                   ),
                 ),
               ),
@@ -388,23 +440,26 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Horários Mais Movimentados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Horários Mais Movimentados',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
               child: LineChart(
                 LineChartData(
-                  gridData: const FlGridData(show: true),
                   titlesData: FlTitlesData(
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        getTitlesWidget: (value, meta) => Text('${value.toInt()}h'),
+                        getTitlesWidget: (value, meta) =>
+                            Text('${value.toInt()}h'),
                       ),
                     ),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 40)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: const AxisTitles(
+                        sideTitles:
+                            SideTitles(showTitles: true, reservedSize: 40)),
+                    topTitles: const AxisTitles(),
+                    rightTitles: const AxisTitles(),
                   ),
                   borderData: FlBorderData(show: true),
                   lineBarsData: [
@@ -446,7 +501,7 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
       lastDate: DateTime.now(),
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
     );
-    
+
     if (picked != null) {
       setState(() {
         _startDate = picked.start;
@@ -466,7 +521,7 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
           endDate: _endDate,
         );
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('PDF gerado com sucesso!'),

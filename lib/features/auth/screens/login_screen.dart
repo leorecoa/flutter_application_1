@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (mounted) {
             _showSuccess('Bem-vindo, ${user.name ?? 'Usuário'}!');
-            
+
             context.go('/dashboard');
           }
         } else {

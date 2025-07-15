@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:rrule/rrule.dart';
 import '../../../core/models/appointment_model.dart';
 
 enum RecurrenceType { none, daily, weekly, monthly }
@@ -14,10 +13,12 @@ class RecurringAppointmentDialog extends StatefulWidget {
   });
 
   @override
-  State<RecurringAppointmentDialog> createState() => _RecurringAppointmentDialogState();
+  State<RecurringAppointmentDialog> createState() =>
+      _RecurringAppointmentDialogState();
 }
 
-class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog> {
+class _RecurringAppointmentDialogState
+    extends State<RecurringAppointmentDialog> {
   final _formKey = GlobalKey<FormState>();
   final _clientNameController = TextEditingController();
   final _clientPhoneController = TextEditingController();
@@ -61,7 +62,8 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                     labelText: 'Nome do Cliente',
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) => value?.isEmpty == true ? 'Nome obrigatório' : null,
+                  validator: (value) =>
+                      value?.isEmpty == true ? 'Nome obrigatório' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -79,7 +81,8 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                     labelText: 'Serviço',
                     prefixIcon: Icon(Icons.build),
                   ),
-                  validator: (value) => value?.isEmpty == true ? 'Serviço obrigatório' : null,
+                  validator: (value) =>
+                      value?.isEmpty == true ? 'Serviço obrigatório' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -91,18 +94,21 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value?.isEmpty == true) return 'Preço obrigatório';
-                    if (double.tryParse(value!) == null) return 'Preço inválido';
+                    if (double.tryParse(value!) == null) {
+                      return 'Preço inválido';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Data e hora
                 Row(
                   children: [
                     Expanded(
                       child: ListTile(
-                        title: Text('Data: ${DateFormat('dd/MM/yyyy').format(_startDate)}'),
+                        title: Text(
+                            'Data: ${DateFormat('dd/MM/yyyy').format(_startDate)}'),
                         leading: const Icon(Icons.calendar_today),
                         onTap: _selectStartDate,
                       ),
@@ -120,9 +126,10 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
 
                 // Configurações de recorrência
                 const Divider(),
-                const Text('Configurações de Recorrência', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Configurações de Recorrência',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                
+
                 DropdownButtonFormField<RecurrenceType>(
                   value: _recurrenceType,
                   decoration: const InputDecoration(
@@ -130,14 +137,20 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                     prefixIcon: Icon(Icons.repeat),
                   ),
                   items: const [
-                    DropdownMenuItem(value: RecurrenceType.none, child: Text('Sem recorrência')),
-                    DropdownMenuItem(value: RecurrenceType.daily, child: Text('Diário')),
-                    DropdownMenuItem(value: RecurrenceType.weekly, child: Text('Semanal')),
-                    DropdownMenuItem(value: RecurrenceType.monthly, child: Text('Mensal')),
+                    DropdownMenuItem(
+                        value: RecurrenceType.none,
+                        child: Text('Sem recorrência')),
+                    DropdownMenuItem(
+                        value: RecurrenceType.daily, child: Text('Diário')),
+                    DropdownMenuItem(
+                        value: RecurrenceType.weekly, child: Text('Semanal')),
+                    DropdownMenuItem(
+                        value: RecurrenceType.monthly, child: Text('Mensal')),
                   ],
-                  onChanged: (value) => setState(() => _recurrenceType = value!),
+                  onChanged: (value) =>
+                      setState(() => _recurrenceType = value!),
                 ),
-                
+
                 if (_recurrenceType != RecurrenceType.none) ...[
                   const SizedBox(height: 16),
                   Row(
@@ -150,7 +163,8 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                             helperText: _getIntervalHelperText(),
                           ),
                           keyboardType: TextInputType.number,
-                          onChanged: (value) => _interval = int.tryParse(value) ?? 1,
+                          onChanged: (value) =>
+                              _interval = int.tryParse(value) ?? 1,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -162,18 +176,19 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                             helperText: 'Quantas vezes repetir',
                           ),
                           keyboardType: TextInputType.number,
-                          onChanged: (value) => _occurrences = int.tryParse(value) ?? 1,
+                          onChanged: (value) =>
+                              _occurrences = int.tryParse(value) ?? 1,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   ListTile(
-                    title: Text(_endDate == null 
-                        ? 'Data Final: Não definida' 
+                    title: Text(_endDate == null
+                        ? 'Data Final: Não definida'
                         : 'Data Final: ${DateFormat('dd/MM/yyyy').format(_endDate!)}'),
                     leading: const Icon(Icons.event),
-                    trailing: _endDate != null 
+                    trailing: _endDate != null
                         ? IconButton(
                             icon: const Icon(Icons.clear),
                             onPressed: () => setState(() => _endDate = null),
@@ -182,7 +197,7 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
                     onTap: _selectEndDate,
                   ),
                 ],
-                
+
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _notesController,
@@ -287,12 +302,12 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
   List<DateTime> _generateRecurringDates(DateTime startDate) {
     final dates = <DateTime>[];
     DateTime currentDate = startDate;
-    
+
     for (int i = 0; i < _occurrences; i++) {
       if (_endDate != null && currentDate.isAfter(_endDate!)) break;
-      
+
       dates.add(currentDate);
-      
+
       switch (_recurrenceType) {
         case RecurrenceType.daily:
           currentDate = currentDate.add(Duration(days: _interval));
@@ -313,7 +328,7 @@ class _RecurringAppointmentDialogState extends State<RecurringAppointmentDialog>
           break;
       }
     }
-    
+
     return dates;
   }
 

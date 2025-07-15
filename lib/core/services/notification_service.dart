@@ -7,15 +7,13 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
 
     const initSettings = InitializationSettings(
       android: androidSettings,
@@ -27,8 +25,9 @@ class NotificationService {
 
   Future<void> scheduleAppointmentReminder(Appointment appointment) async {
     // Lembrete 1 hora antes
-    final reminderTime = appointment.dateTime.subtract(const Duration(hours: 1));
-    
+    final reminderTime =
+        appointment.dateTime.subtract(const Duration(hours: 1));
+
     if (reminderTime.isAfter(DateTime.now())) {
       await _notifications.zonedSchedule(
         appointment.id.hashCode,
@@ -45,7 +44,8 @@ class NotificationService {
           ),
           iOS: DarwinNotificationDetails(),
         ),
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
       );
     }
@@ -69,12 +69,11 @@ class NotificationService {
             'appointment_reminders',
             'Lembretes de Agendamento',
             channelDescription: 'Notificações de lembretes de agendamentos',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
           ),
           iOS: DarwinNotificationDetails(),
         ),
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
   }
@@ -105,10 +104,12 @@ class NotificationService {
     );
   }
 
-  Future<void> scheduleClientConfirmationReminder(Appointment appointment) async {
+  Future<void> scheduleClientConfirmationReminder(
+      Appointment appointment) async {
     // Lembrete para cliente confirmar 24h antes
-    final confirmationTime = appointment.dateTime.subtract(const Duration(hours: 24));
-    
+    final confirmationTime =
+        appointment.dateTime.subtract(const Duration(hours: 24));
+
     if (confirmationTime.isAfter(DateTime.now())) {
       await _notifications.zonedSchedule(
         appointment.id.hashCode + 2,
@@ -125,7 +126,8 @@ class NotificationService {
           ),
           iOS: DarwinNotificationDetails(),
         ),
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
       );
     }
   }

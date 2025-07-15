@@ -1,9 +1,10 @@
 {
   "name": "appointments-function",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "aws-sdk": "^2.1691.0",
-    "jsonwebtoken": "^9.0.2",
-    "uuid": "^9.0.1"
+    "@aws-sdk/client-dynamodb": "^3.658.1",
+    "@aws-sdk/lib-dynamodb": "^3.658.1",
+    "uuid": "^10.0.0"
   }
 }

@@ -1,6 +1,6 @@
 class AppConstants {
-  static const String appName = 'AGENDEMAIS';
-  static const String appSlogan = 'Seu negócio sempre em primeiro lugar';
+  static const String appName = 'AgendaFácil';
+  static const String appSlogan = 'Agendamentos fáceis e rápidos';
   static const String version = '1.0.0';
   
   // API Configuration

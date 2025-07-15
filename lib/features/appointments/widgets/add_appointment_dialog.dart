@@ -21,7 +21,7 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
   final _serviceController = TextEditingController();
   final _priceController = TextEditingController();
   final _appointmentsService = AppointmentsService();
-  
+
   DateTime _selectedDate = DateTime.now().add(const Duration(hours: 1));
   bool _isLoading = false;
 
@@ -42,7 +42,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   labelText: 'Nome do Cliente',
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Nome obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Nome obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -60,7 +61,8 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
                   labelText: 'Serviço',
                   prefixIcon: Icon(Icons.build),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Serviço obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Serviço obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -78,8 +80,10 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                title: Text('Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
-                subtitle: Text('Hora: ${_selectedDate.hour}:${_selectedDate.minute.toString().padLeft(2, '0')}'),
+                title: Text(
+                    'Data: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                subtitle: Text(
+                    'Hora: ${_selectedDate.hour}:${_selectedDate.minute.toString().padLeft(2, '0')}'),
                 leading: const Icon(Icons.schedule),
                 onTap: _selectDateTime,
               ),
@@ -113,16 +117,17 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),
       );
-      
+
       if (time != null) {
         setState(() {
-          _selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+          _selectedDate =
+              DateTime(date.year, date.month, date.day, time.hour, time.minute);
         });
       }
     }
@@ -145,12 +150,13 @@ class _AddAppointmentDialogState extends State<AddAppointmentDialog> {
     };
 
     try {
-      final response = await _appointmentsService.createAppointment(appointmentData);
-      
+      final response =
+          await _appointmentsService.createAppointment(appointmentData);
+
       if (response['success'] == true) {
         final appointment = Appointment.fromJson(appointmentData);
         widget.onAppointmentAdded(appointment);
-        
+
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
-import '../models/appointment_model.dart';
 import '../models/service_model.dart';
 import '../services/api_service.dart';
 import '../services/cache_service.dart';
@@ -40,8 +39,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
-    
+    state = state.copyWith(isLoading: true);
+
     try {
       final response = await _apiService.post('/auth/login', {
         'email': email,
@@ -73,40 +72,41 @@ class AuthNotifier extends StateNotifier<AuthState> {
 final servicesProvider = FutureProvider<List<Service>>((ref) async {
   final cache = CacheService();
   final cached = await cache.get<List>('cache_services');
-  
+
   if (cached != null) {
     return cached.map((json) => Service.fromJson(json)).toList();
   }
 
   final apiService = ApiService();
   final response = await apiService.get('/services');
-  
+
   if (response['success'] == true) {
     final services = List<Map<String, dynamic>>.from(response['data'] ?? []);
     await cache.set('cache_services', services);
     return services.map((json) => Service.fromJson(json)).toList();
   }
-  
+
   return [];
 });
 
 // Dashboard Stats Provider
-final dashboardStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final dashboardStatsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final cache = CacheService();
   final cached = await cache.get<Map<String, dynamic>>('cache_dashboard');
-  
+
   if (cached != null) {
     return cached;
   }
 
   final apiService = ApiService();
   final response = await apiService.get('/dashboard/stats');
-  
+
   if (response['success'] == true) {
     final stats = response['data'] ?? {};
     await cache.set('cache_dashboard', stats, ttl: const Duration(minutes: 5));
     return stats;
   }
-  
+
   return {};
 });

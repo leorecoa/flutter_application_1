@@ -14,7 +14,7 @@ codeuri = "c:\\Users\\Leorecoa\\contacts_app\\Afiliados\\flutter_application_1\\
 runtime = "nodejs18.x"
 architecture = "x86_64"
 handler = "index.handler"
-manifest_hash = "496199f1f77017817e40b74049eb2a22"
+manifest_hash = "a335bb3573899805b380d569e0963dbf"
 packagetype = "Zip"
 functions = ["AppointmentsFunction"]
 
@@ -53,5 +53,14 @@ handler = "index.handler"
 manifest_hash = "b466200e26a88498105770acf0b16b36"
 packagetype = "Zip"
 functions = ["ClientsFunction"]
+
+[function_build_definitions.31816ee4-18b7-43d2-b8ed-841c1a2cf9be]
+codeuri = "c:\\Users\\Leorecoa\\contacts_app\\Afiliados\\flutter_application_1\\backend\\src\\functions\\auto-complete"
+runtime = "nodejs18.x"
+architecture = "x86_64"
+handler = "index.handler"
+manifest_hash = "072f24d191e2e80ddaa1fcb06a3b2f87"
+packagetype = "Zip"
+functions = ["AutoCompleteFunction"]
 
 [layer_build_definitions]

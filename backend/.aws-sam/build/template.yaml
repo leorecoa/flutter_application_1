@@ -9,8 +9,10 @@ Globals:
       Variables:
         USERS_TABLE:
           Ref: UsersTable
+        MAIN_TABLE:
+          Ref: AgendademaisMainTable
         APPOINTMENTS_TABLE:
-          Ref: AppointmentsTable
+          Ref: AgendademaisMainTable
         SERVICES_TABLE:
           Ref: ServicesTable
         PIX_TABLE:
@@ -37,24 +39,44 @@ Resources:
           KeyType: HASH
         Projection:
           ProjectionType: ALL
-  AppointmentsTable:
+  AgendademaisMainTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: agendemais-appointments
+      TableName: agendemais-main-table
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
-      - AttributeName: id
+      - AttributeName: PK
         AttributeType: S
-      - AttributeName: userId
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: GSI1PK
+        AttributeType: S
+      - AttributeName: GSI1SK
+        AttributeType: S
+      - AttributeName: GSI2PK
+        AttributeType: S
+      - AttributeName: GSI2SK
         AttributeType: S
       KeySchema:
-      - AttributeName: id
+      - AttributeName: PK
         KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
       GlobalSecondaryIndexes:
-      - IndexName: userId-index
+      - IndexName: AppointmentsByProfessionalIndex
         KeySchema:
-        - AttributeName: userId
+        - AttributeName: GSI1PK
           KeyType: HASH
+        - AttributeName: GSI1SK
+          KeyType: RANGE
+        Projection:
+          ProjectionType: ALL
+      - IndexName: AppointmentsByStatusIndex
+        KeySchema:
+        - AttributeName: GSI2PK
+          KeyType: HASH
+        - AttributeName: GSI2SK
+          KeyType: RANGE
         Projection:
           ProjectionType: ALL
   ServicesTable:
@@ -143,7 +165,7 @@ Resources:
       Policies:
       - DynamoDBCrudPolicy:
           TableName:
-            Ref: AppointmentsTable
+            Ref: AgendademaisMainTable
     Metadata:
       SamResourceId: AppointmentsFunction
   DashboardFunction:
@@ -162,7 +184,7 @@ Resources:
       Policies:
       - DynamoDBReadPolicy:
           TableName:
-            Ref: AppointmentsTable
+            Ref: AgendademaisMainTable
     Metadata:
       SamResourceId: DashboardFunction
   ServicesFunction:
@@ -267,6 +289,23 @@ Resources:
             Method: post
     Metadata:
       SamResourceId: ClientsFunction
+  AutoCompleteFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: AutoCompleteFunction
+      Handler: index.handler
+      Events:
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 * * * ? *)
+            Description: Auto-complete appointments every hour
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: AgendademaisMainTable
+    Metadata:
+      SamResourceId: AutoCompleteFunction
 Outputs:
   ApiUrl:
     Description: API Gateway endpoint URL

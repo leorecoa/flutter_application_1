@@ -119,7 +119,8 @@ class _PixScreenState extends State<PixScreen> {
                     children: [
                       const Text(
                         'Gerar Cobrança PIX',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -131,7 +132,9 @@ class _PixScreenState extends State<PixScreen> {
                         ),
                         keyboardType: TextInputType.number,
                         validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Valor obrigatório';
+                          if (value?.isEmpty ?? true) {
+                            return 'Valor obrigatório';
+                          }
                           return null;
                         },
                       ),
@@ -144,7 +147,9 @@ class _PixScreenState extends State<PixScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Descrição obrigatória';
+                          if (value?.isEmpty ?? true) {
+                            return 'Descrição obrigatória';
+                          }
                           return null;
                         },
                       ),
@@ -159,7 +164,8 @@ class _PixScreenState extends State<PixScreen> {
                             padding: const EdgeInsets.all(16),
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white)
                               : const Text('Gerar PIX'),
                         ),
                       ),
@@ -177,7 +183,8 @@ class _PixScreenState extends State<PixScreen> {
                     children: [
                       const Text(
                         'PIX Gerado',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Container(
@@ -191,7 +198,6 @@ class _PixScreenState extends State<PixScreen> {
                           children: [
                             QrImageView(
                               data: _pixCode!,
-                              version: QrVersions.auto,
                               size: 200.0,
                               backgroundColor: Colors.white,
                             ),
@@ -204,7 +210,8 @@ class _PixScreenState extends State<PixScreen> {
                               ),
                               child: Text(
                                 _pixCode!,
-                                style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
+                                style: const TextStyle(
+                                    fontSize: 10, fontFamily: 'monospace'),
                                 maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -239,9 +246,12 @@ class _PixScreenState extends State<PixScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Valor: R\$ ${_pixData!['amount']?.toStringAsFixed(2)}'),
-                              Text('Status: ${_pixData!['status'] ?? 'Pendente'}'),
-                              Text('Criado em: ${_pixData!['createdAt'] ?? ''}'),
+                              Text(
+                                  'Valor: R\$ ${_pixData!['amount']?.toStringAsFixed(2)}'),
+                              Text(
+                                  'Status: ${_pixData!['status'] ?? 'Pendente'}'),
+                              Text(
+                                  'Criado em: ${_pixData!['createdAt'] ?? ''}'),
                             ],
                           ),
                         ),
@@ -266,13 +276,11 @@ class _PixScreenState extends State<PixScreen> {
                 return Card(
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: item['status'] == 'Pago' 
-                          ? Colors.green 
+                      backgroundColor: item['status'] == 'Pago'
+                          ? Colors.green
                           : Colors.orange,
                       child: Icon(
-                        item['status'] == 'Pago' 
-                            ? Icons.check 
-                            : Icons.schedule,
+                        item['status'] == 'Pago' ? Icons.check : Icons.schedule,
                         color: Colors.white,
                       ),
                     ),
@@ -291,9 +299,10 @@ class _PixScreenState extends State<PixScreen> {
                       ],
                     ),
                     trailing: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: item['status'] == 'Pago' 
+                        color: item['status'] == 'Pago'
                             ? Colors.green.withValues(alpha: 0.1)
                             : Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -301,8 +310,8 @@ class _PixScreenState extends State<PixScreen> {
                       child: Text(
                         item['status'],
                         style: TextStyle(
-                          color: item['status'] == 'Pago' 
-                              ? Colors.green 
+                          color: item['status'] == 'Pago'
+                              ? Colors.green
                               : Colors.orange,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
@@ -321,14 +330,14 @@ class _PixScreenState extends State<PixScreen> {
 
   Future<void> _checkPixStatus() async {
     if (_pixId == null) return;
-    
+
     try {
       final response = await _pixService.checkPixStatus(_pixId!);
       if (response['success'] == true && mounted) {
         setState(() {
           _pixData = response['data'];
         });
-        
+
         final status = response['data']['status'];
         if (status == 'PAID') {
           ScaffoldMessenger.of(context).showSnackBar(

@@ -49,7 +49,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
       children: [
         Card(
           child: TableCalendar<Appointment>(
-            firstDay: DateTime.utc(2020, 1, 1),
+            firstDay: DateTime.utc(2020),
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
@@ -61,7 +61,6 @@ class _CalendarWidgetState extends State<CalendarWidget> {
               holidayTextStyle: TextStyle(color: Colors.red),
             ),
             headerStyle: const HeaderStyle(
-              formatButtonVisible: true,
               titleCentered: true,
               formatButtonShowsNext: false,
               formatButtonDecoration: BoxDecoration(

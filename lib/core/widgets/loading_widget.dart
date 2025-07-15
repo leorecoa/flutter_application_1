@@ -128,8 +128,6 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
         return ShaderMask(
           shaderCallback: (bounds) {
             return LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
               colors: const [
                 Colors.grey,
                 Colors.white,

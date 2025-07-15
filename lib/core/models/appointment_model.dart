@@ -40,6 +40,35 @@ class Appointment {
     );
   }
 
+  factory Appointment.fromDynamoJson(Map<String, dynamic> json) {
+    return Appointment(
+      id: json['appointmentId'] ?? '',
+      clientName: json['clientName'] ?? '',
+      clientPhone: json['clientPhone'] ?? '',
+      service: json['service'] ?? '',
+      dateTime: DateTime.parse(json['appointmentDateTime'] ?? DateTime.now().toIso8601String()),
+      price: (json['price'] ?? 0).toDouble(),
+      status: _parseStatus(json['status']),
+      notes: json['notes'],
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
+  static AppointmentStatus _parseStatus(String? status) {
+    switch (status) {
+      case 'pendente':
+        return AppointmentStatus.scheduled;
+      case 'confirmado':
+        return AppointmentStatus.confirmed;
+      case 'concluido':
+        return AppointmentStatus.completed;
+      case 'cancelado':
+        return AppointmentStatus.cancelled;
+      default:
+        return AppointmentStatus.scheduled;
+    }
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

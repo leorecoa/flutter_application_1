@@ -38,13 +38,21 @@ class RevenueChart extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          final days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                          final days = [
+                            'Dom',
+                            'Seg',
+                            'Ter',
+                            'Qua',
+                            'Qui',
+                            'Sex',
+                            'Sáb'
+                          ];
                           return Text(days[value.toInt() % 7]);
                         },
                       ),
                     ),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(),
+                    rightTitles: const AxisTitles(),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -53,7 +61,6 @@ class RevenueChart extends StatelessWidget {
                       isCurved: true,
                       color: Colors.blue,
                       barWidth: 3,
-                      dotData: const FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
                         color: Colors.blue.withOpacity(0.1),
@@ -71,9 +78,10 @@ class RevenueChart extends StatelessWidget {
 
   List<FlSpot> _generateSpots() {
     if (data.isEmpty) {
-      return List.generate(7, (index) => FlSpot(index.toDouble(), (index * 50 + 100).toDouble()));
+      return List.generate(7,
+          (index) => FlSpot(index.toDouble(), (index * 50 + 100).toDouble()));
     }
-    
+
     return data.asMap().entries.map((entry) {
       return FlSpot(entry.key.toDouble(), entry.value['revenue'].toDouble());
     }).toList();
