@@ -1,0 +1,24 @@
+# CONFIGURAÇÃO PARA COLAR NO CONSOLE DO AWS AMPLIFY
+# Acesse: AWS Console > Amplify > Seu App > Configurações de compilação
+# Cole este conteúdo no editor e clique em "Salvar"
+
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - git clone https://github.com/flutter/flutter.git -b 3.32.4 --depth 1
+        - export PATH="$PATH:`pwd`/flutter/bin"
+        - flutter --version
+        - flutter pub get
+    build:
+      commands:
+        - flutter build web --release
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - /root/.pub-cache/**/*
+      - flutter/**/*
