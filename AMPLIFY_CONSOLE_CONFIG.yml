@@ -1,6 +1,16 @@
-# CONFIGURAÇÃO PARA COLAR NO CONSOLE DO AWS AMPLIFY
-# Acesse: AWS Console > Amplify > Seu App > Configurações de compilação
-# Cole este conteúdo no editor e clique em "Salvar"
+# ========================================
+# CONFIGURAÇÃO PARA CONSOLE AWS AMPLIFY
+# ========================================
+# 
+# INSTRUÇÕES:
+# 1. Acesse: AWS Console > Amplify > d31iho7gw23enq
+# 2. Menu: "Configurações de compilação" (Build settings)
+# 3. APAGUE todo conteúdo do editor
+# 4. COLE o código abaixo
+# 5. Clique em "Salvar"
+# 6. Clique em "Reimplantar esta versão"
+#
+# ========================================
 
 version: 1
 frontend:
