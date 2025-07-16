@@ -1,0 +1,45 @@
+name: Flutter CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci-pipeline:
+    name: CI Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.4'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: flutter format --output=none --set-exit-if-changed .
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build web
+        run: flutter build web --release
+
+      - name: Deploy status
+        if: github.event_name == 'push'
+        run: |
+          echo "✅ CI Pipeline completed successfully"
+          echo "🚀 AWS Amplify will auto-deploy from main branch"
+          echo "📱 App URL: https://main.d31iho7gw23enq.amplifyapp.com/"
