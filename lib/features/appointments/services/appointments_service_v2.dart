@@ -4,6 +4,20 @@ import '../../../core/models/appointment_model.dart';
 class AppointmentsServiceV2 {
   final _apiService = ApiService();
 
+  Future<Map<String, dynamic>> updateAppointment(
+    String appointmentId,
+    Map<String, dynamic> appointmentData,
+  ) async {
+    return await _apiService.put('/appointments/$appointmentId', appointmentData);
+  }
+
+  Future<Map<String, dynamic>> deleteAppointment(String appointmentId) async {
+    return await _apiService.delete('/appointments/$appointmentId');
+  }
+
+class AppointmentsServiceV2 {
+  final _apiService = ApiService();
+
   Future<Map<String, dynamic>> createAppointment({
     required String professionalId,
     required String serviceId,
@@ -57,6 +71,18 @@ class AppointmentsServiceV2 {
     } catch (e) {
       throw Exception('Erro ao buscar agendamentos: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> updateAppointmentStatus(
+    String appointmentId,
+    String newStatus,
+  ) async {
+    final data = {'status': newStatus};
+    return await _apiService.put('/appointments/$appointmentId', data);
+  }
+
+  Future<Map<String, dynamic>> deleteAppointment(String appointmentId) async {
+    return await _apiService.delete('/appointments/$appointmentId');
   }
 
   Future<Appointment> createAppointmentModel({

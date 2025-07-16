@@ -66,7 +66,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/create-appointment',
-            builder: (context, state) => const CreateAppointmentScreen(),
+            builder: (context, state) {
+              final appointment = state.extra as Appointment?;
+              return CreateAppointmentScreen(appointment: appointment);
+            },
           ),
           GoRoute(
             path: '/clients',

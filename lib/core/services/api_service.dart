@@ -74,6 +74,10 @@ class ApiService {
   Future<Map<String, dynamic>> put(String path, Map<String, dynamic> data) async {
     return await _makeRealApiCall('PUT', path, data);
   }
+
+  Future<Map<String, dynamic>> delete(String path) async {
+    return await _makeRealApiCall('DELETE', path, null);
+  }
   
   Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
     try {
@@ -102,6 +106,9 @@ class ApiService {
             headers: headers,
             body: data != null ? jsonEncode(data) : null,
           ).timeout(AppConstants.requestTimeout);
+          break;
+        case 'DELETE':
+          response = await http.delete(url, headers: headers).timeout(AppConstants.requestTimeout);
           break;
         default:
           throw Exception('Método HTTP não suportado: $method');

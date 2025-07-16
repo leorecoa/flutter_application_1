@@ -4,7 +4,8 @@ import 'package:intl/intl.dart';
 import '../services/appointments_service_v2.dart';
 
 class CreateAppointmentScreen extends StatefulWidget {
-  const CreateAppointmentScreen({super.key});
+  final Appointment? appointment;
+  const CreateAppointmentScreen({super.key, this.appointment});
 
   @override
   State<CreateAppointmentScreen> createState() => _CreateAppointmentScreenState();
@@ -23,11 +24,27 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   bool _isLoading = false;
 
+  bool get isEditing => widget.appointment != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditing) {
+      _clientNameController.text = widget.appointment!.clientName;
+      _clientPhoneController.text = widget.appointment!.clientPhone;
+      _serviceController.text = widget.appointment!.service;
+      _priceController.text = widget.appointment!.price.toString();
+      _notesController.text = widget.appointment!.notes ?? '';
+      _selectedDate = widget.appointment!.dateTime;
+      _selectedTime = TimeOfDay.fromDateTime(widget.appointment!.dateTime);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Novo Agendamento'),
+        title: Text(isEditing ? 'Editar Agendamento' : 'Novo Agendamento'),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveAppointment,
@@ -153,7 +170,24 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         _selectedTime.minute,
       );
 
-      await _appointmentsServiceV2.createAppointmentModel(
+      if (isEditing) {
+        // Atualizar agendamento existente
+        final appointmentData = {
+          'clientName': _clientNameController.text,
+          'clientPhone': _clientPhoneController.text,
+          'service': _serviceController.text,
+          'price': double.tryParse(_priceController.text) ?? 0.0,
+          'appointmentDateTime': appointmentDateTime.toIso8601String(),
+          'notes': _notesController.text.isEmpty ? null : _notesController.text,
+        };
+        
+        await _appointmentsServiceV2.updateAppointment(
+          widget.appointment!.id,
+          appointmentData,
+        );
+      } else {
+        // Criar novo agendamento
+        await _appointmentsServiceV2.createAppointmentModel(
         professionalId: 'PROF#default',
         serviceId: 'SERV#${_serviceController.text.toLowerCase()}',
         appointmentDateTime: appointmentDateTime,
@@ -161,13 +195,14 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         clientPhone: _clientPhoneController.text,
         service: _serviceController.text,
         price: double.tryParse(_priceController.text) ?? 0.0,
-        notes: _notesController.text.isEmpty ? null : _notesController.text,
-      );
+          notes: _notesController.text.isEmpty ? null : _notesController.text,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agendamento criado com sucesso!'),
+          SnackBar(
+            content: Text(isEditing ? 'Agendamento atualizado com sucesso!' : 'Agendamento criado com sucesso!'),
             backgroundColor: Colors.green,
           ),
         );
