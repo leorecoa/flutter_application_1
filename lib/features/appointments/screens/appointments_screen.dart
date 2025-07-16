@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service.dart';
+import '../services/appointments_service_v2.dart';
 import '../widgets/add_appointment_dialog.dart';
 import '../widgets/calendar_widget.dart';
 import '../widgets/edit_appointment_dialog.dart';
@@ -18,6 +19,7 @@ class AppointmentsScreen extends StatefulWidget {
 
 class _AppointmentsScreenState extends State<AppointmentsScreen> {
   final _appointmentsService = AppointmentsService();
+  final _appointmentsServiceV2 = AppointmentsServiceV2();
   final _notificationService = NotificationService();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
@@ -37,12 +39,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await _appointmentsService.getAppointments();
-      if (response['success'] == true && mounted) {
-        final appointmentsData =
-            List<Map<String, dynamic>>.from(response['data'] ?? []);
-        final appointments =
-            appointmentsData.map((data) => Appointment.fromJson(data)).toList();
+      final appointments = await _appointmentsServiceV2.getAppointmentsList();
+      if (mounted) {
         setState(() {
           _appointments = appointments;
           _isLoading = false;
