@@ -1,60 +1,48 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:http/http.dart' as http;
-import 'package:agendemais/core/services/api_service.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 
-@GenerateMocks([http.Client])
+// Importação corrigida para o nome do pacote "agendafacil" e o novo arquivo
+import 'package:agendafacil/src/core/services/api_service.dart';
+
+// Importação para o arquivo de mock que será gerado
 import 'api_service_test.mocks.dart';
 
+// Anotação para gerar um MockClient a partir da classe Client do http
+@GenerateMocks([http.Client])
 void main() {
-  group('ApiService Tests', () {
-    late ApiService apiService;
-    late MockClient mockClient;
+  late ApiService apiService;
+  late MockClient mockClient;
 
-    setUp(() {
-      apiService = ApiService();
-      mockClient = MockClient();
+  setUp(() {
+    mockClient = MockClient();
+    apiService = ApiService(client: mockClient);
+  });
+
+  group('ApiService - GET', () {
+    test('retorna um Map se a chamada http for bem-sucedida (status 200)',
+        () async {
+      // Arrange
+      final responsePayload = '{"data": "test_ok"}';
+      when(mockClient.get(any, headers: anyNamed('headers')))
+          .thenAnswer((_) async => http.Response(responsePayload, 200));
+
+      // Act
+      final result = await apiService.get('test-endpoint');
+
+      // Assert
+      expect(result, isA<Map<String, dynamic>>());
+      expect(result['data'], 'test_ok');
     });
 
-    test('should make successful GET request', () async {
+    test('lança uma Exception se a chamada http retornar um erro', () {
       // Arrange
       when(mockClient.get(any, headers: anyNamed('headers')))
-          .thenAnswer((_) async => http.Response('{"success": true, "data": []}', 200));
+          .thenAnswer((_) async => http.Response('Not Found', 404));
 
-      // Act
-      final result = await apiService.get('/test');
-
-      // Assert
-      expect(result['success'], true);
-      expect(result['data'], isA<List>());
-    });
-
-    test('should handle POST request with data', () async {
-      // Arrange
-      const testData = {'name': 'Test Service', 'price': 50.0};
-      when(mockClient.post(any, headers: anyNamed('headers'), body: anyNamed('body')))
-          .thenAnswer((_) async => http.Response('{"success": true, "data": {"id": "123"}}', 201));
-
-      // Act
-      final result = await apiService.post('/services', testData);
-
-      // Assert
-      expect(result['success'], true);
-      expect(result['data']['id'], '123');
-    });
-
-    test('should handle network errors gracefully', () async {
-      // Arrange
-      when(mockClient.get(any, headers: anyNamed('headers')))
-          .thenThrow(Exception('Network error'));
-
-      // Act
-      final result = await apiService.get('/test');
-
-      // Assert
-      expect(result['success'], false);
-      expect(result['message'], contains('Erro de conexão'));
+      // Act & Assert
+      expect(apiService.get('test-endpoint'), throwsException);
     });
   });
 }

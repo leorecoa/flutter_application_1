@@ -1,0 +1,52 @@
+# Nome do Workflow: Deploy Flutter Web to S3/CloudFront
+name: Deploy Flutter Web to AWS
+
+# Gatilho (Trigger): Executa o workflow em cada push para a branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy to S3/CloudFront
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout do código do repositório
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configuração do Flutter SDK de forma robusta e com cache
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.22.1" # Versão exata do Flutter para consistência
+          channel: "stable"
+          cache: true # Ativa o cache para .pub-cache e o SDK, acelerando futuros builds
+
+      # 3. Instalação das dependências do projeto
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 4. Build da aplicação Flutter Web em modo release
+      - name: Build Flutter Web
+        run: flutter build web --release
+
+      # 5. Configuração das credenciais da AWS
+      #    Usa os secrets configurados no repositório do GitHub para autenticação segura.
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # IMPORTANTE: Altere para a região do seu bucket S3
+
+      # 6. Deploy dos arquivos para o Amazon S3
+      #    Sincroniza o conteúdo da pasta 'build/web' com o bucket, removendo arquivos antigos.
+      - name: Deploy to S3
+        run: aws s3 sync build/web/ s3://${{ secrets.AWS_S3_BUCKET_NAME }} --delete
+
+      # 7. Invalidação do Cache do Amazon CloudFront
+      #    Garante que os usuários recebam a versão mais recente da aplicação.
+      - name: Invalidate CloudFront Cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
