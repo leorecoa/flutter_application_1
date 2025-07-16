@@ -1,75 +1,49 @@
 class Service {
   final String id;
   final String name;
-  final String description;
+  final int duration; // Duração em minutos
   final double price;
-  final int durationMinutes;
-  final String category;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String? description;
 
   const Service({
     required this.id,
     required this.name,
-    required this.description,
+    required this.duration,
     required this.price,
-    required this.durationMinutes,
-    required this.category,
-    this.isActive = true,
-    required this.createdAt,
-    required this.updatedAt,
+    this.description,
   });
 
   factory Service.fromJson(Map<String, dynamic> json) {
     return Service(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'] ?? '',
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      duration: json['duration'] ?? 0,
       price: (json['price'] ?? 0).toDouble(),
-      durationMinutes: json['durationMinutes'] ?? 60,
-      category: json['category'] ?? 'Geral',
-      isActive: json['isActive'] ?? true,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      description: json['description'],
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-      'price': price,
-      'durationMinutes': durationMinutes,
-      'category': category,
-      'isActive': isActive,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'duration': duration,
+        'price': price,
+        'description': description,
+      };
 
   Service copyWith({
     String? id,
     String? name,
-    String? description,
+    int? duration,
     double? price,
-    int? durationMinutes,
-    String? category,
-    bool? isActive,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    String? description,
   }) {
     return Service(
       id: id ?? this.id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      duration: duration ?? this.duration,
       price: price ?? this.price,
-      durationMinutes: durationMinutes ?? this.durationMinutes,
-      category: category ?? this.category,
-      isActive: isActive ?? this.isActive,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
+      description: description ?? this.description,
     );
   }
 }

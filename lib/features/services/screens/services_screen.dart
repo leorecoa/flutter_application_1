@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/service_model.dart';
-import '../../../core/services/services_service.dart';
+import '../services/services_service.dart';
+import '../widgets/add_edit_service_dialog.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -13,8 +14,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   final _servicesService = ServicesService();
   List<Service> _services = [];
   bool _isLoading = true;
-  String _selectedCategory = 'Todos';
-  final List<String> _categories = ['Todos', 'Cabelo', 'Estética', 'Manicure', 'Massagem', 'Outros'];
 
   @override
   void initState() {
@@ -25,10 +24,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
   Future<void> _loadServices() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _servicesService.getServices();
-      if (response['success'] == true && mounted) {
-        final servicesData = List<Map<String, dynamic>>.from(response['data'] ?? []);
-        final services = servicesData.map((data) => Service.fromJson(data)).toList();
+      final services = await _servicesService.getServicesList();
+      if (mounted) {
         setState(() {
           _services = services;
           _isLoading = false;
@@ -38,16 +35,13 @@ class _ServicesScreenState extends State<ServicesScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Erro ao carregar serviços: $e')),
         );
       }
     }
   }
 
-  List<Service> get _filteredServices {
-    if (_selectedCategory == 'Todos') return _services;
-    return _services.where((s) => s.category == _selectedCategory).toList();
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,53 +51,39 @@ class _ServicesScreenState extends State<ServicesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _showServiceDialog(),
+            onPressed: () => _showAddEditDialog(),
+            tooltip: 'Novo Serviço',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Categoria',
-                border: OutlineInputBorder(),
-              ),
-              items: _categories.map((category) {
-                return DropdownMenuItem(value: category, child: Text(category));
-              }).toList(),
-              onChanged: (value) => setState(() => _selectedCategory = value!),
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: _loadServices,
-                    child: _filteredServices.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.build, size: 64, color: Colors.grey),
-                                SizedBox(height: 16),
-                                Text('Nenhum serviço encontrado'),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _filteredServices.length,
-                            itemBuilder: (context, index) {
-                              final service = _filteredServices[index];
-                              return _buildServiceCard(service);
-                            },
-                          ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _services.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.build, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('Nenhum serviço cadastrado'),
+                      Text('Toque em + para começar'),
+                    ],
                   ),
-          ),
-        ],
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadServices,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _services.length,
+                    itemBuilder: (context, index) {
+                      final service = _services[index];
+                      return _buildServiceCard(service);
+                    },
+                  ),
+                ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddEditDialog(),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -112,40 +92,109 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: service.isActive ? Colors.green : Colors.grey,
-          child: const Icon(Icons.build, color: Colors.white),
+        leading: const CircleAvatar(
+          backgroundColor: Colors.blue,
+          child: Icon(Icons.build, color: Colors.white),
         ),
         title: Text(service.name),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(service.description),
-            Text('${service.durationMinutes} min • ${service.category}'),
+            Text('${service.duration} min - R\$ ${service.price.toStringAsFixed(2)}'),
+            if (service.description?.isNotEmpty == true)
+              Text(service.description!, style: const TextStyle(fontSize: 12)),
           ],
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'R\$ ${service.price.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'edit') {
+              _showAddEditDialog(service: service);
+            } else if (value == 'delete') {
+              _showDeleteDialog(service);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 16),
+                  SizedBox(width: 8),
+                  Text('Editar'),
+                ],
+              ),
             ),
-            Text(
-              service.isActive ? 'Ativo' : 'Inativo',
-              style: TextStyle(
-                color: service.isActive ? Colors.green : Colors.grey,
-                fontSize: 12,
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 16, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Excluir', style: TextStyle(color: Colors.red)),
+                ],
               ),
             ),
           ],
         ),
-        onTap: () => _showServiceDialog(service: service),
       ),
     );
   }
 
-  void _showServiceDialog({Service? service}) {
+  void _showAddEditDialog({Service? service}) {
+    showDialog(
+      context: context,
+      builder: (context) => AddEditServiceDialog(
+        service: service,
+        onServiceSaved: _loadServices,
+      ),
+    );
+  }
+
+  void _showDeleteDialog(Service service) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: Text('Deseja excluir o serviço "${service.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteService(service);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteService(Service service) async {
+    try {
+      await _servicesService.deleteService(service.id);
+      await _loadServices();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Serviço excluído com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao excluir serviço: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showServiceDialogOld({Service? service}) {
     final isEditing = service != null;
     final nameController = TextEditingController(text: service?.name ?? '');
     final descriptionController = TextEditingController(text: service?.description ?? '');
