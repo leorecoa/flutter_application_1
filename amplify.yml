@@ -3,14 +3,24 @@ frontend:
   phases:
     preBuild:
       commands:
+        - FLUTTER_VERSION="3.22.1"
+        - apt-get update -y
+        - apt-get install -y xz-utils
+        - rm -rf flutter
+        - wget https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
+        - tar -xf flutter_linux_${FLUTTER_VERSION}-stable.tar.xz
+        - export PATH="$PATH:$PWD/flutter/bin"
+        - flutter --version
+        - flutter config --enable-web
         - flutter pub get
     build:
       commands:
+        - export PATH="$PATH:$PWD/flutter/bin"
         - flutter build web --release
   artifacts:
     baseDirectory: build/web
     files:
-      - '**/*'
+      - "**/*"
   cache:
     paths:
-      - /root/.pub-cache/**/*
+      - /root/.pub-cache/**/* # Cache para os pacotes do Flutter
