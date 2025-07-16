@@ -7,6 +7,7 @@ import '../../features/pix/screens/pix_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
+import '../../features/appointments/screens/create_appointment_screen.dart';
 import '../../features/clients/screens/clients_screen.dart';
 import '../../features/services/screens/services_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
@@ -62,6 +63,10 @@ class AppRouter {
           GoRoute(
             path: '/appointments',
             builder: (context, state) => const AppointmentsScreen(),
+          ),
+          GoRoute(
+            path: '/create-appointment',
+            builder: (context, state) => const CreateAppointmentScreen(),
           ),
           GoRoute(
             path: '/clients',

@@ -67,7 +67,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.add),
-                  onPressed: () => _showNewAppointmentDialog(),
+                  onPressed: () => context.push('/create-appointment'),
                   tooltip: 'Novo Agendamento',
                 ),
                 IconButton(

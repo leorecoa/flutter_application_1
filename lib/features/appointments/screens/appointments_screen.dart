@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service.dart';
@@ -71,7 +72,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: () => _showAddAppointmentDialog(),
+              onPressed: () => context.push('/create-appointment'),
               tooltip: 'Novo Agendamento',
             ),
           ],
