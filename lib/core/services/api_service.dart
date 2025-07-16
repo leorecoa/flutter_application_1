@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import '../models/user_model.dart';
+import '../config/app_config.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -76,7 +77,7 @@ class ApiService {
   
   Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
     try {
-      final url = Uri.parse('${AppConstants.apiBaseUrl}$path');
+      final url = Uri.parse('${AppConfig.baseUrl}$path');
       final headers = {
         'Content-Type': 'application/json',
         if (_authToken != null) 'Authorization': 'Bearer $_authToken',
