@@ -30,12 +30,68 @@ class AppointmentsServiceV2 {
     return await _apiService.post('/appointments', data);
   }
 
-  Future<Map<String, dynamic>> getAppointments({String? status}) async {
+  Future<Map<String, dynamic>> getAppointments({String? status, DateTime? date}) async {
     String endpoint = '/appointments';
+    List<String> params = [];
+    
     if (status != null) {
-      endpoint += '?status=$status';
+      params.add('status=$status');
     }
+    
+    if (date != null) {
+      final dateStr = date.toIso8601String().split('T')[0];
+      params.add('date=$dateStr');
+    }
+    
+    if (params.isNotEmpty) {
+      endpoint += '?' + params.join('&');
+    }
+    
     return await _apiService.get(endpoint);
+  }
+  
+  Future<bool> checkTimeConflict(DateTime appointmentDateTime, int durationMinutes) async {
+    try {
+      // Obter todos os agendamentos do dia
+      final date = DateTime(appointmentDateTime.year, appointmentDateTime.month, appointmentDateTime.day);
+      final response = await getAppointments(date: date);
+      
+      if (response['success'] != true) {
+        return false;
+      }
+      
+      final List<dynamic> data = response['data'] ?? [];
+      final appointments = data.map((json) => Appointment.fromDynamoJson(json)).toList();
+      
+      // Filtrar apenas agendamentos confirmados ou agendados (não cancelados)
+      final activeAppointments = appointments.where((a) => 
+        a.status == AppointmentStatus.scheduled || 
+        a.status == AppointmentStatus.confirmed
+      ).toList();
+      
+      // Calcular horário de início e fim do novo agendamento
+      final startTime = appointmentDateTime;
+      final endTime = appointmentDateTime.add(Duration(minutes: durationMinutes));
+      
+      // Verificar se há conflito com algum agendamento existente
+      for (final appointment in activeAppointments) {
+        final existingStartTime = appointment.dateTime;
+        final existingEndTime = existingStartTime.add(const Duration(minutes: 60)); // Assumindo 1h por padrão
+        
+        // Verificar sobreposição de horários
+        if ((startTime.isAfter(existingStartTime) && startTime.isBefore(existingEndTime)) ||
+            (endTime.isAfter(existingStartTime) && endTime.isBefore(existingEndTime)) ||
+            (startTime.isBefore(existingStartTime) && endTime.isAfter(existingEndTime)) ||
+            (startTime.isAtSameMomentAs(existingStartTime) || endTime.isAtSameMomentAs(existingEndTime))) {
+          return true; // Há conflito
+        }
+      }
+      
+      return false; // Não há conflito
+    } catch (e) {
+      print('Erro ao verificar conflito de horário: $e');
+      return false; // Em caso de erro, permitir agendamento
+    }
   }
 
   Future<Map<String, dynamic>> updateAppointmentStatus(

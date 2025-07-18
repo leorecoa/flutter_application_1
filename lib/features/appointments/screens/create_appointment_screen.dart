@@ -345,11 +345,29 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
     }
   }
 
+  void _showConflictDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Conflito de Horário'),
+        content: const Text(
+          'Já existe um agendamento neste horário. Por favor, escolha outro horário ou data.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _saveAppointment() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-
+    
     try {
       final appointmentDateTime = DateTime(
         _selectedDate.year,
@@ -358,7 +376,23 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         _selectedTime.hour,
         _selectedTime.minute,
       );
-
+      
+      // Verificar conflitos de horário
+      final duration = _selectedService?.duration ?? 60;
+      final hasConflict = await _appointmentsServiceV2.checkTimeConflict(
+        appointmentDateTime, 
+        duration
+      );
+      
+      if (hasConflict) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          _showConflictDialog();
+        }
+        return;
+      }
+      
+      // Continuar com o salvamento se não houver conflito
       if (isEditing) {
         // Atualizar agendamento existente
         final appointmentData = {
@@ -368,6 +402,8 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           'price': double.tryParse(_priceController.text) ?? 0.0,
           'appointmentDateTime': appointmentDateTime.toIso8601String(),
           'notes': _notesController.text.isEmpty ? null : _notesController.text,
+          'clientId': _selectedClient?.id,
+          'serviceId': _selectedService?.id,
         };
         
         await _appointmentsServiceV2.updateAppointment(
@@ -402,7 +438,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erro ao criar agendamento: $e'),
+            content: Text('Erro ao ${isEditing ? 'atualizar' : 'criar'} agendamento: $e'),
             backgroundColor: Colors.red,
           ),
         );
