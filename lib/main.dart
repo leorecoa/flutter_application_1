@@ -17,6 +17,8 @@ void main() async {
   // Initialize services for production
   await ApiService().init();
   await AuthService().init();
+  
+  // Initialize notification service
   await NotificationService.instance.init();
   
   // Global error handling
