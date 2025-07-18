@@ -7,12 +7,13 @@ import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/notification_service.dart';
+import 'features/appointments/services/notification_action_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Load environment variables
-  await dotenv.load(fileName: ".env.prod");
+  await dotenv.load(fileName: '.env.prod');
   
   // Initialize services for production
   await ApiService().init();
@@ -30,11 +31,14 @@ void main() async {
   runApp(const ProviderScope(child: AgendemaisApp()));
 }
 
-class AgendemaisApp extends StatelessWidget {
+class AgendemaisApp extends ConsumerWidget {
   const AgendemaisApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Inicializar o serviço de ações de notificações
+    ref.watch(notificationActionServiceProvider);
+    
     return MaterialApp.router(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,

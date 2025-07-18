@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/appointment_model.dart';
+import '../models/notification_action_model.dart';
 import '../routes/app_router.dart';
 
 // Provider para acesso global ao serviço de notificações
@@ -18,6 +21,15 @@ class NotificationService {
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  
+  // Ações para notificações
+  static const String confirmAction = 'CONFIRM';
+  static const String cancelAction = 'CANCEL';
+  
+  // Stream para comunicar ações de notificações
+  final StreamController<NotificationAction> _actionStreamController = 
+      StreamController<NotificationAction>.broadcast();
+  Stream<NotificationAction> get actionStream => _actionStreamController.stream;
 
   NotificationService._();
 
@@ -27,6 +39,11 @@ class NotificationService {
     // Inicializar timezone
     tz_data.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
+    
+    // Configurar ações para Android
+    if (Platform.isAndroid) {
+      await _setupNotificationActions();
+    }
 
     // Configurações para Android
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -36,6 +53,7 @@ class NotificationService {
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      categoryIdentifier: 'appointment',
     );
 
     // Configurações gerais
@@ -53,15 +71,30 @@ class NotificationService {
     _isInitialized = true;
   }
   
+  Future<void> _setupNotificationActions() async {
+    // Configurar ações para Android
+    await _notificationsPlugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
+  }
+  
   void _onDidReceiveLocalNotification(NotificationResponse response) {
     debugPrint('Notificação clicada: ${response.payload}');
     
     if (response.payload != null) {
-      // Verificar se temos um contexto válido para navegação
-      final context = AppRouter.navigatorKey.currentContext;
-      if (context != null) {
-        // Navegar para a tela de detalhes do agendamento usando o ID
-        GoRouter.of(context).go('/appointment-details/${response.payload}');
+      // Verificar se é uma ação ou um clique normal
+      if (response.actionId != null) {
+        // É uma ação (confirmar ou cancelar)
+        _actionStreamController.add(NotificationAction(
+          appointmentId: response.payload!,
+          actionType: response.actionId!,
+        ));
+      } else {
+        // É um clique normal na notificação
+        final context = AppRouter.navigatorKey.currentContext;
+        if (context != null) {
+          // Navegar para a tela de detalhes do agendamento usando o ID
+          GoRouter.of(context).go('/appointment-details/${response.payload}');
+        }
       }
     }
   }
@@ -93,6 +126,7 @@ class NotificationService {
       body: 'Você tem ${appointment.service} amanhã às ${_formatTime(appointment.dateTime)}',
       scheduledDate: appointment.dateTime.subtract(const Duration(days: 1)),
       payload: appointment.id,
+      showActions: false,
     );
 
     // Agendar notificação para 1 hora antes
@@ -102,6 +136,7 @@ class NotificationService {
       body: 'Seu agendamento de ${appointment.service} será em 1 hora',
       scheduledDate: appointment.dateTime.subtract(const Duration(hours: 1)),
       payload: appointment.id,
+      showActions: true,
     );
   }
 
@@ -111,6 +146,7 @@ class NotificationService {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    bool showActions = false,
   }) async {
     // Verificar se a data agendada já passou
     if (scheduledDate.isBefore(DateTime.now())) {
@@ -120,13 +156,44 @@ class NotificationService {
     
     debugPrint('Agendando notificação ID: $id para: ${scheduledDate.toString()}');
 
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      NotificationDetails(
+    // Configurar detalhes da notificação com ou sem ações
+    NotificationDetails notificationDetails;
+    
+    if (showActions && Platform.isAndroid) {
+      // Configurar ações para Android
+      notificationDetails = NotificationDetails(
         android: AndroidNotificationDetails(
+          'appointment_channel',
+          'Agendamentos',
+          channelDescription: 'Notificações de agendamentos',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: Colors.blue,
+          actions: <AndroidNotificationAction>[
+            const AndroidNotificationAction(
+              confirmAction,
+              'Confirmar',
+              icon: DrawableResourceAndroidBitmap('ic_confirm'),
+              showsUserInterface: false,
+            ),
+            const AndroidNotificationAction(
+              cancelAction,
+              'Cancelar',
+              icon: DrawableResourceAndroidBitmap('ic_cancel'),
+              showsUserInterface: false,
+            ),
+          ],
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+    } else {
+      // Notificação padrão sem ações
+      notificationDetails = NotificationDetails(
+        android: const AndroidNotificationDetails(
           'appointment_channel',
           'Agendamentos',
           channelDescription: 'Notificações de agendamentos',
@@ -139,7 +206,15 @@ class NotificationService {
           presentBadge: true,
           presentSound: true,
         ),
-      ),
+      );
+    }
+
+    await _notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
@@ -168,5 +243,9 @@ class NotificationService {
     final hour = dateTime.hour.toString().padLeft(2, '0');
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
+  }
+  
+  void dispose() {
+    _actionStreamController.close();
   }
 }
