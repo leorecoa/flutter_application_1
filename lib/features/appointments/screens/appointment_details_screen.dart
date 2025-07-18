@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../../../core/services/notification_service.dart';
 import '../services/appointments_service_v2.dart';
 
-class AppointmentDetailsScreen extends StatefulWidget {
+class AppointmentDetailsScreen extends ConsumerStatefulWidget {
   final Appointment appointment;
   
   const AppointmentDetailsScreen({
@@ -14,10 +15,10 @@ class AppointmentDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<AppointmentDetailsScreen> createState() => _AppointmentDetailsScreenState();
+  ConsumerState<AppointmentDetailsScreen> createState() => _AppointmentDetailsScreenState();
 }
 
-class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
+class _AppointmentDetailsScreenState extends ConsumerState<AppointmentDetailsScreen> {
   final _appointmentsService = AppointmentsServiceV2();
   bool _isLoading = false;
   late Appointment _appointment;
@@ -302,7 +303,8 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
         
         if (newStatus == AppointmentStatus.cancelled) {
           // Cancelar notificações se o agendamento for cancelado
-          await NotificationService.instance.cancelAppointmentNotifications(_appointment.id);
+          final notificationService = ref.read(notificationServiceProvider);
+          await notificationService.cancelAppointmentNotifications(_appointment.id);
         }
         
         if (mounted) {
@@ -331,7 +333,8 @@ class _AppointmentDetailsScreenState extends State<AppointmentDetailsScreen> {
     setState(() => _isLoading = true);
     
     try {
-      await NotificationService.instance.cancelAppointmentNotifications(_appointment.id);
+      final notificationService = ref.read(notificationServiceProvider);
+      await notificationService.cancelAppointmentNotifications(_appointment.id);
       
       if (mounted) {
         setState(() => _isLoading = false);

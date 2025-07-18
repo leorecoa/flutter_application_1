@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/client_model.dart';
@@ -8,15 +9,15 @@ import '../../../features/clients/services/clients_service.dart';
 import '../../../features/services/services/services_service.dart';
 import '../services/appointments_service_v2.dart';
 
-class CreateAppointmentScreen extends StatefulWidget {
+class CreateAppointmentScreen extends ConsumerStatefulWidget {
   final Appointment? appointment;
   const CreateAppointmentScreen({super.key, this.appointment});
 
   @override
-  State<CreateAppointmentScreen> createState() => _CreateAppointmentScreenState();
+  ConsumerState<CreateAppointmentScreen> createState() => _CreateAppointmentScreenState();
 }
 
-class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
+class _CreateAppointmentScreenState extends ConsumerState<CreateAppointmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _clientNameController = TextEditingController();
   final _clientPhoneController = TextEditingController();
@@ -433,7 +434,8 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await NotificationService.instance.cancelAppointmentNotifications(appointment.id);
+              final notificationService = ref.read(notificationServiceProvider);
+              await notificationService.cancelAppointmentNotifications(appointment.id);
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -503,7 +505,8 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         if (response['success'] == true) {
           // Agendar notificações para o agendamento atualizado
           final updatedAppointment = Appointment.fromDynamoJson(response['data']);
-          await NotificationService.instance.scheduleAppointmentReminders(updatedAppointment);
+          final notificationService = ref.read(notificationServiceProvider);
+          await notificationService.scheduleAppointmentReminders(updatedAppointment);
           
           if (mounted) {
             _showNotificationConfirmDialog(updatedAppointment);
@@ -525,7 +528,8 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         );
         
         // Agendar notificações para o novo agendamento
-        await NotificationService.instance.scheduleAppointmentReminders(newAppointment);
+        final notificationService = ref.read(notificationServiceProvider);
+        await notificationService.scheduleAppointmentReminders(newAppointment);
         
         if (mounted) {
           _showNotificationConfirmDialog(newAppointment);

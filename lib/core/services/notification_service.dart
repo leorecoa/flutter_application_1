@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/appointment_model.dart';
+
+// Provider para acesso global ao serviço de notificações
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService.instance;
+});
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -48,15 +54,29 @@ class NotificationService {
     _isInitialized = true;
   }
 
+  /// Gera um ID de notificação único e determinístico para o lembrete de 1 dia.
+  int _getDayNotificationId(String appointmentId) {
+    // Usar o hashCode de uma string modificada garante um ID diferente para cada tipo.
+    return (appointmentId + "_day").hashCode;
+  }
+
+  /// Gera um ID de notificação único e determinístico para o lembrete de 1 hora.
+  int _getHourNotificationId(String appointmentId) {
+    return (appointmentId + "_hour").hashCode;
+  }
+  
   Future<void> scheduleAppointmentReminders(Appointment appointment) async {
     if (!_isInitialized) await init();
 
     // Cancelar notificações existentes para este agendamento
     await cancelAppointmentNotifications(appointment.id);
+    
+    final dayId = _getDayNotificationId(appointment.id);
+    final hourId = _getHourNotificationId(appointment.id);
 
     // Agendar notificação para 1 dia antes
     await _scheduleNotification(
-      id: int.parse(appointment.id.hashCode.toString().substring(0, 9)),
+      id: dayId,
       title: 'Lembrete de Agendamento',
       body: 'Você tem ${appointment.service} amanhã às ${_formatTime(appointment.dateTime)}',
       scheduledDate: appointment.dateTime.subtract(const Duration(days: 1)),
@@ -65,7 +85,7 @@ class NotificationService {
 
     // Agendar notificação para 1 hora antes
     await _scheduleNotification(
-      id: int.parse(appointment.id.hashCode.toString().substring(0, 9)) + 1,
+      id: hourId,
       title: 'Agendamento em Breve',
       body: 'Seu agendamento de ${appointment.service} será em 1 hora',
       scheduledDate: appointment.dateTime.subtract(const Duration(hours: 1)),
@@ -82,8 +102,11 @@ class NotificationService {
   }) async {
     // Verificar se a data agendada já passou
     if (scheduledDate.isBefore(DateTime.now())) {
+      debugPrint('Data de notificação no passado: ${scheduledDate.toString()}');
       return;
     }
+    
+    debugPrint('Agendando notificação ID: $id para: ${scheduledDate.toString()}');
 
     await _notificationsPlugin.zonedSchedule(
       id,
@@ -115,9 +138,13 @@ class NotificationService {
     if (!_isInitialized) await init();
 
     // Cancelar as duas notificações associadas ao agendamento
-    final baseId = int.parse(appointmentId.hashCode.toString().substring(0, 9));
-    await _notificationsPlugin.cancel(baseId);
-    await _notificationsPlugin.cancel(baseId + 1);
+    final dayId = _getDayNotificationId(appointmentId);
+    final hourId = _getHourNotificationId(appointmentId);
+    
+    await _notificationsPlugin.cancel(dayId);
+    await _notificationsPlugin.cancel(hourId);
+    
+    debugPrint('Notificações canceladas para o agendamento $appointmentId');
   }
 
   Future<void> cancelAllNotifications() async {
