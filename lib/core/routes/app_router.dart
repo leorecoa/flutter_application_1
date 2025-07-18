@@ -9,6 +9,7 @@ import '../../features/settings/screens/settings_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/appointments/screens/create_appointment_screen.dart';
 import '../../features/appointments/screens/appointment_details_screen.dart';
+import '../../features/appointments/screens/appointment_details_loader.dart';
 import '../../features/clients/screens/clients_screen.dart';
 import '../../features/clients/screens/client_history_screen.dart';
 import '../../features/services/screens/services_screen.dart';
@@ -19,7 +20,11 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../widgets/main_layout.dart';
 
 class AppRouter {
+  // Chave global para navegação fora do contexto
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  
   static final GoRouter router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/',
     routes: [
       GoRoute(
@@ -78,6 +83,13 @@ class AppRouter {
             builder: (context, state) {
               final appointment = state.extra as Appointment;
               return AppointmentDetailsScreen(appointment: appointment);
+            },
+          ),
+          GoRoute(
+            path: '/appointment-details/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return AppointmentDetailsLoader(appointmentId: id);
             },
           ),
           GoRoute(

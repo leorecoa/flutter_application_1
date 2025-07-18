@@ -32,6 +32,14 @@ class AppointmentsServiceV2 {
     return await _apiService.post('/appointments', data);
   }
 
+  Future<Map<String, dynamic>> getAppointmentById(String appointmentId) async {
+    try {
+      return await _apiService.get('/appointments/$appointmentId');
+    } catch (e) {
+      throw Exception('Erro ao buscar agendamento: $e');
+    }
+  }
+  
   Future<Map<String, dynamic>> getAppointments({
     String? status, 
     DateTime? date,

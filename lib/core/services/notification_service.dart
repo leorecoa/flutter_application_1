@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/appointment_model.dart';
+import '../routes/app_router.dart';
 
 // Provider para acesso global ao serviço de notificações
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -45,13 +47,23 @@ class NotificationService {
     // Inicializar plugin
     await _notificationsPlugin.initialize(
       initSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Manipular tap na notificação
-        debugPrint('Notificação clicada: ${response.payload}');
-      },
+      onDidReceiveNotificationResponse: _onDidReceiveLocalNotification,
     );
 
     _isInitialized = true;
+  }
+  
+  void _onDidReceiveLocalNotification(NotificationResponse response) {
+    debugPrint('Notificação clicada: ${response.payload}');
+    
+    if (response.payload != null) {
+      // Verificar se temos um contexto válido para navegação
+      final context = AppRouter.navigatorKey.currentContext;
+      if (context != null) {
+        // Navegar para a tela de detalhes do agendamento usando o ID
+        GoRouter.of(context).go('/appointment-details/${response.payload}');
+      }
+    }
   }
 
   /// Gera um ID de notificação único e determinístico para o lembrete de 1 dia.
