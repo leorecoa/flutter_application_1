@@ -9,6 +9,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/appointment_model.dart';
 import '../models/notification_action_model.dart';
 import '../routes/app_router.dart';
+import '../../features/notifications/services/notification_history_service.dart';
 
 // Provider para acesso global ao serviço de notificações
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -49,11 +50,33 @@ class NotificationService {
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // Configurações para iOS
-    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+    final List<DarwinNotificationCategory> darwinNotificationCategories = [
+      DarwinNotificationCategory(
+        'appointment',
+        actions: [
+          DarwinNotificationAction(
+            confirmAction,
+            'Confirmar',
+            options: {DarwinNotificationActionOption.foreground},
+          ),
+          DarwinNotificationAction(
+            cancelAction,
+            'Cancelar',
+            options: {DarwinNotificationActionOption.destructive},
+          ),
+        ],
+      ),
+    ];
+    
+    final DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      categoryIdentifier: 'appointment',
+      onDidReceiveLocalNotification: (id, title, body, payload) {
+        debugPrint('iOS notification: $id, $title, $body, $payload');
+        return null;
+      },
+      notificationCategories: Set<DarwinNotificationCategory>.from(darwinNotificationCategories),
     );
 
     // Configurações gerais
@@ -90,12 +113,22 @@ class NotificationService {
         ));
       } else {
         // É um clique normal na notificação
-        final context = AppRouter.navigatorKey.currentContext;
-        if (context != null) {
-          // Navegar para a tela de detalhes do agendamento usando o ID
-          GoRouter.of(context).go('/appointment-details/${response.payload}');
-        }
+        _navigateToAppointmentDetails(response.payload!);
       }
+    }
+  }
+  
+  void _navigateToAppointmentDetails(String appointmentId) {
+    final context = AppRouter.navigatorKey.currentContext;
+    if (context != null) {
+      // Navegar para a tela de detalhes do agendamento usando o ID
+      GoRouter.of(context).go('/appointment-details/$appointmentId');
+    } else {
+      // Se não tiver contexto, usar deeplink
+      final uri = Uri.parse('agendemais://appointment/$appointmentId');
+      debugPrint('Tentando abrir deeplink: $uri');
+      // Aqui você pode usar o pacote url_launcher para abrir o deeplink
+      // url_launcher.launchUrl(uri);
     }
   }
 
@@ -127,6 +160,8 @@ class NotificationService {
       scheduledDate: appointment.dateTime.subtract(const Duration(days: 1)),
       payload: appointment.id,
       showActions: false,
+      groupKey: 'com.agendemais.appointment.reminders',
+      groupAlertBehavior: GroupAlertBehavior.summary,
     );
 
     // Agendar notificação para 1 hora antes
@@ -137,6 +172,8 @@ class NotificationService {
       scheduledDate: appointment.dateTime.subtract(const Duration(hours: 1)),
       payload: appointment.id,
       showActions: true,
+      groupKey: 'com.agendemais.appointment.reminders',
+      groupAlertBehavior: GroupAlertBehavior.summary,
     );
   }
 
@@ -147,7 +184,16 @@ class NotificationService {
     required DateTime scheduledDate,
     String? payload,
     bool showActions = false,
+    String? groupKey,
+    GroupAlertBehavior? groupAlertBehavior,
   }) async {
+    // Salvar no histórico de notificações
+    final historyService = NotificationHistoryService();
+    await historyService.saveNotification(
+      title: title,
+      body: body,
+      appointmentId: payload,
+    );
     // Verificar se a data agendada já passou
     if (scheduledDate.isBefore(DateTime.now())) {
       debugPrint('Data de notificação no passado: ${scheduledDate.toString()}');
@@ -159,16 +205,18 @@ class NotificationService {
     // Configurar detalhes da notificação com ou sem ações
     NotificationDetails notificationDetails;
     
-    if (showActions && Platform.isAndroid) {
-      // Configurar ações para Android
+    if (showActions) {
+      // Configurar ações para Android e iOS
       notificationDetails = NotificationDetails(
-        android: AndroidNotificationDetails(
+        android: Platform.isAndroid ? AndroidNotificationDetails(
           'appointment_channel',
           'Agendamentos',
           channelDescription: 'Notificações de agendamentos',
           importance: Importance.high,
           priority: Priority.high,
           color: Colors.blue,
+          groupKey: groupKey,
+          groupAlertBehavior: groupAlertBehavior,
           actions: <AndroidNotificationAction>[
             const AndroidNotificationAction(
               confirmAction,
@@ -183,28 +231,33 @@ class NotificationService {
               showsUserInterface: false,
             ),
           ],
-        ),
-        iOS: const DarwinNotificationDetails(
+        ) : null,
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
+          categoryIdentifier: 'appointment', // Associa com a categoria definida na inicialização
+          threadIdentifier: groupKey, // Agrupa notificações no iOS
         ),
       );
     } else {
       // Notificação padrão sem ações
       notificationDetails = NotificationDetails(
-        android: const AndroidNotificationDetails(
+        android: AndroidNotificationDetails(
           'appointment_channel',
           'Agendamentos',
           channelDescription: 'Notificações de agendamentos',
           importance: Importance.high,
           priority: Priority.high,
           color: Colors.blue,
+          groupKey: groupKey,
+          groupAlertBehavior: groupAlertBehavior,
         ),
-        iOS: const DarwinNotificationDetails(
+        iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
+          threadIdentifier: groupKey, // Agrupa notificações no iOS
         ),
       );
     }

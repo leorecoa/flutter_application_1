@@ -17,6 +17,7 @@ import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/subscription/screens/plans_screen.dart';
 import '../../features/analytics/screens/analytics_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/notifications/screens/notification_history_screen.dart';
 import '../widgets/main_layout.dart';
 
 class AppRouter {
@@ -26,6 +27,8 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: navigatorKey,
     initialLocation: '/',
+    // Configurar deeplinks
+    urlPathStrategy: UrlPathStrategy.path,
     routes: [
       GoRoute(
         path: '/splash',
@@ -122,6 +125,10 @@ class AppRouter {
           GoRoute(
             path: '/notifications',
             builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/notification-history',
+            builder: (context, state) => const NotificationHistoryScreen(),
           ),
         ],
       ),
