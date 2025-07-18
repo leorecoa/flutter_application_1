@@ -8,6 +8,7 @@ import '../../features/reports/screens/reports_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/appointments/screens/appointments_screen.dart';
 import '../../features/appointments/screens/create_appointment_screen.dart';
+import '../../features/appointments/screens/appointment_details_screen.dart';
 import '../../features/clients/screens/clients_screen.dart';
 import '../../features/clients/screens/client_history_screen.dart';
 import '../../features/services/screens/services_screen.dart';
@@ -70,6 +71,13 @@ class AppRouter {
             builder: (context, state) {
               final appointment = state.extra as Appointment?;
               return CreateAppointmentScreen(appointment: appointment);
+            },
+          ),
+          GoRoute(
+            path: '/appointment-details',
+            builder: (context, state) {
+              final appointment = state.extra as Appointment;
+              return AppointmentDetailsScreen(appointment: appointment);
             },
           ),
           GoRoute(

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/client_model.dart';
 import '../../../core/models/service_model.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../features/clients/services/clients_service.dart';
 import '../../../features/services/services/services_service.dart';
 import '../services/appointments_service_v2.dart';
@@ -347,6 +348,27 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
                 ],
               ),
             ),
+            
+            // Notificações
+            Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('Notificações', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  SwitchListTile(
+                    title: const Text('Receber lembretes'),
+                    subtitle: const Text('1 dia antes e 1 hora antes do agendamento'),
+                    value: true, // Sempre ativado por padrão
+                    onChanged: null, // Não permitir desativar por enquanto
+                    secondary: const Icon(Icons.notifications_active),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -390,6 +412,39 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showNotificationConfirmDialog(Appointment appointment) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Notificações Agendadas'),
+        content: const Text(
+          'Você receberá notificações 1 dia antes e 1 hora antes do seu agendamento.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await NotificationService.instance.cancelAppointmentNotifications(appointment.id);
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Notificações canceladas'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            child: const Text('Cancelar Notificações'),
           ),
         ],
       ),
@@ -440,13 +495,23 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           'duration': _selectedService?.duration ?? 60,
         };
         
-        await _appointmentsServiceV2.updateAppointment(
+        final response = await _appointmentsServiceV2.updateAppointment(
           widget.appointment!.id,
           appointmentData,
         );
+        
+        if (response['success'] == true) {
+          // Agendar notificações para o agendamento atualizado
+          final updatedAppointment = Appointment.fromDynamoJson(response['data']);
+          await NotificationService.instance.scheduleAppointmentReminders(updatedAppointment);
+          
+          if (mounted) {
+            _showNotificationConfirmDialog(updatedAppointment);
+          }
+        }
       } else {
         // Criar novo agendamento
-        await _appointmentsServiceV2.createAppointmentModel(
+        final newAppointment = await _appointmentsServiceV2.createAppointmentModel(
           professionalId: 'PROF#default',
           serviceId: _selectedService?.id ?? 'SERV#${_serviceController.text.toLowerCase()}',
           appointmentDateTime: appointmentDateTime,
@@ -458,6 +523,13 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           clientId: _selectedClient?.id,
           duration: _selectedService?.duration ?? 60,
         );
+        
+        // Agendar notificações para o novo agendamento
+        await NotificationService.instance.scheduleAppointmentReminders(newAppointment);
+        
+        if (mounted) {
+          _showNotificationConfirmDialog(newAppointment);
+        }
       }
 
       if (mounted) {

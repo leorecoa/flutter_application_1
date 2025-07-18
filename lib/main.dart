@@ -6,6 +6,7 @@ import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,7 @@ void main() async {
   // Initialize services for production
   await ApiService().init();
   await AuthService().init();
+  await NotificationService.instance.init();
   
   // Global error handling
   FlutterError.onError = (FlutterErrorDetails details) {

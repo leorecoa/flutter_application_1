@@ -1,134 +1,133 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/appointment_model.dart';
 
 class NotificationService {
-  static final NotificationService _instance = NotificationService._internal();
-  factory NotificationService() => _instance;
-  NotificationService._internal();
+  static final NotificationService _instance = NotificationService._();
+  static NotificationService get instance => _instance;
 
-  final FlutterLocalNotificationsPlugin _notifications =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  bool _isInitialized = false;
+
+  NotificationService._();
 
   Future<void> init() async {
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings();
+    if (_isInitialized) return;
 
-    const initSettings = InitializationSettings(
+    // Inicializar timezone
+    tz_data.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
+
+    // Configurações para Android
+    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    // Configurações para iOS
+    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    // Configurações gerais
+    const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
 
-    await _notifications.initialize(initSettings);
-  }
-
-  Future<void> scheduleAppointmentReminder(Appointment appointment) async {
-    // Lembrete 1 hora antes
-    final reminderTime =
-        appointment.dateTime.subtract(const Duration(hours: 1));
-
-    if (reminderTime.isAfter(DateTime.now())) {
-      await _notifications.zonedSchedule(
-        appointment.id.hashCode,
-        'Lembrete de Agendamento',
-        'Você tem um agendamento em 1 hora: ${appointment.service} com ${appointment.clientName}',
-        tz.TZDateTime.from(reminderTime, tz.local),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'appointment_reminders',
-            'Lembretes de Agendamento',
-            channelDescription: 'Notificações de lembretes de agendamentos',
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
-    }
-
-    // Lembrete no dia anterior
-    final dayBeforeReminder = DateTime(
-      appointment.dateTime.year,
-      appointment.dateTime.month,
-      appointment.dateTime.day - 1,
-      20, // 20:00
+    // Inicializar plugin
+    await _notificationsPlugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        // Manipular tap na notificação
+        debugPrint('Notificação clicada: ${response.payload}');
+      },
     );
 
-    if (dayBeforeReminder.isAfter(DateTime.now())) {
-      await _notifications.zonedSchedule(
-        appointment.id.hashCode + 1,
-        'Agendamento Amanhã',
-        'Você tem um agendamento amanhã às ${appointment.dateTime.hour}:${appointment.dateTime.minute.toString().padLeft(2, '0')} - ${appointment.service}',
-        tz.TZDateTime.from(dayBeforeReminder, tz.local),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'appointment_reminders',
-            'Lembretes de Agendamento',
-            channelDescription: 'Notificações de lembretes de agendamentos',
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
-    }
+    _isInitialized = true;
   }
 
-  Future<void> cancelAppointmentNotification(String appointmentId) async {
-    await _notifications.cancel(appointmentId.hashCode);
-    await _notifications.cancel(appointmentId.hashCode + 1);
+  Future<void> scheduleAppointmentReminders(Appointment appointment) async {
+    if (!_isInitialized) await init();
+
+    // Cancelar notificações existentes para este agendamento
+    await cancelAppointmentNotifications(appointment.id);
+
+    // Agendar notificação para 1 dia antes
+    await _scheduleNotification(
+      id: int.parse(appointment.id.hashCode.toString().substring(0, 9)),
+      title: 'Lembrete de Agendamento',
+      body: 'Você tem ${appointment.service} amanhã às ${_formatTime(appointment.dateTime)}',
+      scheduledDate: appointment.dateTime.subtract(const Duration(days: 1)),
+      payload: appointment.id,
+    );
+
+    // Agendar notificação para 1 hora antes
+    await _scheduleNotification(
+      id: int.parse(appointment.id.hashCode.toString().substring(0, 9)) + 1,
+      title: 'Agendamento em Breve',
+      body: 'Seu agendamento de ${appointment.service} será em 1 hora',
+      scheduledDate: appointment.dateTime.subtract(const Duration(hours: 1)),
+      payload: appointment.id,
+    );
   }
 
-  Future<void> showInstantNotification({
+  Future<void> _scheduleNotification({
+    required int id,
     required String title,
     required String body,
+    required DateTime scheduledDate,
+    String? payload,
   }) async {
-    await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+    // Verificar se a data agendada já passou
+    if (scheduledDate.isBefore(DateTime.now())) {
+      return;
+    }
+
+    await _notificationsPlugin.zonedSchedule(
+      id,
       title,
       body,
-      const NotificationDetails(
+      tz.TZDateTime.from(scheduledDate, tz.local),
+      NotificationDetails(
         android: AndroidNotificationDetails(
-          'instant_notifications',
-          'Notificações Instantâneas',
-          channelDescription: 'Notificações imediatas do sistema',
+          'appointment_channel',
+          'Agendamentos',
+          channelDescription: 'Notificações de agendamentos',
           importance: Importance.high,
           priority: Priority.high,
+          color: Colors.blue,
         ),
-        iOS: DarwinNotificationDetails(),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
       ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      payload: payload,
     );
   }
 
-  Future<void> scheduleClientConfirmationReminder(
-      Appointment appointment) async {
-    // Lembrete para cliente confirmar 24h antes
-    final confirmationTime =
-        appointment.dateTime.subtract(const Duration(hours: 24));
+  Future<void> cancelAppointmentNotifications(String appointmentId) async {
+    if (!_isInitialized) await init();
 
-    if (confirmationTime.isAfter(DateTime.now())) {
-      await _notifications.zonedSchedule(
-        appointment.id.hashCode + 2,
-        'Confirmação Necessária',
-        'Cliente ${appointment.clientName} precisa confirmar agendamento de ${appointment.service}',
-        tz.TZDateTime.from(confirmationTime, tz.local),
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'client_confirmations',
-            'Confirmações de Cliente',
-            channelDescription: 'Lembretes para confirmação de clientes',
-            importance: Importance.high,
-            priority: Priority.high,
-          ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-      );
-    }
+    // Cancelar as duas notificações associadas ao agendamento
+    final baseId = int.parse(appointmentId.hashCode.toString().substring(0, 9));
+    await _notificationsPlugin.cancel(baseId);
+    await _notificationsPlugin.cancel(baseId + 1);
+  }
+
+  Future<void> cancelAllNotifications() async {
+    if (!_isInitialized) await init();
+    await _notificationsPlugin.cancelAll();
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

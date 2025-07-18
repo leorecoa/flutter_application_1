@@ -108,8 +108,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                               // Ação quando dia é selecionado
                             },
                             onAppointmentTap: (appointment) =>
-                                _showAppointmentDetails(appointment,
-                                    showActions: true),
+                                context.push('/appointment-details', extra: appointment),
                           ),
                   ),
                   // Tab Lista
@@ -234,7 +233,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             ),
           ],
         ),
-        onTap: () => _showAppointmentDetails(appointment),
+        onTap: () => context.push('/appointment-details', extra: appointment),
       ),
     );
   }
