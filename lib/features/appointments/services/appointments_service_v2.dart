@@ -4,20 +4,6 @@ import '../../../core/models/appointment_model.dart';
 class AppointmentsServiceV2 {
   final _apiService = ApiService();
 
-  Future<Map<String, dynamic>> updateAppointment(
-    String appointmentId,
-    Map<String, dynamic> appointmentData,
-  ) async {
-    return await _apiService.put('/appointments/$appointmentId', appointmentData);
-  }
-
-  Future<Map<String, dynamic>> deleteAppointment(String appointmentId) async {
-    return await _apiService.delete('/appointments/$appointmentId');
-  }
-
-class AppointmentsServiceV2 {
-  final _apiService = ApiService();
-
   Future<Map<String, dynamic>> createAppointment({
     required String professionalId,
     required String serviceId,
@@ -27,6 +13,7 @@ class AppointmentsServiceV2 {
     required String service,
     required double price,
     String? notes,
+    String? clientId,
   }) async {
     final data = {
       'professionalId': professionalId,
@@ -37,6 +24,7 @@ class AppointmentsServiceV2 {
       'service': service,
       'price': price,
       'notes': notes ?? '',
+      'clientId': clientId,
     };
 
     return await _apiService.post('/appointments', data);
@@ -94,6 +82,7 @@ class AppointmentsServiceV2 {
     required String service,
     required double price,
     String? notes,
+    String? clientId,
   }) async {
     try {
       final response = await createAppointment(
@@ -105,6 +94,7 @@ class AppointmentsServiceV2 {
         service: service,
         price: price,
         notes: notes,
+        clientId: clientId,
       );
 
       if (response['success'] == true) {
