@@ -14,6 +14,7 @@ class AppointmentsServiceV2 {
     required double price,
     String? notes,
     String? clientId,
+    int? duration,
   }) async {
     final data = {
       'professionalId': professionalId,
@@ -25,6 +26,7 @@ class AppointmentsServiceV2 {
       'price': price,
       'notes': notes ?? '',
       'clientId': clientId,
+      'duration': duration ?? 60,
     };
 
     return await _apiService.post('/appointments', data);
@@ -58,21 +60,6 @@ class AppointmentsServiceV2 {
     return await _apiService.get(endpoint);
   }
   
-  Future<List<Appointment>> getClientAppointments(String clientId) async {
-    try {
-      final response = await getAppointments(clientId: clientId);
-      
-      if (response['success'] == true) {
-        final List<dynamic> data = response['data'] ?? [];
-        return data.map((json) => Appointment.fromDynamoJson(json)).toList();
-      }
-      
-      return [];
-    } catch (e) {
-      throw Exception('Erro ao buscar agendamentos do cliente: $e');
-    }
-  }
-  
   Future<bool> checkTimeConflict(DateTime appointmentDateTime, int durationMinutes) async {
     try {
       // Obter todos os agendamentos do dia
@@ -99,7 +86,8 @@ class AppointmentsServiceV2 {
       // Verificar se há conflito com algum agendamento existente
       for (final appointment in activeAppointments) {
         final existingStartTime = appointment.dateTime;
-        final existingEndTime = existingStartTime.add(const Duration(minutes: 60)); // Assumindo 1h por padrão
+        final existingDuration = appointment.duration ?? 60;
+        final existingEndTime = existingStartTime.add(Duration(minutes: existingDuration));
         
         // Verificar sobreposição de horários
         if ((startTime.isAfter(existingStartTime) && startTime.isBefore(existingEndTime)) ||
@@ -125,6 +113,17 @@ class AppointmentsServiceV2 {
     return await _apiService.put('/appointments/$appointmentId', data);
   }
 
+  Future<Map<String, dynamic>> updateAppointment(
+    String appointmentId,
+    Map<String, dynamic> appointmentData,
+  ) async {
+    return await _apiService.put('/appointments/$appointmentId', appointmentData);
+  }
+
+  Future<Map<String, dynamic>> deleteAppointment(String appointmentId) async {
+    return await _apiService.delete('/appointments/$appointmentId');
+  }
+
   Future<List<Appointment>> getAppointmentsList({String? status}) async {
     try {
       final response = await getAppointments(status: status);
@@ -139,17 +138,20 @@ class AppointmentsServiceV2 {
       throw Exception('Erro ao buscar agendamentos: $e');
     }
   }
-
-  Future<Map<String, dynamic>> updateAppointmentStatus(
-    String appointmentId,
-    String newStatus,
-  ) async {
-    final data = {'status': newStatus};
-    return await _apiService.put('/appointments/$appointmentId', data);
-  }
-
-  Future<Map<String, dynamic>> deleteAppointment(String appointmentId) async {
-    return await _apiService.delete('/appointments/$appointmentId');
+  
+  Future<List<Appointment>> getClientAppointments(String clientId) async {
+    try {
+      final response = await getAppointments(clientId: clientId);
+      
+      if (response['success'] == true) {
+        final List<dynamic> data = response['data'] ?? [];
+        return data.map((json) => Appointment.fromDynamoJson(json)).toList();
+      }
+      
+      return [];
+    } catch (e) {
+      throw Exception('Erro ao buscar agendamentos do cliente: $e');
+    }
   }
 
   Future<Appointment> createAppointmentModel({
@@ -162,6 +164,7 @@ class AppointmentsServiceV2 {
     required double price,
     String? notes,
     String? clientId,
+    int? duration,
   }) async {
     try {
       final response = await createAppointment(
@@ -174,6 +177,7 @@ class AppointmentsServiceV2 {
         price: price,
         notes: notes,
         clientId: clientId,
+        duration: duration,
       );
 
       if (response['success'] == true) {

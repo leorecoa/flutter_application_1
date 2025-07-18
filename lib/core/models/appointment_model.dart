@@ -10,6 +10,9 @@ class Appointment {
   final AppointmentStatus status;
   final String? notes;
   final DateTime createdAt;
+  final int? duration;
+  final String? clientId;
+  final String? serviceId;
 
   const Appointment({
     required this.id,
@@ -21,6 +24,9 @@ class Appointment {
     required this.status,
     this.notes,
     required this.createdAt,
+    this.duration,
+    this.clientId,
+    this.serviceId,
   });
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
@@ -51,6 +57,9 @@ class Appointment {
       status: _parseStatus(json['status']),
       notes: json['notes'],
       createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      duration: json['duration'] != null ? int.parse(json['duration'].toString()) : 60,
+      clientId: json['clientId'],
+      serviceId: json['serviceId'],
     );
   }
 
@@ -80,6 +89,9 @@ class Appointment {
       'status': status.name,
       'notes': notes,
       'createdAt': createdAt.toIso8601String(),
+      'duration': duration,
+      'clientId': clientId,
+      'serviceId': serviceId,
     };
   }
 
@@ -93,6 +105,9 @@ class Appointment {
     AppointmentStatus? status,
     String? notes,
     DateTime? createdAt,
+    int? duration,
+    String? clientId,
+    String? serviceId,
   }) {
     return Appointment(
       id: id ?? this.id,
@@ -104,6 +119,9 @@ class Appointment {
       status: status ?? this.status,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
+      duration: duration ?? this.duration,
+      clientId: clientId ?? this.clientId,
+      serviceId: serviceId ?? this.serviceId,
     );
   }
 }

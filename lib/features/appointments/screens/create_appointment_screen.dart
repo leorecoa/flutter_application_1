@@ -28,6 +28,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
   
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  TimeOfDay _endTime = TimeOfDay.now().replacing(hour: TimeOfDay.now().hour + 1);
   bool _isLoading = false;
   bool _isLoadingData = true;
   
@@ -75,6 +76,25 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         );
       }
     }
+  }
+
+  void _updateEndTime(int durationMinutes) {
+    // Converter TimeOfDay para minutos totais
+    int startMinutes = _selectedTime.hour * 60 + _selectedTime.minute;
+    int endMinutes = startMinutes + durationMinutes;
+    
+    // Converter de volta para horas e minutos
+    int endHour = endMinutes ~/ 60;
+    int endMinute = endMinutes % 60;
+    
+    // Ajustar para 24 horas
+    if (endHour >= 24) {
+      endHour = endHour - 24;
+    }
+    
+    setState(() {
+      _endTime = TimeOfDay(hour: endHour, minute: endMinute);
+    });
   }
 
   @override
@@ -227,6 +247,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
                             if (service != null) {
                               _serviceController.text = service.name;
                               _priceController.text = service.price.toString();
+                              _updateEndTime(service.duration);
                             }
                           });
                         },
@@ -282,9 +303,18 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.access_time),
-                    title: const Text('Horário'),
+                    title: const Text('Horário de início'),
                     subtitle: Text(_selectedTime.format(context)),
                     onTap: _selectTime,
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: const Text('Horário de término'),
+                    subtitle: Text(_endTime.format(context)),
+                    trailing: Chip(
+                      label: Text('${_selectedService?.duration ?? 60} min'),
+                      backgroundColor: Colors.blue.withOpacity(0.1),
+                    ),
                   ),
                 ],
               ),
@@ -341,7 +371,10 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
       initialTime: _selectedTime,
     );
     if (time != null) {
-      setState(() => _selectedTime = time);
+      setState(() {
+        _selectedTime = time;
+        _updateEndTime(_selectedService?.duration ?? 60);
+      });
     }
   }
 
@@ -404,6 +437,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           'notes': _notesController.text.isEmpty ? null : _notesController.text,
           'clientId': _selectedClient?.id,
           'serviceId': _selectedService?.id,
+          'duration': _selectedService?.duration ?? 60,
         };
         
         await _appointmentsServiceV2.updateAppointment(
@@ -422,6 +456,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           price: double.tryParse(_priceController.text) ?? 0.0,
           notes: _notesController.text.isEmpty ? null : _notesController.text,
           clientId: _selectedClient?.id,
+          duration: _selectedService?.duration ?? 60,
         );
       }
 
