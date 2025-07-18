@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/notification_action_event.dart';
 import '../../../core/models/notification_action_model.dart';
 import '../../../core/services/notification_service.dart';
+import '../../appointments/application/appointment_providers.dart';
 
 /// Mixin para escutar ações de notificação e fornecer feedback ao usuário
 mixin NotificationActionListener<T extends ConsumerStatefulWidget> on ConsumerState<T> {

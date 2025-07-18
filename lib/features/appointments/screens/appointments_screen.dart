@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
+import '../../../core/models/notification_action_event.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../features/notifications/application/notification_listener_mixin.dart';
+import '../application/appointment_providers.dart';
 import '../services/appointments_service.dart';
 import '../services/appointments_service_v2.dart';
 import '../widgets/add_appointment_dialog.dart';
@@ -11,7 +14,6 @@ import '../widgets/calendar_widget.dart';
 import '../widgets/edit_appointment_dialog.dart';
 import '../widgets/recurring_appointment_dialog.dart';
 import '../widgets/client_confirmation_widget.dart';
-import 'appointments_screen_notification_listener.dart';
 
 class AppointmentsScreen extends ConsumerStatefulWidget {
   const AppointmentsScreen({super.key});
@@ -21,11 +23,11 @@ class AppointmentsScreen extends ConsumerStatefulWidget {
 }
 
 class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> 
-    with AppointmentsNotificationListener {
+    with NotificationActionListener {
   final _appointmentsService = AppointmentsService();
-  final _appointmentsServiceV2 = AppointmentsServiceV2();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
+  DateTime? _selectedDay;
 
   @override
   void initState() {
@@ -34,8 +36,11 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
   }
 
   @override
-  void onNotificationActionProcessed() {
+  void onNotificationActionProcessed(NotificationActionEvent event) {
     // Recarregar agendamentos quando uma ação de notificação for processada
+    if (_selectedDay != null) {
+      ref.invalidate(appointmentsProvider(_selectedDay));
+    }
     _loadAppointments();
   }
 
@@ -43,7 +48,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     setState(() => _isLoading = true);
 
     try {
-      final appointments = await _appointmentsServiceV2.getAppointmentsList();
+      final appointmentsService = ref.read(appointmentsServiceProvider);
+      final appointments = await appointmentsService.getAppointmentsList();
       if (mounted) {
         setState(() {
           _appointments = appointments;
@@ -113,7 +119,9 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
                         : CalendarWidget(
                             appointments: _appointments,
                             onDaySelected: (selectedDay) {
-                              // Ação quando dia é selecionado
+                              setState(() {
+                                _selectedDay = selectedDay;
+                              });
                             },
                             onAppointmentTap: (appointment) =>
                                 context.push('/appointment-details', extra: appointment),
@@ -285,19 +293,6 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     }
   }
 
-  void _showAddAppointmentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AddAppointmentDialog(
-        onAppointmentAdded: (appointment) {
-          setState(() {
-            _appointments.add(appointment);
-          });
-        },
-      ),
-    );
-  }
-
   void _showRecurringAppointmentDialog() {
     showDialog(
       context: context,
@@ -305,6 +300,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
         onAppointmentsCreated: (appointments) async {
           for (final appointment in appointments) {
             try {
+              final appointmentsService = ref.read(appointmentsServiceProvider);
               final response = await _appointmentsService
                   .createAppointment(appointment.toJson());
               if (response['success'] == true) {
@@ -359,7 +355,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
 
   Future<void> _deleteAppointment(Appointment appointment) async {
     try {
-      await _appointmentsServiceV2.deleteAppointment(appointment.id);
+      final appointmentsService = ref.read(appointmentsServiceProvider);
+      await appointmentsService.deleteAppointment(appointment.id);
       setState(() {
         _appointments.removeWhere((a) => a.id == appointment.id);
       });

@@ -21,7 +21,7 @@ void main() async {
   await ApiService().init();
   await AuthService().init();
   
-  // Initialize Notification Service using the same instance that will be used throughout the app
+  // Initialize Notification Service using the same container the app will use
   await container.read(notificationServiceProvider).init();
   
   // Global error handling
@@ -30,6 +30,7 @@ void main() async {
     FlutterError.presentError(details);
   };
   
+  // Use UncontrolledProviderScope to pass the pre-initialized container to the app
   runApp(UncontrolledProviderScope(container: container, child: const AgendemaisApp()));
 }
 
