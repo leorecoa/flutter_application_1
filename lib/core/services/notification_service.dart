@@ -21,8 +21,18 @@ class NotificationService {
   static final NotificationService _instance = NotificationService._();
   static NotificationService get instance => _instance;
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  
+  /// Método para injetar um plugin de notificações (usado para testes)
+  @visibleForTesting
+  void setNotificationsPlugin(FlutterLocalNotificationsPlugin plugin) {
+    _notificationsPlugin = plugin;
+  }
+  
+  /// Método para testar o processamento de ações (usado para testes)
+  @visibleForTesting
+  Future<void> testHandleConfirmAction(String appointmentId) => _handleConfirmAction(appointmentId);
   
   // Ações para notificações
   static const String confirmAction = 'CONFIRM';
