@@ -30,7 +30,11 @@ class AppointmentsServiceV2 {
     return await _apiService.post('/appointments', data);
   }
 
-  Future<Map<String, dynamic>> getAppointments({String? status, DateTime? date}) async {
+  Future<Map<String, dynamic>> getAppointments({
+    String? status, 
+    DateTime? date,
+    String? clientId,
+  }) async {
     String endpoint = '/appointments';
     List<String> params = [];
     
@@ -43,11 +47,30 @@ class AppointmentsServiceV2 {
       params.add('date=$dateStr');
     }
     
+    if (clientId != null) {
+      params.add('clientId=$clientId');
+    }
+    
     if (params.isNotEmpty) {
       endpoint += '?' + params.join('&');
     }
     
     return await _apiService.get(endpoint);
+  }
+  
+  Future<List<Appointment>> getClientAppointments(String clientId) async {
+    try {
+      final response = await getAppointments(clientId: clientId);
+      
+      if (response['success'] == true) {
+        final List<dynamic> data = response['data'] ?? [];
+        return data.map((json) => Appointment.fromDynamoJson(json)).toList();
+      }
+      
+      return [];
+    } catch (e) {
+      throw Exception('Erro ao buscar agendamentos do cliente: $e');
+    }
   }
   
   Future<bool> checkTimeConflict(DateTime appointmentDateTime, int durationMinutes) async {

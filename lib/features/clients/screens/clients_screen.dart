@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/models/client_model.dart';
 import '../services/clients_service.dart';
 import '../widgets/add_edit_client_dialog.dart';
@@ -149,6 +150,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
               _showAddEditDialog(client: client);
             } else if (value == 'delete') {
               _showDeleteDialog(client);
+            } else if (value == 'history') {
+              context.push('/client-history', extra: client);
             }
           },
           itemBuilder: (context) => [
@@ -159,6 +162,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   Icon(Icons.edit, size: 16),
                   SizedBox(width: 8),
                   Text('Editar'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'history',
+              child: Row(
+                children: [
+                  Icon(Icons.history, size: 16, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Histórico'),
                 ],
               ),
             ),
@@ -245,6 +258,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Fechar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/client-history', extra: client);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.blue),
+            child: const Text('Histórico'),
           ),
           ElevatedButton(
             onPressed: () {
