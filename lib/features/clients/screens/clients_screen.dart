@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/services/clients_service.dart';
+import '../../../core/models/client_model.dart';
+import '../services/clients_service.dart';
+import '../widgets/add_edit_client_dialog.dart';
 
 class ClientsScreen extends StatefulWidget {
   const ClientsScreen({super.key});
@@ -10,8 +12,10 @@ class ClientsScreen extends StatefulWidget {
 
 class _ClientsScreenState extends State<ClientsScreen> {
   final _clientsService = ClientsService();
-  List<Map<String, dynamic>> _clients = [];
+  List<Client> _clients = [];
   bool _isLoading = true;
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -22,171 +26,175 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Future<void> _loadClients() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _clientsService.getClients();
-      if (response['success'] == true) {
+      final clients = await _clientsService.getClientsList();
+      if (mounted) {
         setState(() {
-          _clients = List<Map<String, dynamic>>.from(response['data'] ?? []);
+          _clients = clients;
           _isLoading = false;
         });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Erro ao carregar clientes: $e')),
         );
       }
     }
+  }
+
+  List<Client> get _filteredClients {
+    if (_searchQuery.isEmpty) return _clients;
+    return _clients.where((client) => 
+      client.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      client.phone.contains(_searchQuery)
+    ).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clientes'),
+        title: const Text('Meus Clientes'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddClientDialog,
+            onPressed: () => _showAddEditDialog(),
+            tooltip: 'Novo Cliente',
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadClients,
-              child: _clients.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people, size: 64, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text('Nenhum cliente cadastrado'),
-                        ],
-                      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Buscar cliente',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty 
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
                     )
-                  : ListView.builder(
+                  : null,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _filteredClients.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.people, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(_searchQuery.isEmpty 
+                          ? 'Nenhum cliente cadastrado\nToque em + para começar'
+                          : 'Nenhum cliente encontrado',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadClients,
+                    child: ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: _clients.length,
+                      itemCount: _filteredClients.length,
                       itemBuilder: (context, index) {
-                        final client = _clients[index];
-                        return Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              child: Text(client['name'][0].toUpperCase()),
-                            ),
-                            title: Text(client['name']),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(client['phone'] ?? ''),
-                                Text(client['email'] ?? ''),
-                              ],
-                            ),
-                            trailing: PopupMenuButton(
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Text('Editar'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Text('Excluir'),
-                                ),
-                              ],
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _showEditClientDialog(client);
-                                } else if (value == 'delete') {
-                                  _deleteClient(client['id']);
-                                }
-                              },
-                            ),
-                          ),
-                        );
+                        final client = _filteredClients[index];
+                        return _buildClientCard(client);
                       },
                     ),
-            ),
-    );
-  }
-
-  void _showAddClientDialog() {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final emailController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Novo Cliente'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome'),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(labelText: 'Telefone'),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await _clientsService.createClient({
-                  'name': nameController.text,
-                  'phone': phoneController.text,
-                  'email': emailController.text,
-                });
-                Navigator.pop(context);
-                _loadClients();
-              }
-            },
-            child: const Text('Salvar'),
+                  ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddEditDialog(),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showEditClientDialog(Map<String, dynamic> client) {
-    final nameController = TextEditingController(text: client['name']);
-    final phoneController = TextEditingController(text: client['phone']);
-    final emailController = TextEditingController(text: client['email']);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar Cliente'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildClientCard(Client client) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const CircleAvatar(
+          backgroundColor: Colors.blue,
+          child: Icon(Icons.person, color: Colors.white),
+        ),
+        title: Text(client.name),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome'),
+            Text(client.phone),
+            if (client.email?.isNotEmpty == true)
+              Text(client.email!, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'edit') {
+              _showAddEditDialog(client: client);
+            } else if (value == 'delete') {
+              _showDeleteDialog(client);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, size: 16),
+                  SizedBox(width: 8),
+                  Text('Editar'),
+                ],
+              ),
             ),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(labelText: 'Telefone'),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, size: 16, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Excluir', style: TextStyle(color: Colors.red)),
+                ],
+              ),
             ),
           ],
         ),
+        onTap: () => _showClientDetails(client),
+      ),
+    );
+  }
+
+  void _showAddEditDialog({Client? client}) {
+    showDialog(
+      context: context,
+      builder: (context) => AddEditClientDialog(
+        client: client,
+        onClientSaved: _loadClients,
+      ),
+    );
+  }
+
+  void _showDeleteDialog(Client client) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Exclusão'),
+        content: Text('Deseja excluir o cliente "${client.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -194,43 +202,85 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await _clientsService.updateClient(client['id'], {
-                'name': nameController.text,
-                'phone': phoneController.text,
-                'email': emailController.text,
-              });
               Navigator.pop(context);
-              _loadClients();
+              await _deleteClient(client);
             },
-            child: const Text('Salvar'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Excluir', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _deleteClient(String clientId) async {
-    final confirm = await showDialog<bool>(
+  void _showClientDetails(Client client) {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirmar'),
-        content: const Text('Deseja excluir este cliente?'),
+        title: Text(client.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.phone),
+              title: const Text('Telefone'),
+              subtitle: Text(client.phone),
+            ),
+            if (client.email?.isNotEmpty == true)
+              ListTile(
+                leading: const Icon(Icons.email),
+                title: const Text('Email'),
+                subtitle: Text(client.email!),
+              ),
+            if (client.address?.isNotEmpty == true)
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Endereço'),
+                subtitle: Text(client.address!),
+              ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddEditDialog(client: client);
+            },
+            child: const Text('Editar'),
           ),
         ],
       ),
     );
+  }
 
-    if (confirm == true) {
-      await _clientsService.deleteClient(clientId);
-      _loadClients();
+  Future<void> _deleteClient(Client client) async {
+    try {
+      await _clientsService.deleteClient(client.id);
+      await _loadClients();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cliente excluído com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao excluir cliente: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
