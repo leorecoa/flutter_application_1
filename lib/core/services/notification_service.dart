@@ -10,6 +10,7 @@ import '../models/appointment_model.dart';
 import '../models/notification_action_model.dart';
 import '../routes/app_router.dart';
 import '../../features/notifications/services/notification_history_service.dart';
+import '../../features/appointments/services/appointments_service_v2.dart';
 
 // Provider para acesso global ao serviço de notificações
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -100,21 +101,67 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
   }
   
-  void _onDidReceiveLocalNotification(NotificationResponse response) {
-    debugPrint('Notificação clicada: ${response.payload}');
+  Future<void> _onDidReceiveLocalNotification(NotificationResponse response) async {
+    final actionId = response.actionId;
+    final payload = response.payload;
+    debugPrint('Notificação clicada: Action: $actionId, Payload: $payload');
     
-    if (response.payload != null) {
+    if (payload != null) {
       // Verificar se é uma ação ou um clique normal
-      if (response.actionId != null) {
+      if (actionId != null) {
         // É uma ação (confirmar ou cancelar)
-        _actionStreamController.add(NotificationAction(
-          appointmentId: response.payload!,
-          actionType: response.actionId!,
-        ));
+        switch (actionId) {
+          case confirmAction:
+            await _handleConfirmAction(payload);
+            break;
+          case cancelAction:
+            await _handleCancelAction(payload);
+            break;
+          default:
+            // Ação desconhecida
+            debugPrint('Ação desconhecida: $actionId');
+            break;
+        }
       } else {
         // É um clique normal na notificação
-        _navigateToAppointmentDetails(response.payload!);
+        _navigateToAppointmentDetails(payload);
       }
+    }
+  }
+  
+  Future<void> _handleConfirmAction(String appointmentId) async {
+    try {
+      // Chamar o serviço para confirmar o agendamento
+      final appointmentsService = AppointmentsServiceV2();
+      await appointmentsService.updateAppointmentStatus(appointmentId, 'confirmado');
+      
+      // Notificar via stream
+      _actionStreamController.add(NotificationAction(
+        appointmentId: appointmentId,
+        actionType: confirmAction,
+      ));
+      
+      debugPrint('Agendamento $appointmentId confirmado com sucesso');
+    } catch (e) {
+      debugPrint('Erro ao confirmar agendamento: $e');
+    }
+  }
+  
+  Future<void> _handleCancelAction(String appointmentId) async {
+    try {
+      // Chamar o serviço para cancelar o agendamento
+      final appointmentsService = AppointmentsServiceV2();
+      await appointmentsService.updateAppointmentStatus(appointmentId, 'cancelado');
+      
+      // Notificar via stream
+      _actionStreamController.add(NotificationAction(
+        appointmentId: appointmentId,
+        actionType: cancelAction,
+      ));
+      
+      debugPrint('Agendamento $appointmentId cancelado com sucesso');
+    } catch (e) {
+      debugPrint('Erro ao cancelar agendamento: $e');
     }
   }
   

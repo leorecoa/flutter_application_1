@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
+import '../../../core/services/notification_service.dart';
 import '../services/appointments_service.dart';
 import '../services/appointments_service_v2.dart';
 import '../widgets/add_appointment_dialog.dart';
@@ -9,31 +11,32 @@ import '../widgets/calendar_widget.dart';
 import '../widgets/edit_appointment_dialog.dart';
 import '../widgets/recurring_appointment_dialog.dart';
 import '../widgets/client_confirmation_widget.dart';
-import '../../../core/services/notification_service.dart';
+import 'appointments_screen_notification_listener.dart';
 
-class AppointmentsScreen extends StatefulWidget {
+class AppointmentsScreen extends ConsumerStatefulWidget {
   const AppointmentsScreen({super.key});
 
   @override
-  State<AppointmentsScreen> createState() => _AppointmentsScreenState();
+  ConsumerState<AppointmentsScreen> createState() => _AppointmentsScreenState();
 }
 
-class _AppointmentsScreenState extends State<AppointmentsScreen> {
+class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> 
+    with AppointmentsNotificationListener {
   final _appointmentsService = AppointmentsService();
   final _appointmentsServiceV2 = AppointmentsServiceV2();
-  final _notificationService = NotificationService();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _initializeNotifications();
     _loadAppointments();
   }
 
-  Future<void> _initializeNotifications() async {
-    await _notificationService.init();
+  @override
+  void onNotificationActionProcessed() {
+    // Recarregar agendamentos quando uma ação de notificação for processada
+    _loadAppointments();
   }
 
   Future<void> _loadAppointments() async {
@@ -65,6 +68,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         appBar: AppBar(
           title: const Text('Agendamentos'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () => context.push('/notification-history'),
+              tooltip: 'Histórico de Notificações',
+            ),
             IconButton(
               icon: const Icon(Icons.repeat),
               onPressed: () => _showRecurringAppointmentDialog(),
@@ -290,67 +298,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
     );
   }
 
-  void _showAppointmentDetails(Appointment appointment,
-      {bool showActions = false}) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(appointment.clientName),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Serviço: ${appointment.service}'),
-            Text('Telefone: ${appointment.clientPhone}'),
-            Text(
-                'Data: ${DateFormat('dd/MM/yyyy HH:mm').format(appointment.dateTime)}'),
-            Text('Valor: R\$ ${appointment.price.toStringAsFixed(2)}'),
-            Text('Status: ${_getStatusText(appointment.status)}'),
-            if (appointment.notes?.isNotEmpty == true) ...[
-              const SizedBox(height: 8),
-              Text('Observações: ${appointment.notes}'),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fechar'),
-          ),
-          if (showActions && appointment.status != AppointmentStatus.completed)
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showEditAppointmentDialog(appointment);
-              },
-              child: const Text('Editar'),
-            ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditAppointmentDialog(Appointment appointment) {
-    showDialog(
-      context: context,
-      builder: (context) => EditAppointmentDialog(
-        appointment: appointment,
-        onAppointmentUpdated: (updatedAppointment) {
-          final index = _appointments.indexWhere((a) => a.id == appointment.id);
-          if (index != -1) {
-            setState(() {
-              _appointments[index] = updatedAppointment;
-            });
-            // Reagendar notificações
-            _notificationService.cancelAppointmentNotification(appointment.id);
-            _notificationService
-                .scheduleAppointmentReminder(updatedAppointment);
-          }
-        },
-      ),
-    );
-  }
-
   void _showRecurringAppointmentDialog() {
     showDialog(
       context: context,
@@ -365,10 +312,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                   _appointments.add(appointment);
                 });
                 // Agendar notificações
-                await _notificationService
-                    .scheduleAppointmentReminder(appointment);
-                await _notificationService
-                    .scheduleClientConfirmationReminder(appointment);
+                final notificationService = ref.read(notificationServiceProvider);
+                await notificationService.scheduleAppointmentReminders(appointment);
               }
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -418,6 +363,11 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       setState(() {
         _appointments.removeWhere((a) => a.id == appointment.id);
       });
+      
+      // Cancelar notificações
+      final notificationService = ref.read(notificationServiceProvider);
+      await notificationService.cancelAppointmentNotifications(appointment.id);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Agendamento excluído com sucesso!'),
@@ -463,12 +413,6 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
             content: Text(message),
             backgroundColor: isConfirmed ? Colors.green : Colors.orange,
           ),
-        );
-
-        // Notificação instantânea
-        await _notificationService.showInstantNotification(
-          title: 'Status Atualizado',
-          body: message,
         );
       }
     } catch (e) {

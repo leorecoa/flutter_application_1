@@ -7,7 +7,6 @@ import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/notification_service.dart';
-import 'features/appointments/services/notification_action_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,12 +14,15 @@ void main() async {
   // Load environment variables
   await dotenv.load(fileName: '.env.prod');
   
+  // Create a ProviderContainer to initialize services before the app runs
+  final container = ProviderContainer();
+  
   // Initialize services for production
   await ApiService().init();
   await AuthService().init();
   
-  // Initialize notification service
-  await NotificationService.instance.init();
+  // Initialize Notification Service using the same instance that will be used throughout the app
+  await container.read(notificationServiceProvider).init();
   
   // Global error handling
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -28,17 +30,14 @@ void main() async {
     FlutterError.presentError(details);
   };
   
-  runApp(const ProviderScope(child: AgendemaisApp()));
+  runApp(UncontrolledProviderScope(container: container, child: const AgendemaisApp()));
 }
 
-class AgendemaisApp extends ConsumerWidget {
+class AgendemaisApp extends StatelessWidget {
   const AgendemaisApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Inicializar o serviço de ações de notificações
-    ref.watch(notificationActionServiceProvider);
-    
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
