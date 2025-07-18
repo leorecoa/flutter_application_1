@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/appointment_model.dart';
 import '../services/appointments_service_v2.dart';
+import 'paginated_appointments_notifier.dart';
+import 'paginated_appointments_state.dart';
 
 /// Provider para o serviço de agendamentos
 final appointmentsServiceProvider = Provider<AppointmentsServiceV2>((ref) {
@@ -13,20 +15,31 @@ final appointmentFiltersProvider = StateProvider<Map<String, dynamic>>((ref) => 
 /// Provider para todos os agendamentos (sem filtros)
 final allAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
   final service = ref.watch(appointmentsServiceProvider);
-  return service.getAppointmentsList();
+  final response = await service.getAppointmentsList();
+  return response.items;
 });
 
-/// Provider para agendamentos filtrados
+/// Provider para agendamentos filtrados (sem paginação)
 final filteredAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
   final service = ref.watch(appointmentsServiceProvider);
   final filters = ref.watch(appointmentFiltersProvider);
-  return service.getAppointmentsList(filters: filters);
+  final response = await service.getAppointmentsList(filters: filters);
+  return response.items;
+});
+
+/// Provider para agendamentos paginados
+final paginatedAppointmentsProvider = StateNotifierProvider.autoDispose<
+    PaginatedAppointmentsNotifier, PaginatedAppointmentsState>((ref) {
+  final service = ref.watch(appointmentsServiceProvider);
+  final filters = ref.watch(appointmentFiltersProvider);
+  return PaginatedAppointmentsNotifier(service, filters);
 });
 
 /// Provider para agendamentos de uma data específica
 final appointmentsProvider = FutureProvider.family<List<Appointment>, DateTime?>((ref, date) async {
   final service = ref.watch(appointmentsServiceProvider);
-  final appointments = await service.getAppointmentsList();
+  final response = await service.getAppointmentsList();
+  final appointments = response.items;
   
   // Se não houver data selecionada, retorna todos os agendamentos
   if (date == null) {

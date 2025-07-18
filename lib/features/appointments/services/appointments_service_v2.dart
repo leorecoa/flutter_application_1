@@ -1,5 +1,6 @@
 import '../../../core/services/api_service.dart';
 import '../../../core/models/appointment_model.dart';
+import '../../../core/models/paginated_response_model.dart';
 
 class AppointmentsServiceV2 {
   final _apiService = ApiService();
@@ -44,6 +45,8 @@ class AppointmentsServiceV2 {
     String? status, 
     DateTime? date,
     String? clientId,
+    int? limit,
+    String? lastKey,
   }) async {
     String endpoint = '/appointments';
     List<String> params = [];
@@ -59,6 +62,14 @@ class AppointmentsServiceV2 {
     
     if (clientId != null) {
       params.add('clientId=$clientId');
+    }
+    
+    if (limit != null) {
+      params.add('limit=$limit');
+    }
+    
+    if (lastKey != null) {
+      params.add('lastKey=$lastKey');
     }
     
     if (params.isNotEmpty) {
@@ -132,20 +143,34 @@ class AppointmentsServiceV2 {
     return await _apiService.delete('/appointments/$appointmentId');
   }
 
-  Future<List<Appointment>> getAppointmentsList({Map<String, dynamic>? filters}) async {
+  Future<PaginatedResponse<Appointment>> getAppointmentsList({
+    Map<String, dynamic>? filters,
+    int limit = 20,
+    String? lastKey,
+  }) async {
     try {
+      // Construir parâmetros para a consulta
+      final status = filters?['status'];
+      final date = filters?['date'] as DateTime?;
+      final clientId = filters?['clientId'];
+      
+      // Fazer a requisição
       final response = await getAppointments(
-        status: filters?['status'],
-        date: filters?['date'],
-        clientId: filters?['clientId'],
+        status: status,
+        date: date,
+        clientId: clientId,
+        limit: limit,
+        lastKey: lastKey,
       );
       
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
-        return data.map((json) => Appointment.fromDynamoJson(json)).toList();
+        final items = data.map((json) => Appointment.fromDynamoJson(json)).toList();
+        final nextKey = response['lastKey'] as String?;
+        return PaginatedResponse(items: items, lastKey: nextKey);
       }
       
-      return [];
+      return const PaginatedResponse(items: [], lastKey: null);
     } catch (e) {
       throw Exception('Erro ao buscar agendamentos: $e');
     }
