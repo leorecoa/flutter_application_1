@@ -132,9 +132,13 @@ class AppointmentsServiceV2 {
     return await _apiService.delete('/appointments/$appointmentId');
   }
 
-  Future<List<Appointment>> getAppointmentsList({String? status}) async {
+  Future<List<Appointment>> getAppointmentsList({Map<String, dynamic>? filters}) async {
     try {
-      final response = await getAppointments(status: status);
+      final response = await getAppointments(
+        status: filters?['status'],
+        date: filters?['date'],
+        clientId: filters?['clientId'],
+      );
       
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];

@@ -7,7 +7,23 @@ final appointmentsServiceProvider = Provider<AppointmentsServiceV2>((ref) {
   return AppointmentsServiceV2();
 });
 
-/// Provider para lista de agendamentos
+/// Provider para gerenciar os filtros de agendamentos
+final appointmentFiltersProvider = StateProvider<Map<String, dynamic>>((ref) => {});
+
+/// Provider para todos os agendamentos (sem filtros)
+final allAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
+  final service = ref.watch(appointmentsServiceProvider);
+  return service.getAppointmentsList();
+});
+
+/// Provider para agendamentos filtrados
+final filteredAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
+  final service = ref.watch(appointmentsServiceProvider);
+  final filters = ref.watch(appointmentFiltersProvider);
+  return service.getAppointmentsList(filters: filters);
+});
+
+/// Provider para agendamentos de uma data específica
 final appointmentsProvider = FutureProvider.family<List<Appointment>, DateTime?>((ref, date) async {
   final service = ref.watch(appointmentsServiceProvider);
   final appointments = await service.getAppointmentsList();
