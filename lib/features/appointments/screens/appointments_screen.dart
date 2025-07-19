@@ -246,8 +246,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
+        child: Row(ildren: [
             // Filtro de Status
             PopupMenuButton<String?>(
               onSelected: (status) {
