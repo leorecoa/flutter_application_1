@@ -444,10 +444,15 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     showDialog(
       context: context,
       builder: (context) => RecurringAppointmentDialog(
-        onAppointmentsCreated: (appointments) async {
-          for (final appointment in appointments) {
+        onAppointmentsCreated: (newAppointments) async {
+          final appointmentsService = ref.read(appointmentsServiceProvider);
+          final notificationService = ref.read(notificationServiceProvider);
+          int successCount = 0;
+          List<String> errors = [];
+
+          // Processa todas as criações em paralelo para maior eficiência
+          await Future.wait(newAppointments.map((appointment) async {
             try {
-              final appointmentsService = ref.read(appointmentsServiceProvider);
               final response = await appointmentsService.createAppointment(
                 professionalId: appointment.professionalId,
                 serviceId: appointment.serviceId,
@@ -462,29 +467,62 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
               );
               
               if (response['success'] == true) {
-                // Agendar notificações
-                final notificationService = ref.read(notificationServiceProvider);
                 await notificationService.scheduleAppointmentReminders(appointment);
+                successCount++;
+              } else {
+                errors.add(response['message'] ?? 'Erro ao criar ${appointment.clientName}');
               }
             } catch (e) {
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Erro ao criar agendamento: $e')),
-              );
+              errors.add('Erro de conexão ao criar agendamento para ${appointment.clientName}');
             }
+          }));
+
+          // Garante que o widget ainda está na árvore antes de usar o context
+          if (!mounted) return;
+
+          // Recarrega a lista de agendamentos uma única vez
+          if (successCount > 0) {
+            ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
           }
           
-          // Recarregar agendamentos
-          ref.invalidate(allAppointmentsProvider);
-          ref.invalidate(filteredAppointmentsProvider);
-          ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
-          
-          if (!mounted) return;
+          // Exibe um único feedback consolidado para o usuário
+          final message = StringBuffer('$successCount agendamentos criados com sucesso.');
+          if (errors.isNotEmpty) {
+            message.write('\nFalhas: ${errors.length}.');
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                  '${appointments.length} agendamentos criados com sucesso!'),
-              backgroundColor: Colors.green,
+              content: Text(message.toString()),
+              backgroundColor: errors.isEmpty ? Colors.green : Colors.orange,
+              duration: const Duration(seconds: 5),
+              action: errors.isNotEmpty ? SnackBarAction(
+                label: 'DETALHES', 
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Detalhes dos erros'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: errors.map((e) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Text('• $e'),
+                          )).toList(),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('FECHAR'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ) : null,
             ),
           );
         },
@@ -525,9 +563,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
       final notificationService = ref.read(notificationServiceProvider);
       await notificationService.cancelAppointmentNotifications(appointment.id);
       
-      // Recarregar agendamentos
-      ref.invalidate(allAppointmentsProvider);
-      ref.invalidate(filteredAppointmentsProvider);
+      // Apenas a ação abaixo é necessária, ela já aciona a recarga com os filtros atuais
       ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
       
       if (!mounted) return;
@@ -561,9 +597,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
       );
 
       if (response['success'] == true) {
-        // Recarregar agendamentos para refletir a mudança na UI
-        ref.invalidate(allAppointmentsProvider);
-        ref.invalidate(filteredAppointmentsProvider);
+        // Apenas a ação abaixo é necessária, ela já aciona a recarga com os filtros atuais
         ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
 
         final message =

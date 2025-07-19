@@ -1,30 +1,37 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/notification_action_model.dart';
 import '../../../core/services/notification_service.dart';
 
+/// Provider que expõe o stream de ações de notificação
+final notificationActionStreamProvider = StreamProvider.autoDispose<NotificationAction>((ref) {
+  return ref.watch(notificationServiceProvider).actionStream;
+});
+
 /// Mixin para escutar ações de notificação e fornecer feedback ao usuário
 mixin NotificationActionListenerMixin<T extends ConsumerStatefulWidget>
     on ConsumerState<T> {
+  
   @override
   void initState() {
     super.initState();
-    
-    // Registrar para receber ações de notificação
-    final notificationService = ref.read(notificationServiceProvider);
-    notificationService.registerActionListener(_processNotificationAction);
+    _listenToNotificationActions();
   }
   
-  @override
-  void dispose() {
-    // Cancelar registro ao destruir o widget
-    final notificationService = ref.read(notificationServiceProvider);
-    notificationService.unregisterActionListener(_processNotificationAction);
-    super.dispose();
+  /// Configura o listener para o stream de ações de notificação
+  void _listenToNotificationActions() {
+    // Escuta o provider, que gerencia o ciclo de vida do stream automaticamente
+    ref.listen<AsyncValue<NotificationAction>>(
+      notificationActionStreamProvider, 
+      (_, next) {
+        next.whenData(_handleNotificationAction);
+      }
+    );
   }
   
   /// Processa uma ação de notificação
-  void _processNotificationAction(NotificationAction action) {
+  void _handleNotificationAction(NotificationAction action) {
     if (!mounted) return;
     
     // Determinar mensagem e cor com base no tipo de ação
