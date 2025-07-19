@@ -12,6 +12,9 @@ final appointmentsServiceProvider = Provider<AppointmentsServiceV2>((ref) {
 /// Provider para gerenciar os filtros de agendamentos
 final appointmentFiltersProvider = StateProvider<Map<String, dynamic>>((ref) => {});
 
+/// Provider para o termo de busca
+final searchTermProvider = StateProvider<String>((ref) => '');
+
 /// Provider para todos os agendamentos (sem filtros)
 final allAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
   final service = ref.watch(appointmentsServiceProvider);
@@ -23,7 +26,12 @@ final allAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((r
 final filteredAppointmentsProvider = FutureProvider.autoDispose<List<Appointment>>((ref) async {
   final service = ref.watch(appointmentsServiceProvider);
   final filters = ref.watch(appointmentFiltersProvider);
-  final response = await service.getAppointmentsList(filters: filters);
+  final searchTerm = ref.watch(searchTermProvider);
+  
+  final response = await service.getAppointmentsList(
+    filters: filters,
+    searchTerm: searchTerm.isNotEmpty ? searchTerm : null,
+  );
   return response.items;
 });
 
@@ -32,7 +40,15 @@ final paginatedAppointmentsProvider = StateNotifierProvider.autoDispose<
     PaginatedAppointmentsNotifier, PaginatedAppointmentsState>((ref) {
   final service = ref.watch(appointmentsServiceProvider);
   final filters = ref.watch(appointmentFiltersProvider);
-  return PaginatedAppointmentsNotifier(service, filters);
+  final searchTerm = ref.watch(searchTermProvider);
+  
+  // Adicionar termo de busca aos filtros se não estiver vazio
+  final updatedFilters = Map<String, dynamic>.from(filters);
+  if (searchTerm.isNotEmpty) {
+    updatedFilters['search'] = searchTerm;
+  }
+  
+  return PaginatedAppointmentsNotifier(service, updatedFilters);
 });
 
 /// Provider para agendamentos de uma data específica

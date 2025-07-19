@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../../../core/models/notification_action_event.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/utils/debouncer.dart';
 import '../../../features/notifications/application/notification_listener_mixin.dart';
 import '../application/appointment_providers.dart';
 import '../widgets/calendar_widget.dart';
@@ -22,6 +23,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
     with NotificationActionListener {
   DateTime? _selectedDay;
   final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  final _debounce = Debouncer(milliseconds: 500);
 
   @override
   void initState() {
@@ -33,6 +36,8 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchController.dispose();
+    _debounce.dispose();
     super.dispose();
   }
 
@@ -87,6 +92,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
         ),
         body: Column(
           children: [
+            _buildSearchBar(),
             _buildFilterBar(),
             Expanded(
               child: TabBarView(
@@ -137,6 +143,36 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Buscar agendamentos...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    ref.read(searchTermProvider.notifier).state = '';
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        onChanged: (value) {
+          _debounce.run(() {
+            ref.read(searchTermProvider.notifier).state = value;
+          });
+        },
       ),
     );
   }
@@ -271,12 +307,14 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
             const SizedBox(width: 8),
             
             // Botão para limpar filtros
-            if (currentFilters.isNotEmpty)
+            if (currentFilters.isNotEmpty || _searchController.text.isNotEmpty)
               TextButton.icon(
                 icon: const Icon(Icons.clear_all),
                 label: const Text('Limpar Filtros'),
                 onPressed: () {
                   ref.read(appointmentFiltersProvider.notifier).state = {};
+                  _searchController.clear();
+                  ref.read(searchTermProvider.notifier).state = '';
                 },
               ),
           ],

@@ -47,6 +47,7 @@ class AppointmentsServiceV2 {
     String? clientId,
     int? limit,
     String? lastKey,
+    String? search,
   }) async {
     String endpoint = '/appointments';
     List<String> params = [];
@@ -70,6 +71,10 @@ class AppointmentsServiceV2 {
     
     if (lastKey != null) {
       params.add('lastKey=$lastKey');
+    }
+    
+    if (search != null && search.isNotEmpty) {
+      params.add('search=$search');
     }
     
     if (params.isNotEmpty) {
@@ -147,12 +152,14 @@ class AppointmentsServiceV2 {
     Map<String, dynamic>? filters,
     int limit = 20,
     String? lastKey,
+    String? searchTerm,
   }) async {
     try {
       // Construir parâmetros para a consulta
       final status = filters?['status'];
       final date = filters?['date'] as DateTime?;
       final clientId = filters?['clientId'];
+      final search = searchTerm ?? filters?['search'];
       
       // Fazer a requisição
       final response = await getAppointments(
@@ -161,6 +168,7 @@ class AppointmentsServiceV2 {
         clientId: clientId,
         limit: limit,
         lastKey: lastKey,
+        search: search,
       );
       
       if (response['success'] == true) {
