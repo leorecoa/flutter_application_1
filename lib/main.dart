@@ -6,32 +6,24 @@ import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/auth_service.dart';
-import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Load environment variables
   await dotenv.load(fileName: '.env.prod');
-  
-  // Create a ProviderContainer to initialize services before the app runs
-  final container = ProviderContainer();
-  
+
   // Initialize services for production
   await ApiService().init();
   await AuthService().init();
-  
-  // Initialize Notification Service using the same container the app will use
-  await container.read(notificationServiceProvider).init();
-  
+
   // Global error handling
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint('Flutter Error: ${details.exception}');
     FlutterError.presentError(details);
   };
-  
-  // Use UncontrolledProviderScope to pass the pre-initialized container to the app
-  runApp(UncontrolledProviderScope(container: container, child: const AgendemaisApp()));
+
+  runApp(const ProviderScope(child: AgendemaisApp()));
 }
 
 class AgendemaisApp extends StatelessWidget {

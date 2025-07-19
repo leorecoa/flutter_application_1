@@ -11,7 +11,7 @@ class NotificationHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationHistoryAsync = ref.watch(notificationHistoryProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Histórico de Notificações'),
@@ -37,7 +37,7 @@ class NotificationHistoryScreen extends ConsumerWidget {
               ),
             );
           }
-          
+
           return ListView.builder(
             itemCount: notifications.length,
             itemBuilder: (context, index) {
@@ -53,20 +53,20 @@ class NotificationHistoryScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildNotificationItem(
-    BuildContext context, 
-    WidgetRef ref, 
+    BuildContext context,
+    WidgetRef ref,
     NotificationHistoryItem notification,
   ) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: notification.isRead ? Colors.grey : Colors.blue,
-          child: Icon(
+          child: const Icon(
             Icons.notifications,
             color: Colors.white,
           ),
@@ -74,7 +74,8 @@ class NotificationHistoryScreen extends ConsumerWidget {
         title: Text(
           notification.title,
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight:
+                notification.isRead ? FontWeight.normal : FontWeight.bold,
           ),
         ),
         subtitle: Column(
@@ -94,10 +95,12 @@ class NotificationHistoryScreen extends ConsumerWidget {
         onTap: () {
           // Marcar como lida
           if (!notification.isRead) {
-            ref.read(notificationHistoryServiceProvider).markAsRead(notification.id);
+            ref
+                .read(notificationHistoryServiceProvider)
+                .markAsRead(notification.id);
             ref.refresh(notificationHistoryProvider);
           }
-          
+
           // Navegar para detalhes do agendamento se disponível
           if (notification.appointmentId != null) {
             context.push('/appointment-details/${notification.appointmentId}');
@@ -106,7 +109,7 @@ class NotificationHistoryScreen extends ConsumerWidget {
       ),
     );
   }
-  
+
   void _showClearHistoryDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,

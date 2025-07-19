@@ -82,12 +82,12 @@ class _CreateAppointmentScreenState extends ConsumerState<CreateAppointmentScree
 
   void _updateEndTime(int durationMinutes) {
     // Converter TimeOfDay para minutos totais
-    int startMinutes = _selectedTime.hour * 60 + _selectedTime.minute;
-    int endMinutes = startMinutes + durationMinutes;
+    final int startMinutes = _selectedTime.hour * 60 + _selectedTime.minute;
+    final int endMinutes = startMinutes + durationMinutes;
     
     // Converter de volta para horas e minutos
     int endHour = endMinutes ~/ 60;
-    int endMinute = endMinutes % 60;
+    final int endMinute = endMinutes % 60;
     
     // Ajustar para 24 horas
     if (endHour >= 24) {
@@ -351,22 +351,22 @@ class _CreateAppointmentScreenState extends ConsumerState<CreateAppointmentScree
             ),
             
             // Notificações
-            Card(
+            const Card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.all(16),
                     child: Text('Notificações', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                   SwitchListTile(
-                    title: const Text('Receber lembretes'),
-                    subtitle: const Text('1 dia antes e 1 hora antes do agendamento'),
+                    title: Text('Receber lembretes'),
+                    subtitle: Text('1 dia antes e 1 hora antes do agendamento'),
                     value: true, // Sempre ativado por padrão
                     onChanged: null, // Não permitir desativar por enquanto
-                    secondary: const Icon(Icons.notifications_active),
+                    secondary: Icon(Icons.notifications_active),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                 ],
               ),
             ),
