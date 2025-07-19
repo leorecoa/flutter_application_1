@@ -454,7 +454,18 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
           for (final appointment in appointments) {
             try {
               final appointmentsService = ref.read(appointmentsServiceProvider);
-              final response = await appointmentsService.createAppointment(appointment.toJson());
+              final response = await appointmentsService.createAppointment(
+                professionalId: appointment.professionalId,
+                serviceId: appointment.serviceId,
+                appointmentDateTime: appointment.dateTime,
+                clientName: appointment.clientName,
+                clientPhone: appointment.clientPhone,
+                service: appointment.service,
+                price: appointment.price,
+                notes: appointment.notes,
+                clientId: appointment.clientId,
+                duration: appointment.duration,
+              );
               
               if (response['success'] == true) {
                 // Agendar notificações
