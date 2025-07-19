@@ -129,12 +129,13 @@ class AppointmentsServiceV2 {
     }
   }
 
+  // Método otimizado para atualizar apenas o status de um agendamento
   Future<Map<String, dynamic>> updateAppointmentStatus(
     String appointmentId,
     String newStatus,
   ) async {
     final data = {'status': newStatus};
-    return await _apiService.put('/appointments/$appointmentId', data);
+    return await _apiService.put('/appointments/$appointmentId/status', data);
   }
 
   Future<Map<String, dynamic>> updateAppointment(

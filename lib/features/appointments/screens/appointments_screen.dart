@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
-import '../../../core/models/notification_action_event.dart';
+import '../../../core/models/notification_action_model.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../../features/notifications/application/notification_listener_mixin.dart';
@@ -20,8 +20,7 @@ class AppointmentsScreen extends ConsumerStatefulWidget {
 }
 
 class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> 
-    with NotificationActionListener {
-  DateTime? _selectedDay;
+    with NotificationActionListenerMixin {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   final _debounce = Debouncer(milliseconds: 500);
@@ -49,14 +48,11 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
   }
 
   @override
-  void onNotificationActionProcessed(NotificationActionEvent event) {
+  void onNotificationActionProcessed(NotificationAction action) {
     // Recarregar agendamentos quando uma ação de notificação for processada
     ref.invalidate(allAppointmentsProvider);
     ref.invalidate(filteredAppointmentsProvider);
     ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
-    if (_selectedDay != null) {
-      ref.invalidate(appointmentsProvider(_selectedDay));
-    }
   }
 
   @override
@@ -121,9 +117,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
                               : CalendarWidget(
                                   appointments: appointments,
                                   onDaySelected: (selectedDay) {
-                                    setState(() {
-                                      _selectedDay = selectedDay;
-                                    });
+                                    // Não precisamos mais armazenar o dia selecionado
                                   },
                                   onAppointmentTap: (appointment) =>
                                       context.push('/appointment-details', extra: appointment),
@@ -473,6 +467,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
                 await notificationService.scheduleAppointmentReminders(appointment);
               }
             } catch (e) {
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Erro ao criar agendamento: $e')),
               );
@@ -484,6 +479,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
           ref.invalidate(filteredAppointmentsProvider);
           ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
           
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -534,6 +530,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
       ref.invalidate(filteredAppointmentsProvider);
       ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Agendamento excluído com sucesso!'),
@@ -541,6 +538,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao excluir agendamento: $e'),
@@ -553,21 +551,17 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
   Future<void> _handleConfirmationChange(
       String appointmentId, bool isConfirmed) async {
     try {
+      final newStatus = isConfirmed ? AppointmentStatus.confirmed : AppointmentStatus.cancelled;
+      
+      // Chamada de API otimizada: atualiza apenas o status, não busca a lista toda
       final appointmentsService = ref.read(appointmentsServiceProvider);
-      final response = await appointmentsService.getAppointmentsList();
-      final appointment = response.items.firstWhere((a) => a.id == appointmentId);
-      
-      final newStatus =
-          isConfirmed ? AppointmentStatus.confirmed : AppointmentStatus.cancelled;
-      
-      final updatedAppointment = appointment.copyWith(status: newStatus);
-      final updateResponse = await appointmentsService.updateAppointment(
+      final response = await appointmentsService.updateAppointmentStatus(
         appointmentId,
-        updatedAppointment.toJson(),
+        newStatus.name,
       );
 
-      if (updateResponse['success'] == true) {
-        // Recarregar agendamentos
+      if (response['success'] == true) {
+        // Recarregar agendamentos para refletir a mudança na UI
         ref.invalidate(allAppointmentsProvider);
         ref.invalidate(filteredAppointmentsProvider);
         ref.read(paginatedAppointmentsProvider.notifier).fetchFirstPage();
@@ -575,14 +569,18 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen>
         final message =
             isConfirmed ? 'Agendamento confirmado!' : 'Agendamento cancelado!';
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
             backgroundColor: isConfirmed ? Colors.green : Colors.orange,
           ),
         );
+      } else {
+        throw Exception(response['message'] ?? 'Falha ao atualizar o status');
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
       );
