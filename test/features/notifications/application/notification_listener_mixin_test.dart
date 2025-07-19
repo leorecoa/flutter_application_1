@@ -20,12 +20,12 @@ void main() {
   setUp(() {
     mockNotificationService = MockNotificationService();
     actionStreamController = StreamController<NotificationAction>.broadcast();
-    
+
     // Configurar o mock para retornar o stream controlado
     when(mockNotificationService.actionStream).thenAnswer(
       (_) => actionStreamController.stream,
     );
-    
+
     // Criar um ProviderContainer de teste
     container = ProviderContainer(
       overrides: [
@@ -40,11 +40,11 @@ void main() {
     container.dispose();
   });
 
-  testWidgets('NotificationActionListener should handle notification actions', 
+  testWidgets('NotificationActionListener should handle notification actions',
       (WidgetTester tester) async {
     // Arrange
     final testKey = GlobalKey<TestNotificationListenerState>();
-    
+
     // Build our widget
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -54,37 +54,39 @@ void main() {
         ),
       ),
     );
-    
+
     // Verificar que o método _listenToNotificationActions foi chamado
     verify(mockNotificationService.actionStream).called(1);
-    
+
     // Act - Simular uma ação de confirmação
     actionStreamController.add(
-      NotificationAction(
+      const NotificationAction(
         appointmentId: '123',
         actionType: NotificationService.confirmAction,
       ),
     );
-    
+
     // Aguardar o processamento da ação
     await tester.pumpAndSettle();
-    
+
     // Assert - Verificar que o método onNotificationActionProcessed foi chamado
-    expect(testKey.currentState!.processedEvents, contains(NotificationActionEvent.confirmed));
-    
+    expect(testKey.currentState!.processedEvents,
+        contains(NotificationActionEvent.confirmed));
+
     // Act - Simular uma ação de cancelamento
     actionStreamController.add(
-      NotificationAction(
+      const NotificationAction(
         appointmentId: '123',
         actionType: NotificationService.cancelAction,
       ),
     );
-    
+
     // Aguardar o processamento da ação
     await tester.pumpAndSettle();
-    
+
     // Assert - Verificar que o método onNotificationActionProcessed foi chamado novamente
-    expect(testKey.currentState!.processedEvents, contains(NotificationActionEvent.cancelled));
+    expect(testKey.currentState!.processedEvents,
+        contains(NotificationActionEvent.cancelled));
   });
 }
 
@@ -93,10 +95,12 @@ class TestNotificationListener extends ConsumerStatefulWidget {
   const TestNotificationListener({Key? key}) : super(key: key);
 
   @override
-  TestNotificationListenerState createState() => TestNotificationListenerState();
+  TestNotificationListenerState createState() =>
+      TestNotificationListenerState();
 }
 
-class TestNotificationListenerState extends ConsumerState<TestNotificationListener>
+class TestNotificationListenerState
+    extends ConsumerState<TestNotificationListener>
     with NotificationActionListener {
   final List<NotificationActionEvent> processedEvents = [];
 

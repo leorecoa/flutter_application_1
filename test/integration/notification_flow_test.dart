@@ -22,30 +22,31 @@ void main() {
   late MockAppointmentsServiceV2 mockAppointmentsService;
   late StreamController<NotificationAction> actionStreamController;
   late ProviderContainer container;
-  
+
   setUp(() {
     mockNotificationService = MockNotificationService();
     mockAppointmentsService = MockAppointmentsServiceV2();
     actionStreamController = StreamController<NotificationAction>.broadcast();
-    
+
     // Configurar o mock para retornar o stream controlado
     when(mockNotificationService.actionStream).thenAnswer(
       (_) => actionStreamController.stream,
     );
-    
+
     // Configurar o mock para retornar uma lista de agendamentos
-    when(mockAppointmentsService.getAppointmentsList()).thenAnswer((_) async => [
-      Appointment(
-        id: '1',
-        clientName: 'Client 1',
-        clientPhone: '123456789',
-        service: 'Service 1',
-        dateTime: DateTime.now().add(const Duration(days: 1)),
-        price: 100.0,
-        status: AppointmentStatus.scheduled,
-      ),
-    ]);
-    
+    when(mockAppointmentsService.getAppointmentsList())
+        .thenAnswer((_) async => [
+              Appointment(
+                id: '1',
+                clientName: 'Client 1',
+                clientPhone: '123456789',
+                service: 'Service 1',
+                dateTime: DateTime.now().add(const Duration(days: 1)),
+                price: 100.0,
+                status: AppointmentStatus.scheduled,
+              ),
+            ]);
+
     // Criar um ProviderContainer de teste
     container = ProviderContainer(
       overrides: [
@@ -55,13 +56,14 @@ void main() {
       ],
     );
   });
-  
+
   tearDown(() {
     actionStreamController.close();
     container.dispose();
   });
-  
-  testWidgets('Full notification flow should update UI when action is processed',
+
+  testWidgets(
+      'Full notification flow should update UI when action is processed',
       (WidgetTester tester) async {
     // Arrange - Construir a tela de agendamentos
     await tester.pumpWidget(
@@ -72,27 +74,27 @@ void main() {
         ),
       ),
     );
-    
+
     // Aguardar o carregamento inicial
     await tester.pumpAndSettle();
-    
+
     // Verificar que a lista de agendamentos foi carregada
     verify(mockAppointmentsService.getAppointmentsList()).called(1);
-    
+
     // Act - Simular uma ação de confirmação
     actionStreamController.add(
-      NotificationAction(
+      const NotificationAction(
         appointmentId: '1',
         actionType: NotificationService.confirmAction,
       ),
     );
-    
+
     // Aguardar o processamento da ação
     await tester.pumpAndSettle();
-    
+
     // Assert - Verificar que a lista de agendamentos foi recarregada
     verify(mockAppointmentsService.getAppointmentsList()).called(2);
-    
+
     // Verificar que um SnackBar foi exibido
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text('Agendamento confirmado com sucesso!'), findsOneWidget);
