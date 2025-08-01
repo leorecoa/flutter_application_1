@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_application_1/core/errors/auth_exceptions.dart';
 import 'package:flutter_application_1/core/services/amplify_service.dart';
 import 'package:flutter_application_1/features/auth/reset_password_screen.dart';
 
@@ -28,25 +29,29 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       try {
         final email = _emailController.text.trim();
         final amplifyService = ref.read(amplifyServiceProvider);
+        // A chamada é feita, mas ignoramos o erro de "usuário não encontrado" aqui.
         await amplifyService.resetPassword(email);
-
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => ResetPasswordScreen(email: email),
-            ),
-          );
-        }
-      } on AuthException catch (e) {
-        setState(() => _errorMessage = e.message);
+      } on UserNotFoundException {
+        // Propositalmente não fazemos nada para não revelar que o usuário não existe.
+        print('User not found, but proceeding to avoid user enumeration.');
       } catch (e) {
-        setState(() => _errorMessage = 'Ocorreu um erro. Tente novamente.');
+        // Captura outros erros reais (ex: sem internet)
+        if (mounted) {
+          setState(() => _errorMessage = 'Ocorreu um erro. Tente novamente.');
+        }
+        return; // Interrompe a execução em caso de erro real.
       } finally {
         if (mounted) {
           setState(() => _isLoading = false);
         }
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
