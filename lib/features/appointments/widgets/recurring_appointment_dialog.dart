@@ -108,7 +108,8 @@ class _RecurringAppointmentDialogState
                     Expanded(
                       child: ListTile(
                         title: Text(
-                            'Data: ${DateFormat('dd/MM/yyyy').format(_startDate)}'),
+                          'Data: ${DateFormat('dd/MM/yyyy').format(_startDate)}',
+                        ),
                         leading: const Icon(Icons.calendar_today),
                         onTap: _selectStartDate,
                       ),
@@ -126,8 +127,10 @@ class _RecurringAppointmentDialogState
 
                 // Configurações de recorrência
                 const Divider(),
-                const Text('Configurações de Recorrência',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Configurações de Recorrência',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<RecurrenceType>(
@@ -138,14 +141,21 @@ class _RecurringAppointmentDialogState
                   ),
                   items: const [
                     DropdownMenuItem(
-                        value: RecurrenceType.none,
-                        child: Text('Sem recorrência')),
+                      value: RecurrenceType.none,
+                      child: Text('Sem recorrência'),
+                    ),
                     DropdownMenuItem(
-                        value: RecurrenceType.daily, child: Text('Diário')),
+                      value: RecurrenceType.daily,
+                      child: Text('Diário'),
+                    ),
                     DropdownMenuItem(
-                        value: RecurrenceType.weekly, child: Text('Semanal')),
+                      value: RecurrenceType.weekly,
+                      child: Text('Semanal'),
+                    ),
                     DropdownMenuItem(
-                        value: RecurrenceType.monthly, child: Text('Mensal')),
+                      value: RecurrenceType.monthly,
+                      child: Text('Mensal'),
+                    ),
                   ],
                   onChanged: (value) =>
                       setState(() => _recurrenceType = value!),
@@ -184,9 +194,11 @@ class _RecurringAppointmentDialogState
                   ),
                   const SizedBox(height: 16),
                   ListTile(
-                    title: Text(_endDate == null
-                        ? 'Data Final: Não definida'
-                        : 'Data Final: ${DateFormat('dd/MM/yyyy').format(_endDate!)}'),
+                    title: Text(
+                      _endDate == null
+                          ? 'Data Final: Não definida'
+                          : 'Data Final: ${DateFormat('dd/MM/yyyy').format(_endDate!)}',
+                    ),
                     leading: const Icon(Icons.event),
                     trailing: _endDate != null
                         ? IconButton(
@@ -335,14 +347,18 @@ class _RecurringAppointmentDialogState
   Appointment _createAppointment(DateTime dateTime, int index) {
     return Appointment(
       id: '${DateTime.now().millisecondsSinceEpoch}_$index',
+      professionalId: '1', // Mock professional ID
+      serviceId: '1', // Mock service ID
+      dateTime: dateTime,
       clientName: _clientNameController.text,
       clientPhone: _clientPhoneController.text,
-      service: _serviceController.text,
-      dateTime: dateTime,
+      serviceName: _serviceController.text,
       price: double.parse(_priceController.text),
       status: AppointmentStatus.scheduled,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
+      confirmedByClient: false,
       createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 }

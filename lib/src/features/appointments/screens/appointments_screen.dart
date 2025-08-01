@@ -1,8 +1,50 @@
-import 'package:agendafacil/src/features/appointments/application/appointment_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:agendafacil/src/features/appointments/data/appointment_model.dart';
+
+// Modelo básico de agendamento
+class Appointment {
+  final String id;
+  final String clientName;
+  final String serviceName;
+  final DateTime dateTime;
+  final DateTime startTime;
+  final DateTime endTime;
+
+  Appointment({
+    required this.id,
+    required this.clientName,
+    required this.serviceName,
+    required this.dateTime,
+    required this.startTime,
+    required this.endTime,
+  });
+}
+
+// Provider mock para agendamentos
+final appointmentsProvider = FutureProvider.family<List<Appointment>, DateTime>((ref, date) async {
+  // Simula dados de agendamentos para demonstração
+  await Future.delayed(const Duration(milliseconds: 500));
+  
+  return [
+    Appointment(
+      id: '1',
+      clientName: 'João Silva',
+      serviceName: 'Corte de Cabelo',
+      dateTime: date,
+      startTime: DateTime(date.year, date.month, date.day, 9, 0),
+      endTime: DateTime(date.year, date.month, date.day, 10, 0),
+    ),
+    Appointment(
+      id: '2',
+      clientName: 'Maria Santos',
+      serviceName: 'Manicure',
+      dateTime: date,
+      startTime: DateTime(date.year, date.month, date.day, 14, 0),
+      endTime: DateTime(date.year, date.month, date.day, 15, 0),
+    ),
+  ];
+});
 
 class AppointmentsScreen extends ConsumerStatefulWidget {
   const AppointmentsScreen({super.key});
@@ -33,7 +75,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
         children: [
           TableCalendar(
             locale: 'pt_BR',
-            firstDay: DateTime.utc(2020, 1, 1),
+            firstDay: DateTime.utc(2020),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
@@ -79,7 +121,7 @@ class _AppointmentsScreenState extends ConsumerState<AppointmentsScreen> {
                     return ListTile(
                       title: Text(appointment.clientName),
                       subtitle: Text(
-                          '${appointment.startTime.hour}:${appointment.startTime.minute} - ${appointment.endTime.hour}:${appointment.endTime.minute}'),
+                          '${appointment.startTime.hour.toString().padLeft(2, '0')}:${appointment.startTime.minute.toString().padLeft(2, '0')} - ${appointment.endTime.hour.toString().padLeft(2, '0')}:${appointment.endTime.minute.toString().padLeft(2, '0')}'),
                       trailing: Text(appointment.serviceName),
                     );
                   },

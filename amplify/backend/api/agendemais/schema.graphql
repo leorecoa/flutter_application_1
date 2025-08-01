@@ -1,0 +1,216 @@
+type Tenant @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: owner, ownerField: "owner", operations: [read, update] },
+  { allow: private, operations: [read] }
+]) {
+  id: ID!
+  name: String!
+  domain: String
+  plan: String!
+  status: String!
+  logo: String
+  primaryColor: String
+  accentColor: String
+  maxUsers: Int
+  maxClients: Int
+  features: [String]
+  owner: String
+  users: [User] @hasMany(indexName: "byTenant", fields: ["id"])
+  clients: [Client] @hasMany(indexName: "byTenant", fields: ["id"])
+  services: [Service] @hasMany(indexName: "byTenant", fields: ["id"])
+  appointments: [Appointment] @hasMany(indexName: "byTenant", fields: ["id"])
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type User @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: owner, ownerField: "username", operations: [read, update] },
+  { allow: private, operations: [read], provider: userPools }
+]) {
+  id: ID!
+  username: String!
+  email: String!
+  name: String!
+  role: String!
+  status: String!
+  avatar: String
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  appointments: [Appointment] @hasMany(indexName: "byUser", fields: ["id"])
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Client @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: private, operations: [create, read, update], provider: userPools }
+]) {
+  id: ID!
+  name: String!
+  email: String
+  phone: String
+  address: String
+  notes: String
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  appointments: [Appointment] @hasMany(indexName: "byClient", fields: ["id"])
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Service @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: private, operations: [read], provider: userPools }
+]) {
+  id: ID!
+  name: String!
+  description: String
+  price: Float!
+  duration: Int!
+  color: String
+  active: Boolean!
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  appointments: [Appointment] @hasMany(indexName: "byService", fields: ["id"])
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Appointment @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: private, operations: [create, read, update], provider: userPools }
+]) {
+  id: ID!
+  clientId: ID! @index(name: "byClient")
+  client: Client @belongsTo(fields: ["clientId"])
+  serviceId: ID! @index(name: "byService")
+  service: Service @belongsTo(fields: ["serviceId"])
+  userId: ID! @index(name: "byUser")
+  user: User @belongsTo(fields: ["userId"])
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  date: AWSDate!
+  startTime: AWSTime!
+  endTime: AWSTime!
+  status: AppointmentStatus!
+  notes: String
+  clientName: String!
+  serviceName: String!
+  servicePrice: Float!
+  paymentStatus: PaymentStatus
+  paymentMethod: String
+  paymentAmount: Float
+  paymentDate: AWSDateTime
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Payment @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: private, operations: [create, read], provider: userPools }
+]) {
+  id: ID!
+  appointmentId: ID! @index(name: "byAppointment")
+  appointment: Appointment @belongsTo(fields: ["appointmentId"])
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  amount: Float!
+  method: String!
+  status: PaymentStatus!
+  transactionId: String
+  pixCode: String
+  receiptUrl: String
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+type TenantSettings @model
+@auth(rules: [
+  { allow: groups, groups: ["Admin"], operations: [create, read, update, delete] },
+  { allow: private, operations: [read], provider: userPools }
+]) {
+  id: ID!
+  tenantId: ID! @index(name: "byTenant")
+  tenant: Tenant @belongsTo(fields: ["tenantId"])
+  workingHours: AWSJSON
+  notificationSettings: AWSJSON
+  paymentSettings: AWSJSON
+  customFields: AWSJSON
+  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
+}
+
+type Query {
+  # Custom queries that can't be handled by @model directives
+  getAppointmentsByDateRange(
+    tenantId: ID!,
+    startDate: AWSDate!,
+    endDate: AWSDate!,
+    status: AppointmentStatus
+  ): [Appointment] @function(name: "getAppointmentsByDateRange")
+  
+  getAvailableTimeSlots(
+    tenantId: ID!,
+    serviceId: ID!,
+    date: AWSDate!
+  ): AWSJSON @function(name: "getAvailableTimeSlots")
+  
+  getDashboardStats(
+    tenantId: ID!,
+    period: String!
+  ): AWSJSON @function(name: "getDashboardStats")
+}
+
+type Mutation {
+  # Custom mutations that can't be handled by @model directives
+  createRecurringAppointments(
+    appointments: [AppointmentInput]!
+  ): [Appointment] @function(name: "createRecurringAppointments")
+  
+  processPayment(
+    appointmentId: ID!,
+    method: String!,
+    amount: Float!
+  ): Payment @function(name: "processPayment")
+  
+  sendAppointmentReminder(
+    appointmentId: ID!
+  ): Boolean @function(name: "sendAppointmentReminder")
+}
+
+input AppointmentInput {
+  clientId: ID!
+  serviceId: ID!
+  userId: ID!
+  tenantId: ID!
+  date: AWSDate!
+  startTime: AWSTime!
+  endTime: AWSTime!
+  status: AppointmentStatus!
+  notes: String
+  clientName: String!
+  serviceName: String!
+  servicePrice: Float!
+}

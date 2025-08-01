@@ -1,50 +1,57 @@
 import 'dart:async';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/notification_model.dart';
 import '../models/appointment_model.dart';
-import '../models/notification_action_model.dart';
 
-/// Provider para o serviço de notificações
-final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
-});
-
-/// Serviço responsável por gerenciar notificações
+/// Serviço para gerenciar notificações
 class NotificationService {
-  /// Constantes para tipos de ação
-  static const String confirmAction = 'confirm';
-  static const String cancelAction = 'cancel';
-  static const String rescheduleAction = 'reschedule';
-  
-  /// Stream controller para ações de notificação
-  final _actionController = StreamController<NotificationAction>.broadcast();
-  
+  final StreamController<NotificationActionEvent> _actionController =
+      StreamController<NotificationActionEvent>.broadcast();
+
   /// Stream de ações de notificação
-  Stream<NotificationAction> get actionStream => _actionController.stream;
-  
-  /// Agenda lembretes para um agendamento
+  Stream<NotificationActionEvent> get actionStream => _actionController.stream;
+
+  /// Confirma uma ação de notificação
+  void confirmAction(String notificationId) {
+    _actionController.add(
+      NotificationActionEvent(
+        notificationId: notificationId,
+        action: 'confirm',
+      ),
+    );
+  }
+
+  /// Cancela uma ação de notificação
+  void cancelAction(String notificationId) {
+    _actionController.add(
+      NotificationActionEvent(notificationId: notificationId, action: 'cancel'),
+    );
+  }
+
+  /// Agenda lembretes de agendamento
   Future<void> scheduleAppointmentReminders(Appointment appointment) async {
-    // Implementação para agendar notificações locais ou push
-    print('Agendando lembretes para: ${appointment.id}');
-    
-    // TODO: Implementar agendamento de notificações
+    // Implementação mock
+    await Future.delayed(const Duration(milliseconds: 100));
   }
-  
-  /// Cancela notificações de um agendamento
+
+  /// Cancela notificações de agendamento
   Future<void> cancelAppointmentNotifications(String appointmentId) async {
-    // Implementação para cancelar notificações
-    print('Cancelando notificações para: $appointmentId');
-    
-    // TODO: Implementar cancelamento de notificações
+    // Implementação mock
+    await Future.delayed(const Duration(milliseconds: 100));
   }
-  
-  /// Processa uma ação de notificação
-  void processAction(NotificationAction action) {
-    // Adiciona a ação ao stream para que os ouvintes sejam notificados
-    _actionController.add(action);
-  }
-  
-  /// Libera recursos
+
+  /// Descarta os recursos
   void dispose() {
     _actionController.close();
   }
+}
+
+/// Evento de ação de notificação
+class NotificationActionEvent {
+  final String notificationId;
+  final String action; // Mudando para String para evitar conflito
+
+  const NotificationActionEvent({
+    required this.notificationId,
+    required this.action,
+  });
 }

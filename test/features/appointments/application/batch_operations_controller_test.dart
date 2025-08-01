@@ -12,8 +12,8 @@ import 'package:flutter_application_1/features/appointments/application/paginate
 import 'batch_operations_controller_test.mocks.dart';
 
 @GenerateMocks([
-  IAppointmentsService, 
-  NotificationService, 
+  IAppointmentsService,
+  NotificationService,
   PaginatedAppointmentsNotifier,
   ProviderContainer,
 ])
@@ -28,9 +28,9 @@ void main() {
     mockAppointmentsService = MockIAppointmentsService();
     mockNotificationService = MockNotificationService();
     mockContainer = MockProviderContainer();
-    
+
     // Mock read function
-    final mockRead = <T>(provider) {
+    mockRead<T>(provider) {
       if (provider == paginatedAppointmentsProvider.notifier) {
         return MockPaginatedAppointmentsNotifier();
       }
@@ -38,14 +38,14 @@ void main() {
         return MockProviderContainer();
       }
       throw UnimplementedError('Provider not mocked');
-    };
-    
+    }
+
     controller = BatchOperationsController(
       mockAppointmentsService,
       mockNotificationService,
       mockRead,
     );
-    
+
     // Create test appointments
     testAppointments = [
       Appointment(
@@ -57,7 +57,7 @@ void main() {
         clientPhone: '123456789',
         service: 'Test Service',
         price: 100.0,
-        dateTime: DateTime(2023, 1, 1, 10, 0),
+        dateTime: DateTime(2023, 1, 1, 10),
         duration: 60,
         status: AppointmentStatus.scheduled,
         notes: 'Test notes',
@@ -71,7 +71,7 @@ void main() {
         clientPhone: '987654321',
         service: 'Test Service',
         price: 100.0,
-        dateTime: DateTime(2023, 1, 2, 10, 0),
+        dateTime: DateTime(2023, 1, 2, 10),
         duration: 60,
         status: AppointmentStatus.scheduled,
         notes: 'Test notes',
@@ -82,11 +82,13 @@ void main() {
   group('cancelAppointments', () {
     test('should cancel all appointments successfully', () async {
       // Arrange
-      when(mockAppointmentsService.updateAppointmentStatus(
-        any, 
-        AppointmentStatus.cancelled,
-      )).thenAnswer((_) async => {'success': true});
-      
+      when(
+        mockAppointmentsService.updateAppointmentStatus(
+          any,
+          AppointmentStatus.cancelled,
+        ),
+      ).thenAnswer((_) async => {'success': true});
+
       // Act
       final result = await controller.cancelAppointments(testAppointments);
 
@@ -94,55 +96,76 @@ void main() {
       expect(result.successCount, 2);
       expect(result.failureCount, 0);
       expect(result.errors, isEmpty);
-      
-      verify(mockAppointmentsService.updateAppointmentStatus(
-        'test-1', 
-        AppointmentStatus.cancelled,
-      )).called(1);
-      
-      verify(mockAppointmentsService.updateAppointmentStatus(
-        'test-2', 
-        AppointmentStatus.cancelled,
-      )).called(1);
-      
-      verify(mockNotificationService.cancelAppointmentNotifications('test-1')).called(1);
-      verify(mockNotificationService.cancelAppointmentNotifications('test-2')).called(1);
+
+      verify(
+        mockAppointmentsService.updateAppointmentStatus(
+          'test-1',
+          AppointmentStatus.cancelled,
+        ),
+      ).called(1);
+
+      verify(
+        mockAppointmentsService.updateAppointmentStatus(
+          'test-2',
+          AppointmentStatus.cancelled,
+        ),
+      ).called(1);
+
+      verify(
+        mockNotificationService.cancelAppointmentNotifications('test-1'),
+      ).called(1);
+      verify(
+        mockNotificationService.cancelAppointmentNotifications('test-2'),
+      ).called(1);
     });
 
-    test('should handle partial failures when cancelling appointments', () async {
-      // Arrange
-      when(mockAppointmentsService.updateAppointmentStatus(
-        'test-1', 
-        AppointmentStatus.cancelled,
-      )).thenAnswer((_) async => {'success': true});
-      
-      when(mockAppointmentsService.updateAppointmentStatus(
-        'test-2', 
-        AppointmentStatus.cancelled,
-      )).thenThrow(Exception('API Error'));
-      
-      // Act
-      final result = await controller.cancelAppointments(testAppointments);
+    test(
+      'should handle partial failures when cancelling appointments',
+      () async {
+        // Arrange
+        when(
+          mockAppointmentsService.updateAppointmentStatus(
+            'test-1',
+            AppointmentStatus.cancelled,
+          ),
+        ).thenAnswer((_) async => {'success': true});
 
-      // Assert
-      expect(result.successCount, 1);
-      expect(result.failureCount, 1);
-      expect(result.errors.length, 1);
-      expect(result.errors[0], contains('Test Client 2'));
-      
-      verify(mockNotificationService.cancelAppointmentNotifications('test-1')).called(1);
-      verifyNever(mockNotificationService.cancelAppointmentNotifications('test-2'));
-    });
+        when(
+          mockAppointmentsService.updateAppointmentStatus(
+            'test-2',
+            AppointmentStatus.cancelled,
+          ),
+        ).thenThrow(Exception('API Error'));
+
+        // Act
+        final result = await controller.cancelAppointments(testAppointments);
+
+        // Assert
+        expect(result.successCount, 1);
+        expect(result.failureCount, 1);
+        expect(result.errors.length, 1);
+        expect(result.errors[0], contains('Test Client 2'));
+
+        verify(
+          mockNotificationService.cancelAppointmentNotifications('test-1'),
+        ).called(1);
+        verifyNever(
+          mockNotificationService.cancelAppointmentNotifications('test-2'),
+        );
+      },
+    );
   });
 
   group('confirmAppointments', () {
     test('should confirm all appointments successfully', () async {
       // Arrange
-      when(mockAppointmentsService.updateAppointmentStatus(
-        any, 
-        AppointmentStatus.confirmed,
-      )).thenAnswer((_) async => {'success': true});
-      
+      when(
+        mockAppointmentsService.updateAppointmentStatus(
+          any,
+          AppointmentStatus.confirmed,
+        ),
+      ).thenAnswer((_) async => {'success': true});
+
       // Act
       final result = await controller.confirmAppointments(testAppointments);
 
@@ -150,38 +173,49 @@ void main() {
       expect(result.successCount, 2);
       expect(result.failureCount, 0);
       expect(result.errors, isEmpty);
-      
-      verify(mockAppointmentsService.updateAppointmentStatus(
-        'test-1', 
-        AppointmentStatus.confirmed,
-      )).called(1);
-      
-      verify(mockAppointmentsService.updateAppointmentStatus(
-        'test-2', 
-        AppointmentStatus.confirmed,
-      )).called(1);
+
+      verify(
+        mockAppointmentsService.updateAppointmentStatus(
+          'test-1',
+          AppointmentStatus.confirmed,
+        ),
+      ).called(1);
+
+      verify(
+        mockAppointmentsService.updateAppointmentStatus(
+          'test-2',
+          AppointmentStatus.confirmed,
+        ),
+      ).called(1);
     });
 
-    test('should handle partial failures when confirming appointments', () async {
-      // Arrange
-      when(mockAppointmentsService.updateAppointmentStatus(
-        'test-1', 
-        AppointmentStatus.confirmed,
-      )).thenAnswer((_) async => {'success': true});
-      
-      when(mockAppointmentsService.updateAppointmentStatus(
-        'test-2', 
-        AppointmentStatus.confirmed,
-      )).thenThrow(Exception('API Error'));
-      
-      // Act
-      final result = await controller.confirmAppointments(testAppointments);
+    test(
+      'should handle partial failures when confirming appointments',
+      () async {
+        // Arrange
+        when(
+          mockAppointmentsService.updateAppointmentStatus(
+            'test-1',
+            AppointmentStatus.confirmed,
+          ),
+        ).thenAnswer((_) async => {'success': true});
 
-      // Assert
-      expect(result.successCount, 1);
-      expect(result.failureCount, 1);
-      expect(result.errors.length, 1);
-      expect(result.errors[0], contains('Test Client 2'));
-    });
+        when(
+          mockAppointmentsService.updateAppointmentStatus(
+            'test-2',
+            AppointmentStatus.confirmed,
+          ),
+        ).thenThrow(Exception('API Error'));
+
+        // Act
+        final result = await controller.confirmAppointments(testAppointments);
+
+        // Assert
+        expect(result.successCount, 1);
+        expect(result.failureCount, 1);
+        expect(result.errors.length, 1);
+        expect(result.errors[0], contains('Test Client 2'));
+      },
+    );
   });
 }

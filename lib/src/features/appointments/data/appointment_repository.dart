@@ -1,29 +1,43 @@
-import 'package:agendafacil/src/core/services/api_service.dart';
-import 'package:agendafacil/src/features/appointments/data/appointment_model.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_application_1/core/services/api_service.dart';
+import 'package:flutter_application_1/core/models/appointment_model.dart';
 
+/// Interface do repositório de agendamentos
 abstract class AppointmentRepository {
-  Future<List<Appointment>> getAppointments(DateTime date);
-  Future<void> createAppointment(Appointment appointment);
+  Future<List<Appointment>> getAppointments({
+    int page = 1,
+    int pageSize = 20,
+    Map<String, dynamic>? filters,
+  });
 }
 
+/// Implementação do repositório de agendamentos
 class AppointmentRepositoryImpl implements AppointmentRepository {
-  final ApiService _apiService = ApiService(client: http.Client());
+  final ApiService _apiService;
+
+  AppointmentRepositoryImpl(this._apiService);
 
   @override
-  Future<List<Appointment>> getAppointments(DateTime date) async {
-    // Exemplo de endpoint: /appointments?date=2024-01-15
-    final dateString = date.toIso8601String().split('T').first;
-    final response = await _apiService.get('appointments?date=$dateString');
-    final data = response as List;
-    return data.map((item) => Appointment.fromJson(item)).toList();
-  }
-
-  @override
-  Future<void> createAppointment(Appointment appointment) async {
-    await _apiService.post(
-      'appointments',
-      body: appointment.toJson(),
-    );
+  Future<List<Appointment>> getAppointments({
+    int page = 1,
+    int pageSize = 20,
+    Map<String, dynamic>? filters,
+  }) async {
+    // Implementação temporária
+    await Future.delayed(const Duration(milliseconds: 500));
+    return [
+      Appointment(
+        id: '1',
+        professionalId: 'prof1',
+        serviceId: 'service1',
+        dateTime: DateTime.now().add(const Duration(days: 1)),
+        clientName: 'João Silva',
+        clientPhone: '11999999999',
+        serviceName: 'Corte de Cabelo',
+        price: 50.0,
+        confirmedByClient: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
   }
 }

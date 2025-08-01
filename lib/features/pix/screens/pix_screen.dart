@@ -46,53 +46,54 @@ class _PixScreenState extends State<PixScreen> {
     },
   ];
 
-  Future<void> _gerarPix() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _generatePixCode() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
 
-    setState(() => _isLoading = true);
+      try {
+        final response = await _pixService.createPixPayment(
+          double.parse(_valorController.text),
+          _descricaoController.text,
+        );
 
-    try {
-      final response = await _pixService.generatePixCode(
-        amount: double.parse(_valorController.text),
-        description: _descricaoController.text,
-      );
-
-      if (response['success'] == true) {
-        setState(() {
-          _pixCode = response['pixCode'];
-          _pixId = response['pixId'];
-          _pixData = response['data'];
-        });
-
+        if (response['success'] == true) {
+          setState(() {
+            _pixData = response['data'];
+            _isLoading = false;
+          });
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response['message'] ?? 'Erro ao gerar PIX'),
+              ),
+            );
+          }
+        }
+      } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('PIX gerado com sucesso!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erro ao gerar PIX: $e')));
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
         }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao gerar PIX: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _copiarPix() {
     if (_pixCode != null) {
       Clipboard.setData(ClipboardData(text: _pixCode!));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Código PIX copiado!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Código PIX copiado!')));
     }
   }
 
@@ -120,7 +121,9 @@ class _PixScreenState extends State<PixScreen> {
                       const Text(
                         'Gerar Cobrança PIX',
                         style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -157,7 +160,7 @@ class _PixScreenState extends State<PixScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _gerarPix,
+                          onPressed: _isLoading ? null : _generatePixCode,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF667eea),
                             foregroundColor: Colors.white,
@@ -165,7 +168,8 @@ class _PixScreenState extends State<PixScreen> {
                           ),
                           child: _isLoading
                               ? const CircularProgressIndicator(
-                                  color: Colors.white)
+                                  color: Colors.white,
+                                )
                               : const Text('Gerar PIX'),
                         ),
                       ),
@@ -184,7 +188,9 @@ class _PixScreenState extends State<PixScreen> {
                       const Text(
                         'PIX Gerado',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Container(
@@ -211,7 +217,9 @@ class _PixScreenState extends State<PixScreen> {
                               child: Text(
                                 _pixCode!,
                                 style: const TextStyle(
-                                    fontSize: 10, fontFamily: 'monospace'),
+                                  fontSize: 10,
+                                  fontFamily: 'monospace',
+                                ),
                                 maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -247,11 +255,14 @@ class _PixScreenState extends State<PixScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                  'Valor: R\$ ${_pixData!['amount']?.toStringAsFixed(2)}'),
+                                'Valor: R\$ ${_pixData!['amount']?.toStringAsFixed(2)}',
+                              ),
                               Text(
-                                  'Status: ${_pixData!['status'] ?? 'Pendente'}'),
+                                'Status: ${_pixData!['status'] ?? 'Pendente'}',
+                              ),
                               Text(
-                                  'Criado em: ${_pixData!['createdAt'] ?? ''}'),
+                                'Criado em: ${_pixData!['createdAt'] ?? ''}',
+                              ),
                             ],
                           ),
                         ),
@@ -300,7 +311,9 @@ class _PixScreenState extends State<PixScreen> {
                     ),
                     trailing: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: item['status'] == 'Pago'
                             ? Colors.green.withValues(alpha: 0.1)
@@ -329,29 +342,30 @@ class _PixScreenState extends State<PixScreen> {
   }
 
   Future<void> _checkPixStatus() async {
-    if (_pixId == null) return;
+    if (_pixData == null) return;
 
     try {
-      final response = await _pixService.checkPixStatus(_pixId!);
-      if (response['success'] == true && mounted) {
-        setState(() {
-          _pixData = response['data'];
-        });
+      final response = await _pixService.getPixPaymentStatus(_pixData!['id']);
 
+      if (response['success'] == true) {
         final status = response['data']['status'];
-        if (status == 'PAID') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Pagamento confirmado!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+        if (status == 'paid') {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Pagamento confirmado!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao verificar status: $e')));
+      }
     }
   }
 

@@ -1,0 +1,21 @@
+{
+  "appName": "agendemais",
+  "roleName": "pinpointLambdaRolea1b2c3",
+  "cloudformationPolicyName": "cloudformationPolicya1b2c3",
+  "cloudWatchPolicyName": "cloudWatchPolicya1b2c3",
+  "pinpointPolicyName": "pinpointPolicya1b2c3",
+  "authPolicyName": "pinpoint_amplify_a1b2c3",
+  "unauthPolicyName": "pinpoint_amplify_a1b2c3",
+  "authRoleName": {
+    "Ref": "AuthRoleName"
+  },
+  "unauthRoleName": {
+    "Ref": "UnauthRoleName"
+  },
+  "authRoleArn": {
+    "Fn::GetAtt": [
+      "AuthRole",
+      "Arn"
+    ]
+  }
+}

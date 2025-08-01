@@ -2,62 +2,78 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/client_model.dart';
 import '../../../core/models/appointment_model.dart';
-import '../../../features/appointments/services/appointments_service_v2.dart';
+import '../../../core/services/api_service.dart';
 
 class ClientHistoryScreen extends StatefulWidget {
-  final Client client;
-  
+  final String clientName;
+  final String clientId;
+
   const ClientHistoryScreen({
-    super.key,
-    required this.client,
-  });
+    Key? key,
+    required this.clientName,
+    required this.clientId,
+  }) : super(key: key);
 
   @override
   State<ClientHistoryScreen> createState() => _ClientHistoryScreenState();
 }
 
 class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
-  final _appointmentsService = AppointmentsServiceV2();
   List<Appointment> _appointments = [];
   bool _isLoading = true;
-  
+
   @override
   void initState() {
     super.initState();
-    _loadAppointments();
+    _loadClientAppointments();
   }
-  
-  Future<void> _loadAppointments() async {
-    setState(() => _isLoading = true);
-    
+
+  Future<void> _loadClientAppointments() async {
     try {
-      final appointments = await _appointmentsService.getClientAppointments(widget.client.id);
-      
-      if (mounted) {
-        setState(() {
-          _appointments = appointments;
-          _isLoading = false;
-        });
-      }
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Implementação temporária
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      setState(() {
+        _appointments = [
+          Appointment(
+            id: '1',
+            professionalId: 'prof1',
+            serviceId: 'service1',
+            dateTime: DateTime.now().subtract(const Duration(days: 1)),
+            clientName: widget.clientName,
+            clientPhone: '123456789', // Placeholder
+            serviceName: 'Corte de Cabelo',
+            price: 50.0,
+            confirmedByClient: true,
+            createdAt: DateTime.now().subtract(const Duration(days: 2)),
+            updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+          ),
+        ];
+        _isLoading = false;
+      });
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       if (mounted) {
-        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar agendamentos: $e')),
+          SnackBar(content: Text('Erro ao carregar histórico: $e')),
         );
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Histórico: ${widget.client.name}'),
-      ),
+      appBar: AppBar(title: Text('Histórico: ${widget.clientName}')),
       body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _appointments.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : _appointments.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -65,14 +81,14 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
                   const Icon(Icons.history, size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
                   Text(
-                    'Nenhum agendamento encontrado para ${widget.client.name}',
+                    'Nenhum agendamento encontrado para ${widget.clientName}',
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             )
           : RefreshIndicator(
-              onRefresh: _loadAppointments,
+              onRefresh: _loadClientAppointments,
               child: ListView.builder(
                 padding: const EdgeInsets.all(16),
                 itemCount: _appointments.length,
@@ -84,21 +100,18 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
             ),
     );
   }
-  
+
   Widget _buildAppointmentCard(Appointment appointment) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _getStatusColor(appointment.status),
-          child: Icon(
-            _getStatusIcon(appointment.status),
-            color: Colors.white,
-          ),
+          child: Icon(_getStatusIcon(appointment.status), color: Colors.white),
         ),
-        title: Text(appointment.service),
+        title: Text(appointment.serviceName),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -120,7 +133,7 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
       ),
     );
   }
-  
+
   Color _getStatusColor(AppointmentStatus status) {
     switch (status) {
       case AppointmentStatus.scheduled:
@@ -159,12 +172,12 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
         return 'Cancelado';
     }
   }
-  
+
   void _showAppointmentDetails(Appointment appointment) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(appointment.service),
+        title: Text(appointment.serviceName),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +185,9 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text('Data'),
-              subtitle: Text(DateFormat('dd/MM/yyyy').format(appointment.dateTime)),
+              subtitle: Text(
+                DateFormat('dd/MM/yyyy').format(appointment.dateTime),
+              ),
             ),
             ListTile(
               leading: const Icon(Icons.access_time),

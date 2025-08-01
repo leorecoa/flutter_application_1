@@ -1,149 +1,79 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../constants/app_constants.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
-import '../config/app_config.dart';
 
+/// Serviço para API
 class ApiService {
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
-  ApiService._internal();
-  
   String? _authToken;
   User? _currentUser;
-  
-  String? get authToken => _authToken;
-  User? get currentUser => _currentUser;
-  bool get isAuthenticated => _authToken != null && _currentUser != null;
-  
-  Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString(AppConstants.authTokenKey);
-    final userData = prefs.getString(AppConstants.userDataKey);
-    if (userData != null) {
-      _currentUser = User.fromJson(jsonDecode(userData));
-    }
-  }
-  
-  Future<void> setAuthToken(String token, User user) async {
+
+  /// Provider para o serviço API
+  static final provider = Provider<ApiService>((ref) {
+    return ApiService();
+  });
+
+  /// Define o token de autenticação e usuário atual
+  void setAuthToken(String token, User user) {
     _authToken = token;
     _currentUser = user;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(AppConstants.authTokenKey, token);
-    await prefs.setString(AppConstants.userDataKey, jsonEncode(user.toJson()));
   }
-  
-  Future<void> clearAuthToken() async {
-    _authToken = null;
-    _currentUser = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(AppConstants.authTokenKey);
-    await prefs.remove(AppConstants.userDataKey);
-  }
-  
-  Future<Map<String, dynamic>> post(String path, Map<String, dynamic> data) async {
-    final response = await _makeRealApiCall('POST', path, data);
-    
-    // Se for login bem-sucedido, salvar dados
-    if (path == '/auth/login' && response['success'] == true) {
-      await setAuthToken(response['token'], User.fromJson(response['user']));
-    }
-    
-    return response;
-  }
-  
 
-  
-  Future<Map<String, dynamic>> get(String path) async {
-    return await _makeRealApiCall('GET', path, null);
-  }
-  
+  /// Obtém o token de autenticação atual
+  String? get authToken => _authToken;
 
-  
-  Future<Map<String, dynamic>> generatePix({
-    required double valor,
-    required String descricao,
+  /// Obtém o usuário atual
+  User? get currentUser => _currentUser;
+
+  /// Executa uma requisição GET
+  Future<Map<String, dynamic>> get(
+    String endpoint, {
+    Map<String, String>? queryParameters,
+    String? token,
   }) async {
-    return await _makeRealApiCall('POST', '/payments/pix', {
-      'amount': valor,
-      'description': descricao,
-    });
-  }
-  
-  Future<Map<String, dynamic>> put(String path, Map<String, dynamic> data) async {
-    return await _makeRealApiCall('PUT', path, data);
+    // Implementação mock para desenvolvimento
+    await Future.delayed(const Duration(milliseconds: 100));
+    return {'success': true, 'data': []};
   }
 
-  Future<Map<String, dynamic>> delete(String path) async {
-    return await _makeRealApiCall('DELETE', path, null);
-  }
-  
-  Future<Map<String, dynamic>> _makeRealApiCall(String method, String path, Map<String, dynamic>? data) async {
-    try {
-      final url = Uri.parse('${AppConfig.baseUrl}$path');
-      final headers = {
-        'Content-Type': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      };
-      
-      http.Response response;
-      
-      switch (method) {
-        case 'GET':
-          response = await http.get(url, headers: headers).timeout(AppConstants.requestTimeout);
-          break;
-        case 'POST':
-          response = await http.post(
-            url,
-            headers: headers,
-            body: data != null ? jsonEncode(data) : null,
-          ).timeout(AppConstants.requestTimeout);
-          break;
-        case 'PUT':
-          response = await http.put(
-            url,
-            headers: headers,
-            body: data != null ? jsonEncode(data) : null,
-          ).timeout(AppConstants.requestTimeout);
-          break;
-        case 'DELETE':
-          response = await http.delete(url, headers: headers).timeout(AppConstants.requestTimeout);
-          break;
-        default:
-          throw Exception('Método HTTP não suportado: $method');
-      }
-      
-      if (response.body.isEmpty) {
-        return {
-          'success': false,
-          'message': 'Resposta vazia do servidor',
-        };
-      }
-      
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>?;
-      
-      if (responseData == null) {
-        return {
-          'success': false,
-          'message': 'Resposta inválida do servidor',
-        };
-      }
-      
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return responseData;
-      } else {
-        return {
-          'success': false,
-          'message': responseData['message']?.toString() ?? 'Erro na requisição (${response.statusCode})',
-        };
-      }
-      
-    } catch (e) {
+  /// Executa uma requisição POST
+  Future<Map<String, dynamic>> post(
+    String endpoint, {
+    dynamic body,
+    String? token,
+  }) async {
+    // Implementação mock para desenvolvimento
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Simula resposta de login
+    if (endpoint == '/auth/login') {
       return {
-        'success': false,
-        'message': 'Erro de conexão: $e',
+        'success': true,
+        'user': {
+          'id': '1',
+          'name': 'Usuário Teste',
+          'email': 'teste@exemplo.com',
+        },
+        'token': 'mock_token_123',
       };
     }
+
+    return {'success': true, 'data': {}};
+  }
+
+  /// Executa uma requisição PUT
+  Future<Map<String, dynamic>> put(
+    String endpoint, {
+    dynamic body,
+    String? token,
+  }) async {
+    // Implementação mock para desenvolvimento
+    await Future.delayed(const Duration(milliseconds: 100));
+    return {'success': true, 'data': {}};
+  }
+
+  /// Executa uma requisição DELETE
+  Future<Map<String, dynamic>> delete(String endpoint, {String? token}) async {
+    // Implementação mock para desenvolvimento
+    await Future.delayed(const Duration(milliseconds: 100));
+    return {'success': true, 'message': 'Deleted successfully'};
   }
 }

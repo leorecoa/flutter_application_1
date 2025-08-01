@@ -3,156 +3,108 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/notification_model.dart';
 import '../services/real_time_notification_service.dart';
 
-class RealTimeNotificationWidget extends ConsumerStatefulWidget {
-  final Widget child;
+/// Provider para o serviço de notificações em tempo real
+final realTimeNotificationServiceProvider =
+    Provider<RealTimeNotificationService>((ref) {
+      return RealTimeNotificationService();
+    });
 
-  const RealTimeNotificationWidget({
-    Key? key,
-    required this.child,
-  }) : super(key: key);
+class RealTimeNotificationWidget extends ConsumerStatefulWidget {
+  const RealTimeNotificationWidget({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<RealTimeNotificationWidget> createState() => _RealTimeNotificationWidgetState();
+  ConsumerState<RealTimeNotificationWidget> createState() =>
+      _RealTimeNotificationWidgetState();
 }
 
-class _RealTimeNotificationWidgetState extends ConsumerState<RealTimeNotificationWidget> {
-  OverlayEntry? _overlayEntry;
-  bool _isShowingNotification = false;
-
+class _RealTimeNotificationWidgetState
+    extends ConsumerState<RealTimeNotificationWidget> {
   @override
   void initState() {
     super.initState();
-    
-    // Iniciar o serviço de notificações em tempo real
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final service = ref.read(realTimeNotificationServiceProvider);
-      service.startPolling();
-      
-      // Escutar por novas notificações
-      service.notificationStream.listen(_showNotification);
-    });
+    _startNotificationService();
+  }
+
+  void _startNotificationService() {
+    final service = ref.read(realTimeNotificationServiceProvider);
+    service.startPolling();
   }
 
   @override
   void dispose() {
-    // Parar o serviço de notificações em tempo real
-    ref.read(realTimeNotificationServiceProvider).stopPolling();
-    _removeCurrentNotification();
+    final service = ref.read(realTimeNotificationServiceProvider);
+    service.stopPolling();
     super.dispose();
   }
 
-  void _showNotification(NotificationModel notification) {
-    // Remover notificação atual se existir
-    _removeCurrentNotification();
-    
-    // Criar nova notificação
-    _overlayEntry = OverlayEntry(
-      builder: (context) => _buildNotificationWidget(notification),
+  @override
+  Widget build(BuildContext context) {
+    final notificationService = ref.watch(realTimeNotificationServiceProvider);
+
+    return StreamBuilder<NotificationModel>(
+      stream: notificationService.notificationStream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+
+        final notification = snapshot.data!;
+        return _buildNotificationCard(notification);
+      },
     );
-    
-    // Mostrar notificação
-    _isShowingNotification = true;
-    Overlay.of(context).insert(_overlayEntry!);
-    
-    // Remover após 5 segundos
-    Future.delayed(const Duration(seconds: 5), () {
-      _removeCurrentNotification();
-    });
   }
 
-  void _removeCurrentNotification() {
-    if (_isShowingNotification && _overlayEntry != null) {
-      _overlayEntry!.remove();
-      _overlayEntry = null;
-      _isShowingNotification = false;
-    }
-  }
-
-  Widget _buildNotificationWidget(NotificationModel notification) {
-    return Positioned(
-      top: MediaQuery.of(context).padding.top + 10,
-      right: 10,
-      left: 10,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Marcar como lida e remover
-            ref.read(realTimeNotificationServiceProvider).markAsRead(notification.id);
-            _removeCurrentNotification();
-            
-            // Navegar para a tela apropriada com base no tipo de notificação
-            if (notification.type == NotificationType.appointment) {
-              // Implementar navegação para detalhes do agendamento
-            }
+  Widget _buildNotificationCard(NotificationModel notification) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListTile(
+        leading: _getNotificationIcon(notification.type),
+        title: Text(notification.title),
+        subtitle: Text(notification.body),
+        trailing: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () {
+            // Implementar fechamento da notificação
           },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  _getNotificationIcon(notification.type),
-                  color: Colors.white,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        notification.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        notification.message,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: _removeCurrentNotification,
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
   }
 
-  IconData _getNotificationIcon(NotificationType type) {
-    switch (type) {
-      case NotificationType.appointment:
-        return Icons.calendar_today;
-      case NotificationType.payment:
-        return Icons.payment;
-      case NotificationType.system:
-        return Icons.notifications;
-      default:
-        return Icons.notifications;
-    }
-  }
+  Widget _getNotificationIcon(NotificationType type) {
+    IconData iconData;
+    Color iconColor;
 
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
+    switch (type) {
+      case NotificationType.info:
+        iconData = Icons.info;
+        iconColor = Colors.blue;
+        break;
+      case NotificationType.success:
+        iconData = Icons.check_circle;
+        iconColor = Colors.green;
+        break;
+      case NotificationType.warning:
+        iconData = Icons.warning;
+        iconColor = Colors.orange;
+        break;
+      case NotificationType.error:
+        iconData = Icons.error;
+        iconColor = Colors.red;
+        break;
+      case NotificationType.appointment:
+        iconData = Icons.calendar_today;
+        iconColor = Colors.purple;
+        break;
+      case NotificationType.reminder:
+        iconData = Icons.alarm;
+        iconColor = Colors.teal;
+        break;
+    }
+
+    return CircleAvatar(
+      backgroundColor: iconColor.withValues(alpha: 0.2),
+      child: Icon(iconData, color: iconColor),
+    );
   }
 }

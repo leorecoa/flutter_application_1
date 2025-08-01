@@ -88,8 +88,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _logout() async {
-    await _apiService.clearAuthToken();
-    if (mounted) context.go('/login');
+    try {
+      // Implementação temporária de logout
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro ao fazer logout: $e')));
+      }
+    }
   }
 
   @override
@@ -133,7 +145,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.business),
                   ),
-                  validator: (value) => value?.isEmpty ?? true ? 'Nome obrigatório' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Nome obrigatório' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -158,7 +171,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.qr_code),
                   ),
-                  validator: (value) => value?.isEmpty ?? true ? 'Chave PIX obrigatória' : null,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Chave PIX obrigatória' : null,
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -186,7 +200,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Funcionalidade em desenvolvimento')),
+                const SnackBar(
+                  content: Text('Funcionalidade em desenvolvimento'),
+                ),
               );
             },
           ),
@@ -202,5 +218,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-
-

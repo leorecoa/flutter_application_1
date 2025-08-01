@@ -47,10 +47,10 @@ class AppointmentsService implements IAppointmentsService {
       throw Exception('Erro ao buscar agendamento: $e');
     }
   }
-  
+
   @override
   Future<Map<String, dynamic>> getAppointments({
-    String? status, 
+    String? status,
     DateTime? date,
     String? clientId,
     int? limit,
@@ -58,79 +58,99 @@ class AppointmentsService implements IAppointmentsService {
     String? search,
   }) async {
     String endpoint = '/appointments';
-    List<String> params = [];
-    
+    final List<String> params = [];
+
     if (status != null) {
       params.add('status=$status');
     }
-    
+
     if (date != null) {
       final dateStr = date.toIso8601String().split('T')[0];
       params.add('date=$dateStr');
     }
-    
+
     if (clientId != null) {
       params.add('clientId=$clientId');
     }
-    
+
     if (limit != null) {
       params.add('limit=$limit');
     }
-    
+
     if (lastKey != null) {
       params.add('lastKey=$lastKey');
     }
-    
+
     if (search != null && search.isNotEmpty) {
       params.add('search=$search');
     }
-    
+
     if (params.isNotEmpty) {
-      endpoint += '?' + params.join('&');
+      endpoint += '?${params.join('&')}';
     }
-    
+
     return await _apiService.get(endpoint);
   }
-  
+
   @override
-  Future<bool> checkTimeConflict(DateTime appointmentDateTime, int durationMinutes) async {
+  Future<bool> checkTimeConflict(
+    DateTime appointmentDateTime,
+    int durationMinutes,
+  ) async {
     try {
       // Obter todos os agendamentos do dia
-      final date = DateTime(appointmentDateTime.year, appointmentDateTime.month, appointmentDateTime.day);
+      final date = DateTime(
+        appointmentDateTime.year,
+        appointmentDateTime.month,
+        appointmentDateTime.day,
+      );
       final response = await getAppointments(date: date);
-      
+
       if (response['success'] != true) {
         return false;
       }
-      
+
       final List<dynamic> data = response['data'] ?? [];
-      final appointments = data.map((json) => Appointment.fromDynamoJson(json)).toList();
-      
+      final appointments = data
+          .map((json) => Appointment.fromDynamoJson(json))
+          .toList();
+
       // Filtrar apenas agendamentos confirmados ou agendados (não cancelados)
-      final activeAppointments = appointments.where((a) => 
-        a.status == AppointmentStatus.scheduled || 
-        a.status == AppointmentStatus.confirmed
-      ).toList();
-      
+      final activeAppointments = appointments
+          .where(
+            (a) =>
+                a.status == AppointmentStatus.scheduled ||
+                a.status == AppointmentStatus.confirmed,
+          )
+          .toList();
+
       // Calcular horário de início e fim do novo agendamento
       final startTime = appointmentDateTime;
-      final endTime = appointmentDateTime.add(Duration(minutes: durationMinutes));
-      
+      final endTime = appointmentDateTime.add(
+        Duration(minutes: durationMinutes),
+      );
+
       // Verificar se há conflito com algum agendamento existente
       for (final appointment in activeAppointments) {
         final existingStartTime = appointment.dateTime;
         final existingDuration = appointment.duration ?? 60;
-        final existingEndTime = existingStartTime.add(Duration(minutes: existingDuration));
-        
+        final existingEndTime = existingStartTime.add(
+          Duration(minutes: existingDuration),
+        );
+
         // Verificar sobreposição de horários
-        if ((startTime.isAfter(existingStartTime) && startTime.isBefore(existingEndTime)) ||
-            (endTime.isAfter(existingStartTime) && endTime.isBefore(existingEndTime)) ||
-            (startTime.isBefore(existingStartTime) && endTime.isAfter(existingEndTime)) ||
-            (startTime.isAtSameMomentAs(existingStartTime) || endTime.isAtSameMomentAs(existingEndTime))) {
+        if ((startTime.isAfter(existingStartTime) &&
+                startTime.isBefore(existingEndTime)) ||
+            (endTime.isAfter(existingStartTime) &&
+                endTime.isBefore(existingEndTime)) ||
+            (startTime.isBefore(existingStartTime) &&
+                endTime.isAfter(existingEndTime)) ||
+            (startTime.isAtSameMomentAs(existingStartTime) ||
+                endTime.isAtSameMomentAs(existingEndTime))) {
           return true; // Há conflito
         }
       }
-      
+
       return false; // Não há conflito
     } catch (e) {
       print('Erro ao verificar conflito de horário: $e');
@@ -152,7 +172,10 @@ class AppointmentsService implements IAppointmentsService {
     String appointmentId,
     Map<String, dynamic> appointmentData,
   ) async {
-    return await _apiService.put('/appointments/$appointmentId', appointmentData);
+    return await _apiService.put(
+      '/appointments/$appointmentId',
+      appointmentData,
+    );
   }
 
   @override
@@ -173,7 +196,7 @@ class AppointmentsService implements IAppointmentsService {
       final date = filters?['date'] as DateTime?;
       final clientId = filters?['clientId'];
       final search = searchTerm ?? filters?['search'];
-      
+
       // Fazer a requisição
       final response = await getAppointments(
         status: status,
@@ -183,30 +206,32 @@ class AppointmentsService implements IAppointmentsService {
         lastKey: lastKey,
         search: search,
       );
-      
+
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
-        final items = data.map((json) => Appointment.fromDynamoJson(json)).toList();
+        final items = data
+            .map((json) => Appointment.fromDynamoJson(json))
+            .toList();
         final nextKey = response['lastKey'] as String?;
         return PaginatedResponse(items: items, lastKey: nextKey);
       }
-      
-      return const PaginatedResponse(items: [], lastKey: null);
+
+      return const PaginatedResponse(items: []);
     } catch (e) {
       throw Exception('Erro ao buscar agendamentos: $e');
     }
   }
-  
+
   @override
   Future<List<Appointment>> getClientAppointments(String clientId) async {
     try {
       final response = await getAppointments(clientId: clientId);
-      
+
       if (response['success'] == true) {
         final List<dynamic> data = response['data'] ?? [];
         return data.map((json) => Appointment.fromDynamoJson(json)).toList();
       }
-      
+
       return [];
     } catch (e) {
       throw Exception('Erro ao buscar agendamentos do cliente: $e');
@@ -243,7 +268,7 @@ class AppointmentsService implements IAppointmentsService {
       if (response['success'] == true) {
         return Appointment.fromDynamoJson(response['data']);
       }
-      
+
       throw Exception(response['message'] ?? 'Erro ao criar agendamento');
     } catch (e) {
       throw Exception('Erro ao criar agendamento: $e');

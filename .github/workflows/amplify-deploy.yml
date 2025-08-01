@@ -1,0 +1,141 @@
+name: Amplify Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'tenant/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.9'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Analyze project
+        run: flutter analyze
+      
+      - name: Run tests
+        run: flutter test
+
+  build:
+    name: Build
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.9'
+          channel: 'stable'
+          cache: true
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Build Web
+        run: flutter build web --release
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: build/web
+  
+  deploy:
+    name: Deploy to Amplify
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: build/web
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      
+      - name: Install Amplify CLI
+        run: npm install -g @aws-amplify/cli
+      
+      - name: Get branch name
+        id: branch-name
+        run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+      
+      - name: Set environment variables
+        run: |
+          if [[ "${{ steps.branch-name.outputs.branch }}" == "main" ]]; then
+            echo "ENV_NAME=prod" >> $GITHUB_ENV
+            echo "TENANT_ID=default" >> $GITHUB_ENV
+          elif [[ "${{ steps.branch-name.outputs.branch }}" == "develop" ]]; then
+            echo "ENV_NAME=dev" >> $GITHUB_ENV
+            echo "TENANT_ID=dev" >> $GITHUB_ENV
+          elif [[ "${{ steps.branch-name.outputs.branch }}" == tenant/* ]]; then
+            echo "ENV_NAME=prod" >> $GITHUB_ENV
+            TENANT_ID=$(echo "${{ steps.branch-name.outputs.branch }}" | sed 's/tenant\///')
+            echo "TENANT_ID=$TENANT_ID" >> $GITHUB_ENV
+          fi
+      
+      - name: Deploy to Amplify
+        run: |
+          amplify pull --appId ${{ secrets.AMPLIFY_APP_ID }} --envName ${{ env.ENV_NAME }} --yes
+          
+          # For tenant-specific branches, update the tenant ID
+          if [[ "${{ steps.branch-name.outputs.branch }}" == tenant/* ]]; then
+            aws amplify update-branch \
+              --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+              --branch-name ${{ steps.branch-name.outputs.branch }} \
+              --environment-variables "ENV_NAME=${{ env.ENV_NAME }},TENANT_ID=${{ env.TENANT_ID }}"
+          fi
+          
+          # Start the deployment job
+          aws amplify start-job \
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+            --branch-name ${{ steps.branch-name.outputs.branch }} \
+            --job-type RELEASE
+      
+      - name: Notify deployment status
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: deployments
+          SLACK_TITLE: Deployment Status
+          SLACK_MESSAGE: |
+            Environment: ${{ env.ENV_NAME }}
+            Tenant: ${{ env.TENANT_ID }}
+            Branch: ${{ steps.branch-name.outputs.branch }}
+            Status: ${{ job.status }}
+          SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}

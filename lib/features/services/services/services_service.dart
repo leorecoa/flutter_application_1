@@ -4,58 +4,64 @@ import '../../../core/models/service_model.dart';
 class ServicesService {
   final _apiService = ApiService();
 
-  Future<Map<String, dynamic>> getServices() async {
-    return await _apiService.get('/services');
+  Future<List<Service>> getServices() async {
+    final response = await _apiService.get('/services');
+    // Implementação temporária
+    return [
+      Service(
+        id: '1',
+        name: 'Corte de Cabelo',
+        duration: 30,
+        price: 50.0,
+        description: 'Corte de cabelo masculino',
+      ),
+      Service(
+        id: '2',
+        name: 'Manicure',
+        duration: 60,
+        price: 30.0,
+        description: 'Manicure completa',
+      ),
+    ];
   }
 
-  Future<Map<String, dynamic>> createService(Map<String, dynamic> serviceData) async {
-    return await _apiService.post('/services', serviceData);
-  }
-
-  Future<Map<String, dynamic>> updateService(String serviceId, Map<String, dynamic> serviceData) async {
-    return await _apiService.put('/services/$serviceId', serviceData);
-  }
-
-  Future<Map<String, dynamic>> deleteService(String serviceId) async {
-    return await _apiService.delete('/services/$serviceId');
-  }
-
-  Future<List<Service>> getServicesList() async {
-    try {
-      final response = await getServices();
-      
-      if (response['success'] == true) {
-        final List<dynamic> data = response['data'] ?? [];
-        return data.map((json) => Service.fromJson(json)).toList();
-      }
-      
-      return [];
-    } catch (e) {
-      throw Exception('Erro ao buscar serviços: $e');
-    }
-  }
-
-  Future<Service> createServiceModel({
+  /// Cria um modelo de serviço
+  Service createServiceModel({
     required String name,
     required int duration,
     required double price,
     String? description,
-  }) async {
-    try {
-      final response = await createService({
-        'name': name,
-        'duration': duration,
-        'price': price,
-        'description': description,
-      });
+  }) {
+    return Service(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      duration: duration,
+      price: price,
+      description: description,
+    );
+  }
 
-      if (response['success'] == true) {
-        return Service.fromJson(response['data']);
-      }
-      
-      throw Exception(response['message'] ?? 'Erro ao criar serviço');
-    } catch (e) {
-      throw Exception('Erro ao criar serviço: $e');
-    }
+  Future<Service> createService(Service service) async {
+    final response = await _apiService.post(
+      '/services',
+      body: service.toJson(),
+    );
+    // Implementação temporária
+    return service;
+  }
+
+  Future<Service> updateService(Service service) async {
+    final response = await _apiService.put(
+      '/services/${service.id}',
+      body: service.toJson(),
+    );
+    // Implementação temporária
+    return service;
+  }
+
+  Future<bool> deleteService(String serviceId) async {
+    final response = await _apiService.delete('/services/$serviceId');
+    // Implementação temporária
+    return true;
   }
 }

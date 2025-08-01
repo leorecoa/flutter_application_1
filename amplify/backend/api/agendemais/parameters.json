@@ -1,0 +1,9 @@
+{
+  "AppSyncApiName": "agendemais",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": true,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": ["authagendemais", "Outputs.UserPoolId"]
+  },
+  "AuthModeLastUpdated": "2024-06-01T00:00:00.000Z"
+}

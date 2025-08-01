@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/appointment_model.dart';
 import '../application/appointment_providers.dart';
-import '../utils/appointment_status_utils.dart';
 
 /// Widget para exibir estatísticas de agendamentos
 class AppointmentStatisticsWidget extends ConsumerWidget {
@@ -12,23 +11,28 @@ class AppointmentStatisticsWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appointmentsAsync = ref.watch(allAppointmentsProvider);
-    
+
     return appointmentsAsync.when(
       data: (appointments) => _buildStatistics(context, appointments),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Text('Erro ao carregar estatísticas: $error'),
-      ),
+      error: (error, _) =>
+          Center(child: Text('Erro ao carregar estatísticas: $error')),
     );
   }
-  
-  Widget _buildStatistics(BuildContext context, List<Appointment> appointments) {
+
+  Widget _buildStatistics(
+    BuildContext context,
+    List<Appointment> appointments,
+  ) {
     final theme = Theme.of(context);
-    final currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    
+    final currencyFormat = NumberFormat.currency(
+      locale: 'pt_BR',
+      symbol: 'R\$',
+    );
+
     // Calcular estatísticas
     final stats = _calculateStatistics(appointments);
-    
+
     return Card(
       margin: const EdgeInsets.all(16),
       child: Padding(
@@ -36,10 +40,7 @@ class AppointmentStatisticsWidget extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Estatísticas do Mês',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Estatísticas do Mês', style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -97,11 +98,11 @@ class AppointmentStatisticsWidget extends ConsumerWidget {
       ),
     );
   }
-  
+
   Widget _buildStatCard(
-    BuildContext context, 
-    String title, 
-    String value, 
+    BuildContext context,
+    String title,
+    String value,
     IconData icon,
     Color color,
   ) {
@@ -114,13 +115,7 @@ class AppointmentStatisticsWidget extends ConsumerWidget {
             children: [
               Icon(icon, color: color),
               const SizedBox(height: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color,
-                ),
-              ),
+              Text(title, style: TextStyle(fontSize: 12, color: color)),
               const SizedBox(height: 4),
               Text(
                 value,
@@ -136,43 +131,52 @@ class AppointmentStatisticsWidget extends ConsumerWidget {
       ),
     );
   }
-  
+
   _AppointmentStatistics _calculateStatistics(List<Appointment> appointments) {
     // Filtrar apenas agendamentos do mês atual
     final now = DateTime.now();
-    final currentMonthAppointments = appointments.where((appointment) => 
-      appointment.dateTime.month == now.month && 
-      appointment.dateTime.year == now.year
-    ).toList();
-    
+    final currentMonthAppointments = appointments
+        .where(
+          (appointment) =>
+              appointment.dateTime.month == now.month &&
+              appointment.dateTime.year == now.year,
+        )
+        .toList();
+
     // Calcular estatísticas básicas
     final total = currentMonthAppointments.length;
     final confirmed = currentMonthAppointments
-        .where((a) => a.status == AppointmentStatus.confirmed || 
-                      a.status == AppointmentStatus.completed)
+        .where(
+          (a) =>
+              a.status == AppointmentStatus.confirmed ||
+              a.status == AppointmentStatus.completed,
+        )
         .length;
     final cancelled = currentMonthAppointments
         .where((a) => a.status == AppointmentStatus.cancelled)
         .length;
-    
+
     // Calcular receita
     final revenue = currentMonthAppointments
         .where((a) => a.status != AppointmentStatus.cancelled)
         .fold(0.0, (sum, a) => sum + a.price);
-    
+
     // Calcular média de preço
     final averagePrice = total > 0 ? revenue / total : 0.0;
-    
+
     // Calcular taxa de confirmação
     final scheduledOrConfirmed = currentMonthAppointments
-        .where((a) => a.status == AppointmentStatus.scheduled || 
-                      a.status == AppointmentStatus.confirmed ||
-                      a.status == AppointmentStatus.completed)
+        .where(
+          (a) =>
+              a.status == AppointmentStatus.scheduled ||
+              a.status == AppointmentStatus.confirmed ||
+              a.status == AppointmentStatus.completed,
+        )
         .length;
-    final confirmationRate = scheduledOrConfirmed > 0 
-        ? (confirmed / scheduledOrConfirmed) * 100 
+    final confirmationRate = scheduledOrConfirmed > 0
+        ? (confirmed / scheduledOrConfirmed) * 100
         : 0.0;
-    
+
     return _AppointmentStatistics(
       total: total,
       confirmed: confirmed,
@@ -192,7 +196,7 @@ class _AppointmentStatistics {
   final double revenue;
   final double averagePrice;
   final double confirmationRate;
-  
+
   _AppointmentStatistics({
     required this.total,
     required this.confirmed,

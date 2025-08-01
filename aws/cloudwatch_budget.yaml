@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudWatch Budget e Alertas para AGENDEMAIS'
+
+Resources:
+  # Orçamento para desenvolvimento
+  DevelopmentBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: AGENDEMAIS-Development
+        BudgetLimit:
+          Amount: 10
+          Unit: USD
+        TimeUnit: MONTHLY
+        BudgetType: COST
+        CostFilters:
+          TagKeyValue:
+            - Key: Environment
+              Value: development
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: ${EMAIL_ADDRESS}
+
+  # Orçamento para produção
+  ProductionBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: AGENDEMAIS-Production
+        BudgetLimit:
+          Amount: 50
+          Unit: USD
+        TimeUnit: MONTHLY
+        BudgetType: COST
+        CostFilters:
+          TagKeyValue:
+            - Key: Environment
+              Value: production
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: ${EMAIL_ADDRESS}
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: ${EMAIL_ADDRESS}
+            - SubscriptionType: SNS
+              Address: !Ref BudgetAlertTopic
+
+  # Tópico SNS para alertas de orçamento
+  BudgetAlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: AGENDEMAIS-Budget-Alerts
+      TopicName: AGENDEMAIS-Budget-Alerts
+
+  # Assinatura de email para o tópico SNS
+  EmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: ${EMAIL_ADDRESS}
+      TopicArn: !Ref BudgetAlertTopic
+
+  # Alarme para uso de Lambda
+  LambdaUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: AGENDEMAIS-Lambda-Usage
+      AlarmDescription: Alerta quando o uso de Lambda se aproximar do limite gratuito
+      MetricName: Invocations
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 86400 # 24 horas
+      EvaluationPeriods: 1
+      Threshold: 900000 # 90% do limite gratuito (1 milhão)
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref BudgetAlertTopic
+
+  # Alarme para uso de API Gateway
+  ApiGatewayUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: AGENDEMAIS-ApiGateway-Usage
+      AlarmDescription: Alerta quando o uso de API Gateway se aproximar do limite gratuito
+      MetricName: Count
+      Namespace: AWS/ApiGateway
+      Statistic: Sum
+      Period: 86400 # 24 horas
+      EvaluationPeriods: 1
+      Threshold: 900000 # 90% do limite gratuito (1 milhão)
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref BudgetAlertTopic
+
+  # Alarme para uso de DynamoDB
+  DynamoDBUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: AGENDEMAIS-DynamoDB-Usage
+      AlarmDescription: Alerta quando o uso de DynamoDB se aproximar do limite gratuito
+      MetricName: ConsumedReadCapacityUnits
+      Namespace: AWS/DynamoDB
+      Statistic: Sum
+      Period: 86400 # 24 horas
+      EvaluationPeriods: 1
+      Threshold: 20 # 80% do limite gratuito (25 RCU)
+      ComparisonOperator: GreaterThanThreshold
+      AlarmActions:
+        - !Ref BudgetAlertTopic
+
+Outputs:
+  BudgetAlertTopicArn:
+    Description: ARN do tópico SNS para alertas de orçamento
+    Value: !Ref BudgetAlertTopic

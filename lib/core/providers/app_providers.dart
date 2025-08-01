@@ -49,7 +49,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (response['success'] == true) {
         final user = User.fromJson(response['user']);
-        await _apiService.setAuthToken(response['token'], user);
+        _apiService.setAuthToken(response['token'], user);
         state = state.copyWith(user: user, isLoading: false);
         return true;
       } else {
@@ -90,8 +90,9 @@ final servicesProvider = FutureProvider<List<Service>>((ref) async {
 });
 
 // Dashboard Stats Provider
-final dashboardStatsProvider =
-    FutureProvider<Map<String, dynamic>>((ref) async {
+final dashboardStatsProvider = FutureProvider<Map<String, dynamic>>((
+  ref,
+) async {
   final cache = CacheService();
   final cached = await cache.get<Map<String, dynamic>>('cache_dashboard');
 

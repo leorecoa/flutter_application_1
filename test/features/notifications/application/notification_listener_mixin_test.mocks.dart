@@ -5,14 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
 
-import 'package:flutter_application_1/core/models/appointment_model.dart'
-    as _i6;
-import 'package:flutter_application_1/core/models/notification_action_model.dart'
-    as _i4;
 import 'package:flutter_application_1/core/services/notification_service.dart'
     as _i2;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart'
-    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -39,80 +33,42 @@ class MockNotificationService extends _i1.Mock
   }
 
   @override
-  _i3.Stream<_i4.NotificationAction> get actionStream => (super.noSuchMethod(
-        Invocation.getter(#actionStream),
-        returnValue: _i3.Stream<_i4.NotificationAction>.empty(),
-      ) as _i3.Stream<_i4.NotificationAction>);
-
-  @override
-  void setNotificationsPlugin(_i5.FlutterLocalNotificationsPlugin? plugin) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #setNotificationsPlugin,
-          [plugin],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  _i3.Future<void> testHandleConfirmAction(String? appointmentId) =>
+  _i3.Future<void> sendNotification(
+    String? title,
+    String? body, {
+    Map<String, dynamic>? data,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #testHandleConfirmAction,
-          [appointmentId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(#sendNotification, [title, body], {#data: data}),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> init() => (super.noSuchMethod(
-        Invocation.method(
-          #init,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<void> scheduleAppointmentReminders(_i6.Appointment? appointment) =>
+  _i3.Future<void> scheduleNotification(
+    String? title,
+    String? body,
+    DateTime? scheduledTime, {
+    Map<String, dynamic>? data,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #scheduleAppointmentReminders,
-          [appointment],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+            Invocation.method(
+              #scheduleNotification,
+              [title, body, scheduledTime],
+              {#data: data},
+            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
-  _i3.Future<void> cancelAppointmentNotifications(String? appointmentId) =>
+  _i3.Future<void> cancelNotification(String? notificationId) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #cancelAppointmentNotifications,
-          [appointmentId],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  _i3.Future<void> cancelAllNotifications() => (super.noSuchMethod(
-        Invocation.method(
-          #cancelAllNotifications,
-          [],
-        ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
-
-  @override
-  void dispose() => super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
+            Invocation.method(#cancelNotification, [notificationId]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

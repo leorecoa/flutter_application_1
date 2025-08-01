@@ -15,16 +15,19 @@ class AppointmentsService {
 
     final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
     final path = '/appointments${query.isNotEmpty ? '?$query' : ''}';
-    
+
     return await _apiService.get(path);
   }
 
-  Future<Map<String, dynamic>> createAppointment(Map<String, dynamic> appointmentData) async {
+  Future<Map<String, dynamic>> createAppointment(
+      Map<String, dynamic> appointmentData) async {
     return await _apiService.post('/appointments', appointmentData);
   }
 
-  Future<Map<String, dynamic>> updateAppointment(String appointmentId, Map<String, dynamic> appointmentData) async {
-    return await _apiService.put('/appointments/$appointmentId', appointmentData);
+  Future<Map<String, dynamic>> updateAppointment(
+      String appointmentId, Map<String, dynamic> appointmentData) async {
+    return await _apiService.put(
+        '/appointments/$appointmentId', appointmentData);
   }
 
   Future<Map<String, dynamic>> cancelAppointment(String appointmentId) async {

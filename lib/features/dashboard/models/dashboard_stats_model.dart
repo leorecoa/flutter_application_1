@@ -37,13 +37,16 @@ class DashboardStats {
       monthlyRevenue: (json['monthlyRevenue'] ?? 0).toDouble(),
       weeklyRevenue: (json['weeklyRevenue'] ?? 0).toDouble(),
       todayRevenue: (json['todayRevenue'] ?? 0).toDouble(),
-      averageAppointmentValue: (json['averageAppointmentValue'] ?? 0).toDouble(),
+      averageAppointmentValue: (json['averageAppointmentValue'] ?? 0)
+          .toDouble(),
       growthRate: (json['growthRate'] ?? 0).toDouble(),
-      weeklyData: (json['weeklyData'] as List<dynamic>?)
+      weeklyData:
+          (json['weeklyData'] as List<dynamic>?)
               ?.map((e) => ChartData.fromJson(e))
               .toList() ??
           [],
-      monthlyData: (json['monthlyData'] as List<dynamic>?)
+      monthlyData:
+          (json['monthlyData'] as List<dynamic>?)
               ?.map((e) => ChartData.fromJson(e))
               .toList() ??
           [],
@@ -51,7 +54,7 @@ class DashboardStats {
   }
 
   factory DashboardStats.empty() {
-    return DashboardStats(
+    return const DashboardStats(
       totalAppointments: 0,
       todayAppointments: 0,
       confirmedAppointments: 0,

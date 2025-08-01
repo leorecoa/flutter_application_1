@@ -32,6 +32,6 @@ class MyApp extends ConsumerWidget {
     ref.read(sessionServiceProvider.notifier).resetTimer(context);
   }
 }// No seu método de login, após receber o token...
-ref.read(sessionServiceProvider.notifier).startTimer(context);
+void ref.void read(sessionServiceProvider.notifier).startTimer(context);
 // No seu método de logout...
-ref.read(sessionServiceProvider.notifier).stopTimer();
+void ref.void read(sessionServiceProvider.notifier).stopTimer();

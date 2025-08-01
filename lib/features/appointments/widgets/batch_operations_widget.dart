@@ -8,7 +8,7 @@ class BatchOperationsWidget extends ConsumerStatefulWidget {
   final List<Appointment> selectedAppointments;
   final VoidCallback onOperationComplete;
   final VoidCallback onCancel;
-  
+
   const BatchOperationsWidget({
     super.key,
     required this.selectedAppointments,
@@ -17,7 +17,8 @@ class BatchOperationsWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BatchOperationsWidget> createState() => _BatchOperationsWidgetState();
+  ConsumerState<BatchOperationsWidget> createState() =>
+      _BatchOperationsWidgetState();
 }
 
 class _BatchOperationsWidgetState extends ConsumerState<BatchOperationsWidget> {
@@ -25,7 +26,7 @@ class _BatchOperationsWidgetState extends ConsumerState<BatchOperationsWidget> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final count = widget.selectedAppointments.length;
-    
+
     return Container(
       color: theme.primaryColor.withOpacity(0.1),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -59,7 +60,7 @@ class _BatchOperationsWidgetState extends ConsumerState<BatchOperationsWidget> {
       ),
     );
   }
-  
+
   Widget _buildOperationButton(
     String label,
     IconData icon,
@@ -76,66 +77,67 @@ class _BatchOperationsWidgetState extends ConsumerState<BatchOperationsWidget> {
       ),
     );
   }
-  
+
   Future<void> _confirmSelected() async {
     final controller = ref.read(batchOperationsControllerProvider.notifier);
-    final result = await controller.confirmAppointments(widget.selectedAppointments);
-    
-    if (!mounted) return;
-    
-    _showResultSnackBar(
-      result,
-      'confirmado',
-      Colors.green,
+    final result = await controller.confirmAppointments(
+      widget.selectedAppointments,
     );
-    
+
+    if (!mounted) return;
+
+    _showResultSnackBar(result, 'confirmado', Colors.green);
+
     widget.onOperationComplete();
   }
-  
+
   Future<void> _cancelSelected() async {
     final controller = ref.read(batchOperationsControllerProvider.notifier);
-    final result = await controller.cancelAppointments(widget.selectedAppointments);
-    
-    if (!mounted) return;
-    
-    _showResultSnackBar(
-      result,
-      'cancelado',
-      Colors.orange,
+    final result = await controller.cancelAppointments(
+      widget.selectedAppointments,
     );
-    
+
+    if (!mounted) return;
+
+    _showResultSnackBar(result, 'cancelado', Colors.orange);
+
     widget.onOperationComplete();
   }
-  
+
   void _showResultSnackBar(
     BatchOperationResult result,
     String action,
     Color color,
   ) {
     final message = StringBuffer();
-    
+
     if (result.successCount > 0) {
-      message.write('${result.successCount} ${result.successCount == 1 ? 'agendamento' : 'agendamentos'} $action com sucesso.');
+      message.write(
+        '${result.successCount} ${result.successCount == 1 ? 'agendamento' : 'agendamentos'} $action com sucesso.',
+      );
     }
-    
+
     if (result.failureCount > 0) {
       if (message.isNotEmpty) message.write(' ');
-      message.write('${result.failureCount} ${result.failureCount == 1 ? 'falha' : 'falhas'}.');
+      message.write(
+        '${result.failureCount} ${result.failureCount == 1 ? 'falha' : 'falhas'}.',
+      );
     }
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message.toString()),
         backgroundColor: result.failureCount > 0 ? Colors.orange : color,
-        duration: const Duration(seconds: 4),
-        action: result.errors.isNotEmpty ? SnackBarAction(
-          label: 'DETALHES',
-          onPressed: () => _showErrorDetailsDialog(result.errors),
-        ) : null,
+        action: result.errors.isNotEmpty
+            ? SnackBarAction(
+                label: 'DETALHES',
+                onPressed: () => _showErrorDetailsDialog(result.errors),
+              )
+            : null,
       ),
     );
   }
-  
+
   void _showErrorDetailsDialog(List<String> errors) {
     showDialog(
       context: context,
@@ -145,10 +147,14 @@ class _BatchOperationsWidgetState extends ConsumerState<BatchOperationsWidget> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: errors.map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text('• $e'),
-            )).toList(),
+            children: errors
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Text('• $e'),
+                  ),
+                )
+                .toList(),
           ),
         ),
         actions: [

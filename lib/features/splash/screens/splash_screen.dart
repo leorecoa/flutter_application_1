@@ -1,42 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:async';
+import '../../../core/services/auth_service_local.dart';
+import '../../../core/routes/app_router.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+/// Tela de splash para inicialização do app
+class SplashScreen extends ConsumerStatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1).animate(_controller);
-    
-    _controller.forward();
-    
-    // Redirecionamento mais rápido
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        try {
+    _checkAuthStatus();
+  }
+
+  /// Verifica o status de autenticação do usuário
+  Future<void> _checkAuthStatus() async {
+    try {
+      // Aguarda um pouco para mostrar a tela de splash
+      await Future.delayed(const Duration(seconds: 2));
+
+      final authService = ref.read(authServiceProvider);
+
+      if (authService.isAuthenticated) {
+        if (mounted) {
+          context.go('/dashboard');
+        }
+      } else {
+        if (mounted) {
           context.go('/login');
-        } catch (e) {
-          debugPrint('Erro no redirecionamento: $e');
         }
       }
-    });
+    } catch (e) {
+      // Em caso de erro, vai para login
+      if (mounted) {
+        context.go('/login');
+      }
+    }
   }
 
   @override
@@ -45,72 +50,59 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue, Colors.blueAccent],
           ),
         ),
         child: Center(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo placeholder
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
-                    child: const Icon(
-                      Icons.calendar_today,
-                      size: 60,
-                      color: Color(0xFF667eea),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'AGENDEMAIS',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Seu negócio sempre em primeiro lugar',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                  const SizedBox(height: 50),
-                  const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ],
+                  ],
+                ),
+                child: const Icon(
+                  Icons.calendar_today,
+                  size: 60,
+                  color: Colors.blue,
+                ),
               ),
-            ),
+              const SizedBox(height: 32),
+              const Text(
+                'AGENDEMAIS',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Sistema de Agendamento',
+                style: TextStyle(fontSize: 16, color: Colors.white70),
+              ),
+              const SizedBox(height: 48),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }

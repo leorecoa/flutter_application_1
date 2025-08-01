@@ -1,19 +1,10 @@
-const amplifyconfig = '''
-{
+// This file is generated during the Amplify initialization process
+// It will be replaced with actual values after running 'amplify init'
+// For now, we're providing a placeholder that can be used in development
+
+const amplifyconfig = '''{
   "UserAgent": "aws-amplify-cli/2.0",
   "Version": "1.0",
-  "api": {
-    "plugins": {
-      "awsAPIPlugin": {
-        "agendafacil": {
-          "endpointType": "REST",
-          "endpoint": "https://oovjqmref8.execute-api.us-east-1.amazonaws.com/dev",
-          "region": "us-east-1",
-          "authorizationType": "AMAZON_COGNITO_USER_POOLS"
-        }
-      }
-    }
-  },
   "auth": {
     "plugins": {
       "awsCognitoAuthPlugin": {
@@ -25,22 +16,49 @@ const amplifyconfig = '''
         "CredentialsProvider": {
           "CognitoIdentity": {
             "Default": {
-              "PoolId": "us-east-1:mock-pool-id",
-              "Region": "us-east-1"
+              "PoolId": "COGNITO_IDENTITY_POOL_ID",
+              "Region": "REGION"
             }
           }
         },
         "CognitoUserPool": {
           "Default": {
-            "PoolId": "us-east-1_mockpool",
-            "AppClientId": "mockclientid",
-            "Region": "us-east-1"
+            "PoolId": "COGNITO_USER_POOL_ID",
+            "AppClientId": "COGNITO_APP_CLIENT_ID",
+            "Region": "REGION"
           }
         },
         "Auth": {
           "Default": {
-            "authenticationFlowType": "USER_SRP_AUTH"
+            "authenticationFlowType": "USER_SRP_AUTH",
+            "socialProviders": [],
+            "usernameAttributes": ["EMAIL"],
+            "signupAttributes": ["EMAIL", "NAME"],
+            "passwordProtectionSettings": {
+              "passwordPolicyMinLength": 8,
+              "passwordPolicyCharacters": [
+                "REQUIRES_LOWERCASE",
+                "REQUIRES_UPPERCASE",
+                "REQUIRES_NUMBERS",
+                "REQUIRES_SYMBOLS"
+              ]
+            },
+            "mfaConfiguration": "OFF",
+            "mfaTypes": ["SMS"],
+            "verificationMechanisms": ["EMAIL"]
           }
+        }
+      }
+    }
+  },
+  "api": {
+    "plugins": {
+      "awsAPIPlugin": {
+        "agendemais": {
+          "endpointType": "GraphQL",
+          "endpoint": "API_ENDPOINT",
+          "region": "REGION",
+          "authorizationType": "AMAZON_COGNITO_USER_POOLS"
         }
       }
     }
@@ -48,11 +66,23 @@ const amplifyconfig = '''
   "storage": {
     "plugins": {
       "awsS3StoragePlugin": {
-        "bucket": "mock-bucket",
-        "region": "us-east-1",
-        "defaultAccessLevel": "guest"
+        "bucket": "STORAGE_BUCKET",
+        "region": "REGION",
+        "defaultAccessLevel": "private"
+      }
+    }
+  },
+  "analytics": {
+    "plugins": {
+      "awsPinpointAnalyticsPlugin": {
+        "pinpointAnalytics": {
+          "appId": "PINPOINT_APP_ID",
+          "region": "REGION"
+        },
+        "pinpointTargeting": {
+          "region": "REGION"
+        }
       }
     }
   }
-}
-''';
+}''';

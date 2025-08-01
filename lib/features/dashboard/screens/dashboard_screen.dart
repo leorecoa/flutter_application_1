@@ -1,265 +1,127 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/services/api_service.dart';
-import '../services/dashboard_service.dart';
-import '../../../core/widgets/loading_widget.dart';
-import '../../../core/widgets/error_widget.dart';
-import '../widgets/revenue_chart.dart';
-import '../widgets/appointments_chart.dart';
+import '../../../core/services/auth_service_local.dart';
+import '../../../core/routes/app_router.dart';
+import '../../../core/models/user_model.dart';
 
-class DashboardScreen extends StatefulWidget {
+/// Tela principal do dashboard
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authService = ref.watch(authServiceProvider);
+    final user = authService.currentUser;
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  final _apiService = ApiService();
-  Map<String, dynamic>? _stats;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadDashboard();
-  }
-
-  Future<void> _loadDashboard() async {
-    if (!mounted) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final dashboardService = DashboardService();
-      final stats = await dashboardService.getDashboardStats();
-
-      if (mounted) {
-        setState(() {
-          _stats = stats;
-          _isLoading = false;
-          _error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _error = e.toString();
-        });
-      }
-    }
-  }
-
-  Future<void> _logout() async {
-    await _apiService.clearAuthToken();
-    if (mounted) context.go('/login');
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MediaQuery.of(context).size.width > 768
-          ? null
-          : AppBar(
-              title: Text('Olá, ${_apiService.currentUser?.name ?? 'Usuário'}'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => context.push('/create-appointment'),
-                  tooltip: 'Novo Agendamento',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  onPressed: () => context.push('/settings'),
-                  tooltip: 'Configurações',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: _logout,
-                  tooltip: 'Sair',
-                ),
-              ],
-            ),
-      body: _isLoading
-          ? const LoadingWidget(message: 'Carregando dashboard...')
-          : _error != null
-              ? ErrorDisplayWidget(
-                  message: 'Erro ao carregar dados do dashboard',
-                  onRetry: _loadDashboard,
-                )
-              : RefreshIndicator(
-              onRefresh: _loadDashboard,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      appBar: AppBar(
+        title: const Text('AGENDEMAIS'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () => context.go('/notifications'),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'profile':
+                  context.go('/settings');
+                  break;
+                case 'logout':
+                  _showLogoutDialog(context, ref);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'profile',
+                child: Row(
                   children: [
-                    const Text(
-                      'Visão Geral',
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      children: [
-                        _buildStatCard(
-                          'Agendamentos Hoje',
-                          _stats?['appointmentsToday']?.toString() ?? '0',
-                          Icons.calendar_today,
-                          Colors.blue,
-                        ),
-                        _buildStatCard(
-                          'Total de Clientes',
-                          _stats?['totalClients']?.toString() ?? '0',
-                          Icons.people,
-                          Colors.green,
-                        ),
-                        _buildStatCard(
-                          'Receita do Mês',
-                          'R\$ ${(_stats?['monthlyRevenue'] ?? 0).toStringAsFixed(2).replaceAll('.', ',')}',
-                          Icons.attach_money,
-                          Colors.orange,
-                        ),
-                        _buildStatCard(
-                          'Serviços Ativos',
-                          _stats?['activeServices']?.toString() ?? '0',
-                          Icons.build,
-                          Colors.purple,
-                        ),
-                        _buildStatCard(
-                          'Crescimento Semanal',
-                          '+${_stats?['weeklyGrowth']?.toString() ?? '0'}%',
-                          Icons.trending_up,
-                          Colors.teal,
-                        ),
-                        _buildStatCard(
-                          'Satisfação',
-                          '${_stats?['satisfactionRate']?.toString() ?? '0'}/5 ⭐',
-                          Icons.star,
-                          Colors.amber,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Gráficos
-                    RevenueChart(
-                      data: _stats?['revenueData'] ?? [],
-                    ),
-                    const SizedBox(height: 16),
-                    AppointmentsChart(
-                      statusData: {
-                        'Agendado': _stats?['scheduledCount'] ?? 0,
-                        'Confirmado': _stats?['confirmedCount'] ?? 0,
-                        'Concluído': _stats?['completedCount'] ?? 0,
-                        'Cancelado': _stats?['cancelledCount'] ?? 0,
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    if (_stats?['nextAppointments'] != null) ...[
-                      const Text(
-                        'Próximos Agendamentos',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 16),
-                      for (final appointment
-                          in _stats!['nextAppointments'] as List)
-                        Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  appointment['status'] == 'confirmed'
-                                      ? Colors.green
-                                      : Colors.orange,
-                              child: const Icon(Icons.schedule,
-                                  color: Colors.white),
-                            ),
-                            title: Text(appointment['clientName']),
-                            subtitle: Text(
-                                '${appointment['service']} - R\$ ${appointment['price'].toStringAsFixed(2)}'),
-                            trailing: Text(
-                              '${DateTime.parse(appointment['dateTime']).hour.toString().padLeft(2, '0')}:${DateTime.parse(appointment['dateTime']).minute.toString().padLeft(2, '0')}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Ações Rápidas',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        _buildActionButton(
-                          'Agendamentos',
-                          Icons.calendar_today,
-                          () => context.push('/appointments'),
-                        ),
-                        _buildActionButton(
-                          'Gerenciar Clientes',
-                          Icons.people_outline,
-                          () => _showClientsDialog(),
-                        ),
-                        _buildActionButton(
-                          'Relatórios',
-                          Icons.analytics,
-                          () => _showReportsDialog(),
-                        ),
-                        _buildActionButton(
-                          'PIX Pagamentos',
-                          Icons.pix,
-                          () => context.push('/pix'),
-                        ),
-                        _buildActionButton(
-                          'Configurações',
-                          Icons.settings,
-                          () => context.push('/settings'),
-                        ),
-                      ],
-                    ),
+                    Icon(Icons.person),
+                    SizedBox(width: 8),
+                    Text('Perfil'),
                   ],
                 ),
               ),
-            ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout),
+                    SizedBox(width: 8),
+                    Text('Sair'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Recarregar dados do dashboard
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header com boas-vindas
+              _buildWelcomeHeader(user),
+              const SizedBox(height: 24),
+
+              // Cards de estatísticas
+              _buildStatsSection(),
+              const SizedBox(height: 24),
+
+              // Ações rápidas
+              _buildQuickActionsSection(context),
+              const SizedBox(height: 24),
+
+              // Agendamentos recentes
+              _buildRecentAppointmentsSection(),
+              const SizedBox(height: 24),
+
+              // Seção de relatórios
+              _buildReportsSection(context),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
     );
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
+  /// Header com boas-vindas
+  Widget _buildWelcomeHeader(User? user) {
+    final now = DateTime.now();
+    final hour = now.hour;
+    String greeting;
+
+    if (hour < 12) {
+      greeting = 'Bom dia';
+    } else if (hour < 18) {
+      greeting = 'Boa tarde';
+    } else {
+      greeting = 'Boa noite';
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
             Text(
-              value,
+              '$greeting, ${user?.name ?? 'Usuário'}!',
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
-              title,
-              style: const TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
+              'Aqui está um resumo do seu negócio hoje',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -267,77 +129,439 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon, VoidCallback onTap) {
-    return SizedBox(
-      width: 150,
-      child: ElevatedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon),
-        label: Text(title),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.all(16),
+  /// Seção de estatísticas
+  Widget _buildStatsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Estatísticas do Dia',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-      ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.5,
+          children: [
+            DashboardStatsCard(
+              title: 'Agendamentos',
+              value: '12',
+              subtitle: 'Hoje',
+              icon: Icons.calendar_today,
+              color: Colors.blue,
+            ),
+            DashboardStatsCard(
+              title: 'Clientes',
+              value: '45',
+              subtitle: 'Total',
+              icon: Icons.people,
+              color: Colors.green,
+            ),
+            DashboardStatsCard(
+              title: 'Receita',
+              value: 'R\$ 1.250',
+              subtitle: 'Este mês',
+              icon: Icons.attach_money,
+              color: Colors.orange,
+            ),
+            DashboardStatsCard(
+              title: 'Serviços',
+              value: '8',
+              subtitle: 'Ativos',
+              icon: Icons.work,
+              color: Colors.purple,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  void _showNewAppointmentDialog() {
+  /// Seção de ações rápidas
+  Widget _buildQuickActionsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ações Rápidas',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        QuickActionsCard(
+          actions: [
+            QuickAction(
+              title: 'Novo Agendamento',
+              icon: Icons.add_circle,
+              color: Colors.blue,
+              onTap: () => context.go('/appointments/create'),
+            ),
+            QuickAction(
+              title: 'Novo Cliente',
+              icon: Icons.person_add,
+              color: Colors.green,
+              onTap: () => context.go('/clients/create'),
+            ),
+            QuickAction(
+              title: 'Relatórios',
+              icon: Icons.analytics,
+              color: Colors.orange,
+              onTap: () => context.go('/reports'),
+            ),
+            QuickAction(
+              title: 'Configurações',
+              icon: Icons.settings,
+              color: Colors.grey,
+              onTap: () => context.go('/settings'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Seção de agendamentos recentes
+  Widget _buildRecentAppointmentsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Agendamentos Recentes',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        RecentAppointmentsCard(
+          appointments: [
+            Appointment(
+              id: '1',
+              clientName: 'João Silva',
+              serviceName: 'Corte Masculino',
+              date: DateTime.now().add(const Duration(hours: 2)),
+              startTime: '14:00',
+              status: 'confirmed',
+            ),
+            Appointment(
+              id: '2',
+              clientName: 'Maria Santos',
+              serviceName: 'Manicure',
+              date: DateTime.now().add(const Duration(hours: 4)),
+              startTime: '16:00',
+              status: 'pending',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Seção de relatórios
+  Widget _buildReportsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Relatórios',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.calendar_month, color: Colors.blue),
+                  title: const Text('Relatório Mensal'),
+                  subtitle: const Text('Agendamentos e receita do mês'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => context.go('/reports/monthly'),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.people, color: Colors.green),
+                  title: const Text('Relatório de Clientes'),
+                  subtitle: const Text('Análise de clientes'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => context.go('/reports/clients'),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.attach_money, color: Colors.orange),
+                  title: const Text('Relatório Financeiro'),
+                  subtitle: const Text('Receitas e despesas'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () => context.go('/reports/financial'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Barra de navegação inferior
+  Widget _buildBottomNavigationBar(BuildContext context) {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 0, // Dashboard é a primeira tela
+      onTap: (index) {
+        switch (index) {
+          case 0:
+            context.go('/dashboard');
+            break;
+          case 1:
+            context.go('/appointments');
+            break;
+          case 2:
+            context.go('/clients');
+            break;
+          case 3:
+            context.go('/settings');
+            break;
+        }
+      },
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.dashboard),
+          label: 'Dashboard',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.calendar_today),
+          label: 'Agendamentos',
+        ),
+        BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Clientes'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Configurações',
+        ),
+      ],
+    );
+  }
+
+  /// Dialog de confirmação de logout
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Novo Agendamento'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Cliente',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Serviço',
-                prefixIcon: Icon(Icons.build),
-              ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Data e Hora',
-                prefixIcon: Icon(Icons.schedule),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Confirmar Saída'),
+        content: const Text('Tem certeza que deseja sair da aplicação?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Agendamento criado com sucesso!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+            onPressed: () async {
+              Navigator.of(context).pop();
+              final authService = ref.read(authServiceProvider);
+              await authService.logout();
+              if (context.mounted) {
+                context.go('/login');
+              }
             },
-            child: const Text('Salvar'),
+            child: const Text('Sair'),
           ),
         ],
       ),
     );
   }
+}
 
-  void _showClientsDialog() {
-    context.push('/clients');
+/// Widget para card de estatísticas
+class DashboardStatsCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+
+  const DashboardStatsCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Widget para card de ações rápidas
+class QuickActionsCard extends StatelessWidget {
+  final List<QuickAction> actions;
+
+  const QuickActionsCard({super.key, required this.actions});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: actions
+              .map(
+                (action) => ListTile(
+                  leading: Icon(action.icon, color: action.color),
+                  title: Text(action.title),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: action.onTap,
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Modelo para ação rápida
+class QuickAction {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  QuickAction({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+}
+
+/// Widget para card de agendamentos recentes
+class RecentAppointmentsCard extends StatelessWidget {
+  final List<Appointment> appointments;
+
+  const RecentAppointmentsCard({super.key, required this.appointments});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Próximos Agendamentos',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ...appointments.map(
+              (appointment) => ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _getStatusColor(appointment.status),
+                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                ),
+                title: Text(appointment.clientName),
+                subtitle: Text(
+                  '${appointment.serviceName} - ${appointment.startTime}',
+                ),
+                trailing: Chip(
+                  label: Text(
+                    _getStatusText(appointment.status),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  backgroundColor: _getStatusColor(
+                    appointment.status,
+                  ).withOpacity(0.2),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  void _showReportsDialog() {
-    context.push('/reports');
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmado';
+      case 'pending':
+        return 'Pendente';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return 'Desconhecido';
+    }
+  }
+}
+
+/// Modelo de agendamento (simplificado)
+class Appointment {
+  final String id;
+  final String clientName;
+  final String serviceName;
+  final DateTime date;
+  final String startTime;
+  final String status;
+
+  Appointment({
+    required this.id,
+    required this.clientName,
+    required this.serviceName,
+    required this.date,
+    required this.startTime,
+    required this.status,
+  });
 }

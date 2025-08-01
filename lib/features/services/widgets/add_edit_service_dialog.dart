@@ -7,11 +7,7 @@ class AddEditServiceDialog extends StatefulWidget {
   final Service? service;
   final VoidCallback? onServiceSaved;
 
-  const AddEditServiceDialog({
-    super.key,
-    this.service,
-    this.onServiceSaved,
-  });
+  const AddEditServiceDialog({super.key, this.service, this.onServiceSaved});
 
   @override
   State<AddEditServiceDialog> createState() => _AddEditServiceDialogState();
@@ -24,7 +20,7 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
   final _priceController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _servicesService = ServicesService();
-  
+
   bool _isLoading = false;
   bool get isEditing => widget.service != null;
 
@@ -55,7 +51,8 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
                   labelText: 'Nome do Serviço',
                   prefixIcon: Icon(Icons.build),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -66,7 +63,8 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -75,8 +73,11 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
                   labelText: 'Preço (R\$)',
                   prefixIcon: Icon(Icons.attach_money),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -98,9 +99,13 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveService,
-          child: _isLoading 
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Salvar'),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Salvar'),
         ),
       ],
     );
@@ -117,15 +122,21 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
           'name': _nameController.text,
           'duration': int.parse(_durationController.text),
           'price': double.parse(_priceController.text),
-          'description': _descriptionController.text.isEmpty ? null : _descriptionController.text,
+          'description': _descriptionController.text.isEmpty
+              ? null
+              : _descriptionController.text,
         });
       } else {
-        await _servicesService.createServiceModel(
+        final service = _servicesService.createServiceModel(
           name: _nameController.text,
           duration: int.parse(_durationController.text),
           price: double.parse(_priceController.text),
-          description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+          description: _descriptionController.text.isEmpty
+              ? null
+              : _descriptionController.text,
         );
+
+        await _servicesService.createService(service);
       }
 
       if (mounted) {
@@ -133,7 +144,9 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
         widget.onServiceSaved?.call();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing ? 'Serviço atualizado!' : 'Serviço criado!'),
+            content: Text(
+              isEditing ? 'Serviço atualizado!' : 'Serviço criado!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -141,10 +154,7 @@ class _AddEditServiceDialogState extends State<AddEditServiceDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {

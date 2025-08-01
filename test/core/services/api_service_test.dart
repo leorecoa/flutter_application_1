@@ -24,7 +24,7 @@ void main() {
     test('retorna um Map se a chamada http for bem-sucedida (status 200)',
         () async {
       // Arrange
-      final responsePayload = '{"data": "test_ok"}';
+      const responsePayload = '{"data": "test_ok"}';
       when(mockClient.get(any, headers: anyNamed('headers')))
           .thenAnswer((_) async => http.Response(responsePayload, 200));
 

@@ -40,13 +40,8 @@ import 'package:timezone/timezone.dart' as _i8;
 // ignore_for_file: subtype_of_sealed_class
 
 class _FakeAppointment_0 extends _i1.SmartFake implements _i2.Appointment {
-  _FakeAppointment_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeAppointment_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [FlutterLocalNotificationsPlugin].
@@ -62,32 +57,33 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
   _i4.Future<bool?> initialize(
     _i5.InitializationSettings? initializationSettings, {
     _i6.DidReceiveNotificationResponseCallback?
-        onDidReceiveNotificationResponse,
+    onDidReceiveNotificationResponse,
     _i6.DidReceiveBackgroundNotificationResponseCallback?
-        onDidReceiveBackgroundNotificationResponse,
+    onDidReceiveBackgroundNotificationResponse,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #initialize,
-          [initializationSettings],
-          {
-            #onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
-            #onDidReceiveBackgroundNotificationResponse:
-                onDidReceiveBackgroundNotificationResponse,
-          },
-        ),
-        returnValue: _i4.Future<bool?>.value(),
-      ) as _i4.Future<bool?>);
+            Invocation.method(
+              #initialize,
+              [initializationSettings],
+              {
+                #onDidReceiveNotificationResponse:
+                    onDidReceiveNotificationResponse,
+                #onDidReceiveBackgroundNotificationResponse:
+                    onDidReceiveBackgroundNotificationResponse,
+              },
+            ),
+            returnValue: _i4.Future<bool?>.value(),
+          )
+          as _i4.Future<bool?>);
 
   @override
   _i4.Future<_i6.NotificationAppLaunchDetails?>
-      getNotificationAppLaunchDetails() => (super.noSuchMethod(
-            Invocation.method(
-              #getNotificationAppLaunchDetails,
-              [],
-            ),
+  getNotificationAppLaunchDetails() =>
+      (super.noSuchMethod(
+            Invocation.method(#getNotificationAppLaunchDetails, []),
             returnValue: _i4.Future<_i6.NotificationAppLaunchDetails?>.value(),
-          ) as _i4.Future<_i6.NotificationAppLaunchDetails?>);
+          )
+          as _i4.Future<_i6.NotificationAppLaunchDetails?>);
 
   @override
   _i4.Future<void> show(
@@ -98,44 +94,33 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     String? payload,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #show,
-          [
-            id,
-            title,
-            body,
-            notificationDetails,
-          ],
-          {#payload: payload},
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(
+              #show,
+              [id, title, body, notificationDetails],
+              {#payload: payload},
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> cancel(
-    int? id, {
-    String? tag,
-  }) =>
+  _i4.Future<void> cancel(int? id, {String? tag}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #cancel,
-          [id],
-          {#tag: tag},
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(#cancel, [id], {#tag: tag}),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
-  _i4.Future<void> cancelAll() => (super.noSuchMethod(
-        Invocation.method(
-          #cancelAll,
-          [],
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+  _i4.Future<void> cancelAll() =>
+      (super.noSuchMethod(
+            Invocation.method(#cancelAll, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> zonedSchedule(
@@ -145,34 +130,29 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     _i8.TZDateTime? scheduledDate,
     _i7.NotificationDetails? notificationDetails, {
     required _i9.UILocalNotificationDateInterpretation?
-        uiLocalNotificationDateInterpretation,
+    uiLocalNotificationDateInterpretation,
     bool? androidAllowWhileIdle = false,
     _i10.AndroidScheduleMode? androidScheduleMode,
     String? payload,
     _i11.DateTimeComponents? matchDateTimeComponents,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #zonedSchedule,
-          [
-            id,
-            title,
-            body,
-            scheduledDate,
-            notificationDetails,
-          ],
-          {
-            #uiLocalNotificationDateInterpretation:
-                uiLocalNotificationDateInterpretation,
-            #androidAllowWhileIdle: androidAllowWhileIdle,
-            #androidScheduleMode: androidScheduleMode,
-            #payload: payload,
-            #matchDateTimeComponents: matchDateTimeComponents,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(
+              #zonedSchedule,
+              [id, title, body, scheduledDate, notificationDetails],
+              {
+                #uiLocalNotificationDateInterpretation:
+                    uiLocalNotificationDateInterpretation,
+                #androidAllowWhileIdle: androidAllowWhileIdle,
+                #androidScheduleMode: androidScheduleMode,
+                #payload: payload,
+                #matchDateTimeComponents: matchDateTimeComponents,
+              },
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> periodicallyShow(
@@ -186,46 +166,40 @@ class MockFlutterLocalNotificationsPlugin extends _i1.Mock
     _i10.AndroidScheduleMode? androidScheduleMode,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #periodicallyShow,
-          [
-            id,
-            title,
-            body,
-            repeatInterval,
-            notificationDetails,
-          ],
-          {
-            #payload: payload,
-            #androidAllowWhileIdle: androidAllowWhileIdle,
-            #androidScheduleMode: androidScheduleMode,
-          },
-        ),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      ) as _i4.Future<void>);
+            Invocation.method(
+              #periodicallyShow,
+              [id, title, body, repeatInterval, notificationDetails],
+              {
+                #payload: payload,
+                #androidAllowWhileIdle: androidAllowWhileIdle,
+                #androidScheduleMode: androidScheduleMode,
+              },
+            ),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<List<_i6.PendingNotificationRequest>>
-      pendingNotificationRequests() => (super.noSuchMethod(
-            Invocation.method(
-              #pendingNotificationRequests,
-              [],
-            ),
+  pendingNotificationRequests() =>
+      (super.noSuchMethod(
+            Invocation.method(#pendingNotificationRequests, []),
             returnValue: _i4.Future<List<_i6.PendingNotificationRequest>>.value(
-                <_i6.PendingNotificationRequest>[]),
-          ) as _i4.Future<List<_i6.PendingNotificationRequest>>);
+              <_i6.PendingNotificationRequest>[],
+            ),
+          )
+          as _i4.Future<List<_i6.PendingNotificationRequest>>);
 
   @override
   _i4.Future<List<_i6.ActiveNotification>> getActiveNotifications() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getActiveNotifications,
-          [],
-        ),
-        returnValue: _i4.Future<List<_i6.ActiveNotification>>.value(
-            <_i6.ActiveNotification>[]),
-      ) as _i4.Future<List<_i6.ActiveNotification>>);
+            Invocation.method(#getActiveNotifications, []),
+            returnValue: _i4.Future<List<_i6.ActiveNotification>>.value(
+              <_i6.ActiveNotification>[],
+            ),
+          )
+          as _i4.Future<List<_i6.ActiveNotification>>);
 }
 
 /// A class which mocks [AppointmentsServiceV2].
@@ -238,7 +212,7 @@ class MockAppointmentsServiceV2 extends _i1.Mock
   }
 
   @override
-  _i4.Future<Map<String, dynamic>> createAppointment({
+  _i4.Future<_i2.Appointment> createAppointment({
     required String? professionalId,
     required String? serviceId,
     required DateTime? appointmentDateTime,
@@ -247,181 +221,9 @@ class MockAppointmentsServiceV2 extends _i1.Mock
     required String? service,
     required double? price,
     String? notes,
-    String? clientId,
-    int? duration,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #createAppointment,
-          [],
-          {
-            #professionalId: professionalId,
-            #serviceId: serviceId,
-            #appointmentDateTime: appointmentDateTime,
-            #clientName: clientName,
-            #clientPhone: clientPhone,
-            #service: service,
-            #price: price,
-            #notes: notes,
-            #clientId: clientId,
-            #duration: duration,
-          },
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<Map<String, dynamic>> getAppointmentById(String? appointmentId) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getAppointmentById,
-          [appointmentId],
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<Map<String, dynamic>> getAppointments({
-    String? status,
-    DateTime? date,
-    String? clientId,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getAppointments,
-          [],
-          {
-            #status: status,
-            #date: date,
-            #clientId: clientId,
-          },
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<bool> checkTimeConflict(
-    DateTime? appointmentDateTime,
-    int? durationMinutes,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #checkTimeConflict,
-          [
-            appointmentDateTime,
-            durationMinutes,
-          ],
-        ),
-        returnValue: _i4.Future<bool>.value(false),
-      ) as _i4.Future<bool>);
-
-  @override
-  _i4.Future<Map<String, dynamic>> updateAppointmentStatus(
-    String? appointmentId,
-    String? newStatus,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #updateAppointmentStatus,
-          [
-            appointmentId,
-            newStatus,
-          ],
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<Map<String, dynamic>> updateAppointment(
-    String? appointmentId,
-    Map<String, dynamic>? appointmentData,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #updateAppointment,
-          [
-            appointmentId,
-            appointmentData,
-          ],
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<Map<String, dynamic>> deleteAppointment(String? appointmentId) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #deleteAppointment,
-          [appointmentId],
-        ),
-        returnValue:
-            _i4.Future<Map<String, dynamic>>.value(<String, dynamic>{}),
-      ) as _i4.Future<Map<String, dynamic>>);
-
-  @override
-  _i4.Future<List<_i2.Appointment>> getAppointmentsList({String? status}) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getAppointmentsList,
-          [],
-          {#status: status},
-        ),
-        returnValue:
-            _i4.Future<List<_i2.Appointment>>.value(<_i2.Appointment>[]),
-      ) as _i4.Future<List<_i2.Appointment>>);
-
-  @override
-  _i4.Future<List<_i2.Appointment>> getClientAppointments(String? clientId) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #getClientAppointments,
-          [clientId],
-        ),
-        returnValue:
-            _i4.Future<List<_i2.Appointment>>.value(<_i2.Appointment>[]),
-      ) as _i4.Future<List<_i2.Appointment>>);
-
-  @override
-  _i4.Future<_i2.Appointment> createAppointmentModel({
-    required String? professionalId,
-    required String? serviceId,
-    required DateTime? appointmentDateTime,
-    required String? clientName,
-    required String? clientPhone,
-    required String? service,
-    required double? price,
-    String? notes,
-    String? clientId,
-    int? duration,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #createAppointmentModel,
-          [],
-          {
-            #professionalId: professionalId,
-            #serviceId: serviceId,
-            #appointmentDateTime: appointmentDateTime,
-            #clientName: clientName,
-            #clientPhone: clientPhone,
-            #service: service,
-            #price: price,
-            #notes: notes,
-            #clientId: clientId,
-            #duration: duration,
-          },
-        ),
-        returnValue: _i4.Future<_i2.Appointment>.value(_FakeAppointment_0(
-          this,
-          Invocation.method(
-            #createAppointmentModel,
-            [],
-            {
+            Invocation.method(#createAppointment, [], {
               #professionalId: professionalId,
               #serviceId: serviceId,
               #appointmentDateTime: appointmentDateTime,
@@ -430,10 +232,127 @@ class MockAppointmentsServiceV2 extends _i1.Mock
               #service: service,
               #price: price,
               #notes: notes,
-              #clientId: clientId,
-              #duration: duration,
-            },
-          ),
-        )),
-      ) as _i4.Future<_i2.Appointment>);
+            }),
+            returnValue: _i4.Future<_i2.Appointment>.value(
+              _FakeAppointment_0(
+                this,
+                Invocation.method(#createAppointment, [], {
+                  #professionalId: professionalId,
+                  #serviceId: serviceId,
+                  #appointmentDateTime: appointmentDateTime,
+                  #clientName: clientName,
+                  #clientPhone: clientPhone,
+                  #service: service,
+                  #price: price,
+                  #notes: notes,
+                }),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Appointment>);
+
+  @override
+  _i4.Future<List<_i2.Appointment>> getAppointments({String? status}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAppointments, [], {#status: status}),
+            returnValue: _i4.Future<List<_i2.Appointment>>.value(
+              <_i2.Appointment>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Appointment>>);
+
+  @override
+  _i4.Future<_i2.Appointment> updateAppointmentStatus(
+    String? appointmentId,
+    _i2.AppointmentStatus? newStatus,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateAppointmentStatus, [
+              appointmentId,
+              newStatus,
+            ]),
+            returnValue: _i4.Future<_i2.Appointment>.value(
+              _FakeAppointment_0(
+                this,
+                Invocation.method(#updateAppointmentStatus, [
+                  appointmentId,
+                  newStatus,
+                ]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Appointment>);
+
+  @override
+  _i4.Future<List<_i2.Appointment>> getAppointmentsList({String? status}) =>
+      (super.noSuchMethod(
+            Invocation.method(#getAppointmentsList, [], {#status: status}),
+            returnValue: _i4.Future<List<_i2.Appointment>>.value(
+              <_i2.Appointment>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Appointment>>);
+
+  @override
+  _i4.Future<_i2.Appointment> updateAppointment(_i2.Appointment? appointment) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateAppointment, [appointment]),
+            returnValue: _i4.Future<_i2.Appointment>.value(
+              _FakeAppointment_0(
+                this,
+                Invocation.method(#updateAppointment, [appointment]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Appointment>);
+
+  @override
+  _i4.Future<void> deleteAppointment(String? appointmentId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteAppointment, [appointmentId]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<List<_i2.Appointment>> createBatchAppointments(
+    List<_i2.Appointment>? appointments,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#createBatchAppointments, [appointments]),
+            returnValue: _i4.Future<List<_i2.Appointment>>.value(
+              <_i2.Appointment>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Appointment>>);
+
+  @override
+  _i4.Future<List<_i2.Appointment>> updateBatchStatus(
+    List<String>? ids,
+    _i2.AppointmentStatus? status,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateBatchStatus, [ids, status]),
+            returnValue: _i4.Future<List<_i2.Appointment>>.value(
+              <_i2.Appointment>[],
+            ),
+          )
+          as _i4.Future<List<_i2.Appointment>>);
+
+  @override
+  _i4.Future<_i2.Appointment> updateClientConfirmation(
+    String? id,
+    bool? isConfirmed,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateClientConfirmation, [id, isConfirmed]),
+            returnValue: _i4.Future<_i2.Appointment>.value(
+              _FakeAppointment_0(
+                this,
+                Invocation.method(#updateClientConfirmation, [id, isConfirmed]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Appointment>);
 }
