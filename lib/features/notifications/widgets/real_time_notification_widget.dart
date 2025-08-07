@@ -6,11 +6,11 @@ import '../services/real_time_notification_service.dart';
 /// Provider para o serviço de notificações em tempo real
 final realTimeNotificationServiceProvider =
     Provider<RealTimeNotificationService>((ref) {
-      return RealTimeNotificationService();
-    });
+  return RealTimeNotificationService();
+});
 
 class RealTimeNotificationWidget extends ConsumerStatefulWidget {
-  const RealTimeNotificationWidget({Key? key}) : super(key: key);
+  const RealTimeNotificationWidget({super.key});
 
   @override
   ConsumerState<RealTimeNotificationWidget> createState() =>

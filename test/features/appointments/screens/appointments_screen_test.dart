@@ -36,11 +36,11 @@ void main() {
 
     // Override do provider
     await tester.pumpWidget(
-      ProviderScope(
+      const ProviderScope(
         overrides: [
           // Remover override temporariamente
         ],
-        child: const MaterialApp(home: AppointmentsScreen()),
+        child: MaterialApp(home: AppointmentsScreen()),
       ),
     );
 
@@ -74,11 +74,11 @@ void main() {
 
     // Constrói o widget
     await tester.pumpWidget(
-      ProviderScope(
+      const ProviderScope(
         overrides: [
           // Remover override temporariamente
         ],
-        child: const MaterialApp(home: AppointmentsScreen()),
+        child: MaterialApp(home: AppointmentsScreen()),
       ),
     );
 
@@ -115,11 +115,11 @@ void main() {
 
     // Constrói o widget
     await tester.pumpWidget(
-      ProviderScope(
+      const ProviderScope(
         overrides: [
           // Remover override temporariamente
         ],
-        child: const MaterialApp(home: AppointmentsScreen()),
+        child: MaterialApp(home: AppointmentsScreen()),
       ),
     );
 

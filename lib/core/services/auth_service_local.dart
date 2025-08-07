@@ -59,7 +59,6 @@ class LocalAuthService {
         businessName: 'Meu Negócio',
         phone: '(11) 99999-9999',
         createdAt: DateTime.now(),
-        isActive: true,
       );
 
       _accessToken = 'local-token-${DateTime.now().millisecondsSinceEpoch}';
@@ -109,7 +108,6 @@ class LocalAuthService {
         businessName: 'Meu Negócio',
         phone: '(11) 99999-9999',
         createdAt: DateTime.now(),
-        isActive: true,
       );
 
       _accessToken = 'local-token-${DateTime.now().millisecondsSinceEpoch}';

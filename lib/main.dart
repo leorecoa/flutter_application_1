@@ -15,7 +15,7 @@ void main() async {
 
 /// Widget principal do aplicativo
 class MyApp extends ConsumerWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +33,7 @@ class MyApp extends ConsumerWidget {
 
 /// Tela principal do aplicativo (após autenticação)
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -219,13 +219,10 @@ class HomeScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
-                ...appointmentState.appointments
-                    .take(5)
-                    .map(
+                ...appointmentState.appointments.take(5).map(
                       (appointment) =>
                           _buildAppointmentCard(appointment, context, ref),
-                    )
-                    .toList(),
+                    ),
               ],
 
               if (appointmentState.isLoading)

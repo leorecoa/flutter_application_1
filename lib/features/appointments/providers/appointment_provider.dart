@@ -6,8 +6,8 @@ import '../domain/appointment_repository.dart';
 /// Provider para o estado dos agendamentos
 final appointmentProvider =
     StateNotifierProvider<AppointmentNotifier, AppointmentState>((ref) {
-      return AppointmentNotifier(ref.read(appointmentRepositoryProvider));
-    });
+  return AppointmentNotifier(ref.read(appointmentRepositoryProvider));
+});
 
 /// Estado dos agendamentos
 class AppointmentState {
@@ -60,7 +60,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Carrega agendamentos
   Future<void> loadAppointments({Map<String, dynamic>? filters}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final appointments = await _repository.getPaginatedAppointments(
@@ -118,7 +118,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Cria um novo agendamento
   Future<bool> createAppointment(Appointment appointment) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final newAppointment = await _repository.createAppointment(appointment);
@@ -137,7 +137,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Atualiza um agendamento
   Future<bool> updateAppointment(Appointment appointment) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final updatedAppointment = await _repository.updateAppointment(
@@ -162,14 +162,13 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Deleta um agendamento
   Future<bool> deleteAppointment(String id) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       await _repository.deleteAppointment(id);
 
-      final updatedAppointments = state.appointments
-          .where((a) => a.id != id)
-          .toList();
+      final updatedAppointments =
+          state.appointments.where((a) => a.id != id).toList();
 
       state = state.copyWith(
         appointments: updatedAppointments,
@@ -188,7 +187,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
     String id,
     AppointmentStatus status,
   ) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final updatedAppointment = await _repository.updateAppointmentStatus(
@@ -214,7 +213,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Atualiza a confirmação do cliente
   Future<bool> updateClientConfirmation(String id, bool isConfirmed) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final updatedAppointment = await _repository.updateClientConfirmation(
@@ -240,7 +239,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Cria múltiplos agendamentos
   Future<bool> createBatchAppointments(List<Appointment> appointments) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final newAppointments = await _repository.createBatchAppointments(
@@ -264,7 +263,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
     List<String> ids,
     AppointmentStatus status,
   ) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final updatedAppointments = await _repository.updateBatchStatus(
@@ -340,7 +339,7 @@ class AppointmentNotifier extends StateNotifier<AppointmentState> {
 
   /// Limpa o erro
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith();
   }
 
   /// Refresca os dados

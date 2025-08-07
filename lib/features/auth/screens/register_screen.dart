@@ -4,7 +4,7 @@ import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -33,9 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (_formKey.currentState?.validate() ?? false) {
-      final success = await ref
-          .read(authProvider.notifier)
-          .register(
+      final success = await ref.read(authProvider.notifier).register(
             _emailController.text.trim(),
             _passwordController.text,
             _nameController.text.trim(),

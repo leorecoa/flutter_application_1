@@ -1,49 +1,34 @@
-class Client {
-  final String id;
-  final String name;
-  final String phone;
-  final String? email;
-  final String? address;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-  const Client({
-    required this.id,
+class Client {
+  final String? id;
+  final String name;
+  final String email;
+  final String phoneNumber;
+
+  Client({
+    this.id,
     required this.name,
-    required this.phone,
-    this.email,
-    this.address,
+    required this.email,
+    required this.phoneNumber,
   });
 
-  factory Client.fromJson(Map<String, dynamic> json) {
+  factory Client.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
     return Client(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      phone: json['phone'] ?? '',
-      email: json['email'],
-      address: json['address'],
+      id: snapshot.id,
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'phone': phone,
-        'email': email,
-        'address': address,
-      };
-
-  Client copyWith({
-    String? id,
-    String? name,
-    String? phone,
-    String? email,
-    String? address,
-  }) {
-    return Client(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      phone: phone ?? this.phone,
-      email: email ?? this.email,
-      address: address ?? this.address,
-    );
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'email': email,
+      'phoneNumber': phoneNumber,
+    };
   }
 }

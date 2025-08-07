@@ -30,7 +30,7 @@ void main() {
     mockContainer = MockProviderContainer();
 
     // Mock read function
-    mockRead<T>(provider) {
+    Mock mockRead<T>(provider) {
       if (provider == paginatedAppointmentsProvider.notifier) {
         return MockPaginatedAppointmentsNotifier();
       }

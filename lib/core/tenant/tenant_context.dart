@@ -1,5 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 /// Contexto do tenant para isolamento de dados
 abstract class TenantContext {
   String get currentTenantId;

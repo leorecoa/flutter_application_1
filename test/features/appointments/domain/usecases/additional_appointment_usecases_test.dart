@@ -77,7 +77,6 @@ void main() {
         mockRepository.getPaginatedAppointments(
           page: 1,
           pageSize: 20,
-          filters: null,
         ),
       ).thenThrow(Exception('Repository error'));
 

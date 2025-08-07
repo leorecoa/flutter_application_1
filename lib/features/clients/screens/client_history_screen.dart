@@ -9,10 +9,10 @@ class ClientHistoryScreen extends StatefulWidget {
   final String clientId;
 
   const ClientHistoryScreen({
-    Key? key,
+    super.key,
     required this.clientName,
     required this.clientId,
-  }) : super(key: key);
+  });
 
   @override
   State<ClientHistoryScreen> createState() => _ClientHistoryScreenState();
@@ -74,30 +74,30 @@ class _ClientHistoryScreenState extends State<ClientHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _appointments.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.history, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Nenhum agendamento encontrado para ${widget.clientName}',
-                    textAlign: TextAlign.center,
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.history, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhum agendamento encontrado para ${widget.clientName}',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadClientAppointments,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = _appointments[index];
-                  return _buildAppointmentCard(appointment);
-                },
-              ),
-            ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadClientAppointments,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _appointments.length,
+                    itemBuilder: (context, index) {
+                      final appointment = _appointments[index];
+                      return _buildAppointmentCard(appointment);
+                    },
+                  ),
+                ),
     );
   }
 

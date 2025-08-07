@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A coleção 'users' é onde os perfis globais dos usuários são armazenados.
+    match /users/{userId} {
+      // Um usuário só pode ler/escrever em seu próprio documento.
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Permite a criação de um novo usuário se ele estiver autenticado.
+      allow create: if request.auth != null;
+    }
+
+    // A coleção 'tenants' contém todas as empresas.
+    match /tenants/{tenantId} {
+      // Permite leitura do documento do tenant se o usuário pertencer a ele.
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenants[tenantId] != null;
+
+      // Funções para verificar permissões.
+      function isOwner(tenantData) {
+        return tenantData.tenants[tenantId] == 'owner';
+      }
+      function isMember(tenantData) {
+        return tenantData.tenants[tenantId] != null;
+      }
+
+      // Regras para subcoleções (dados específicos do tenant).
+      // Esta regra se aplica a /appointments, /clients, /services, etc.
+      match /{subcollection}/{docId} {
+        // Permite leitura e escrita em qualquer subcoleção do tenant
+        // se o usuário for um membro desse tenant.
+        allow read, write: if request.auth != null && isMember(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+
+        // Exemplo de regra mais restritiva:
+        // Apenas o 'owner' do tenant pode deletar um cliente.
+        // allow delete: if request.auth != null && isOwner(get(/databases/$(database)/documents/users/$(request.auth.uid)).data);
+      }
+    }
+  }
+}

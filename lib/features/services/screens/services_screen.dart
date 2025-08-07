@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/models/service_model.dart';
 import '../services/services_service.dart';
-import '../widgets/add_edit_service_dialog.dart';
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({super.key});
@@ -60,28 +59,28 @@ class _ServicesScreenState extends State<ServicesScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _services.isEmpty
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.build, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('Nenhum serviço cadastrado'),
-                  Text('Toque em + para começar'),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: _loadServices,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _services.length,
-                itemBuilder: (context, index) {
-                  final service = _services[index];
-                  return _buildServiceCard(service);
-                },
-              ),
-            ),
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.build, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('Nenhum serviço cadastrado'),
+                      Text('Toque em + para começar'),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _loadServices,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _services.length,
+                    itemBuilder: (context, index) {
+                      final service = _services[index];
+                      return _buildServiceCard(service);
+                    },
+                  ),
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditDialog(),
         child: const Icon(Icons.add),
@@ -99,7 +98,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           children: [
             Text('Duração: ${service.duration} minutos'),
             Text('Preço: R\$ ${service.price.toStringAsFixed(2)}'),
-            if (service.description != null) Text(service.description!),
+            Text(service.description!),
           ],
         ),
         trailing: Row(

@@ -53,12 +53,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final isSignedIn = await _authService.isSignedIn();
     if (isSignedIn) {
       final user = await _authService.getCurrentUser();
-      state = state.copyWith(user: user, isAuthenticated: true, error: null);
+      state = state.copyWith(user: user, isAuthenticated: true);
     }
   }
 
   Future<bool> signIn(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final user = await _authService.signIn(email, password);
@@ -67,7 +67,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: user,
           isAuthenticated: true,
           isLoading: false,
-          error: null,
         );
         return true;
       } else {
@@ -89,7 +88,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String name, {
     String? phone,
   }) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final success = await _authService.register(
@@ -121,7 +120,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> updateUser(User user) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final success = await _authService.updateUser(user);
@@ -147,7 +146,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String currentPassword,
     String newPassword,
   ) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final success = await _authService.changePassword(
@@ -166,7 +165,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> deleteAccount(String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final success = await _authService.deleteAccount(password);
@@ -189,6 +188,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith();
   }
 }

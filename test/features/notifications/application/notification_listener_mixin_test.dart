@@ -92,7 +92,7 @@ void main() {
 
 // Widget de teste que implementa o mixin NotificationActionListener
 class TestNotificationListener extends ConsumerStatefulWidget {
-  const TestNotificationListener({Key? key}) : super(key: key);
+  const TestNotificationListener({super.key});
 
   @override
   TestNotificationListenerState createState() =>

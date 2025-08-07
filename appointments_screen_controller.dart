@@ -30,7 +30,7 @@ class AppointmentsScreenController extends StateNotifier<AppointmentsState> {
   Future<void> fetchAppointmentsForMonth(DateTime month) async {
     state = state.copyWith(appointmentsForSelectedDay: const AsyncValue.loading());
     try {
-      final firstDay = DateTime(month.year, month.month, 1);
+      final firstDay = DateTime(month.year, month.month);
       final lastDay = DateTime(month.year, month.month + 1, 0);
 
       final appointments = await _repository.getAppointments(

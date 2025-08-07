@@ -7,7 +7,7 @@ import '../providers/appointment_provider.dart';
 class AppointmentFormScreen extends ConsumerStatefulWidget {
   final Appointment? appointment;
 
-  const AppointmentFormScreen({Key? key, this.appointment}) : super(key: key);
+  const AppointmentFormScreen({super.key, this.appointment});
 
   @override
   ConsumerState<AppointmentFormScreen> createState() =>
@@ -26,7 +26,7 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   double _price = 0.0;
   int _durationMinutes = 60;
-  String _professionalId =
+  final String _professionalId =
       '1'; // Em uma implementação real, viria do usuário logado
 
   bool _isLoading = false;
@@ -104,8 +104,7 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
         );
 
         final appointment = Appointment(
-          id:
-              widget.appointment?.id ??
+          id: widget.appointment?.id ??
               DateTime.now().millisecondsSinceEpoch.toString(),
           professionalId: _professionalId,
           serviceId:
@@ -299,20 +298,20 @@ class _AppointmentFormScreenState extends ConsumerState<AppointmentFormScreen> {
                         border: OutlineInputBorder(),
                       ),
                       value: _durationMinutes,
-                      items: [
-                        const DropdownMenuItem(
+                      items: const [
+                        DropdownMenuItem(
                           value: 30,
                           child: Text('30 min'),
                         ),
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: 60,
                           child: Text('1 hora'),
                         ),
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: 90,
                           child: Text('1h 30min'),
                         ),
-                        const DropdownMenuItem(
+                        DropdownMenuItem(
                           value: 120,
                           child: Text('2 horas'),
                         ),

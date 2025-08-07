@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/services/api_service.dart';
 
 class SettingsScreen extends StatefulWidget {

@@ -146,7 +146,7 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           childAspectRatio: 1.5,
-          children: [
+          children: const [
             DashboardStatsCard(
               title: 'Agendamentos',
               value: '12',
@@ -307,7 +307,6 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildBottomNavigationBar(BuildContext context) {
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      currentIndex: 0, // Dashboard é a primeira tela
       onTap: (index) {
         switch (index) {
           case 0:
@@ -497,7 +496,8 @@ class RecentAppointmentsCard extends StatelessWidget {
               (appointment) => ListTile(
                 leading: CircleAvatar(
                   backgroundColor: _getStatusColor(appointment.status),
-                  child: Icon(Icons.person, color: Colors.white, size: 20),
+                  child:
+                      const Icon(Icons.person, color: Colors.white, size: 20),
                 ),
                 title: Text(appointment.clientName),
                 subtitle: Text(

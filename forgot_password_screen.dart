@@ -5,7 +5,7 @@ import 'package:flutter_application_1/core/services/amplify_service.dart';
 import 'package:flutter_application_1/features/auth/reset_password_screen.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   ConsumerState<ForgotPasswordScreen> createState() =>

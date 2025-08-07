@@ -22,26 +22,27 @@ class Appointment {
 }
 
 // Provider mock para agendamentos
-final appointmentsProvider = FutureProvider.family<List<Appointment>, DateTime>((ref, date) async {
+final appointmentsProvider =
+    FutureProvider.family<List<Appointment>, DateTime>((ref, date) async {
   // Simula dados de agendamentos para demonstração
   await Future.delayed(const Duration(milliseconds: 500));
-  
+
   return [
     Appointment(
       id: '1',
       clientName: 'João Silva',
       serviceName: 'Corte de Cabelo',
       dateTime: date,
-      startTime: DateTime(date.year, date.month, date.day, 9, 0),
-      endTime: DateTime(date.year, date.month, date.day, 10, 0),
+      startTime: DateTime(date.year, date.month, date.day, 9),
+      endTime: DateTime(date.year, date.month, date.day, 10),
     ),
     Appointment(
       id: '2',
       clientName: 'Maria Santos',
       serviceName: 'Manicure',
       dateTime: date,
-      startTime: DateTime(date.year, date.month, date.day, 14, 0),
-      endTime: DateTime(date.year, date.month, date.day, 15, 0),
+      startTime: DateTime(date.year, date.month, date.day, 14),
+      endTime: DateTime(date.year, date.month, date.day, 15),
     ),
   ];
 });

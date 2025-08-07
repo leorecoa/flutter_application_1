@@ -8,14 +8,14 @@ class ServicesService {
     final response = await _apiService.get('/services');
     // Implementação temporária
     return [
-      Service(
+      const Service(
         id: '1',
         name: 'Corte de Cabelo',
         duration: 30,
         price: 50.0,
         description: 'Corte de cabelo masculino',
       ),
-      Service(
+      const Service(
         id: '2',
         name: 'Manicure',
         duration: 60,

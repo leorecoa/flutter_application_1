@@ -55,7 +55,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -90,7 +90,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -122,7 +122,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -143,7 +143,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> existingAppointments = appointmentsJson
+      final List<Appointment> existingAppointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -173,7 +173,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -196,7 +196,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -219,7 +219,7 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final prefs = await SharedPreferences.getInstance();
       final appointmentsJson = prefs.getStringList(_appointmentsKey) ?? [];
 
-      List<Appointment> appointments = appointmentsJson
+      final List<Appointment> appointments = appointmentsJson
           .map((json) => _appointmentFromJson(jsonDecode(json)))
           .toList();
 
@@ -249,9 +249,8 @@ class LocalAppointmentRepository implements AppointmentRepository {
       final status = filters['status'] as String;
       if (status.isNotEmpty && status != 'all') {
         final appointmentStatus = _stringToAppointmentStatus(status);
-        filtered = filtered
-            .where((a) => a.status == appointmentStatus)
-            .toList();
+        filtered =
+            filtered.where((a) => a.status == appointmentStatus).toList();
       }
     }
 
@@ -367,9 +366,8 @@ class LocalAppointmentRepository implements AppointmentRepository {
       serviceName: json['serviceName'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       status: AppointmentStatus.values[json['status'] ?? 0],
-      duration: json['duration'] != null
-          ? Duration(minutes: json['duration'])
-          : null,
+      duration:
+          json['duration'] != null ? Duration(minutes: json['duration']) : null,
       notes: json['notes'],
       clientId: json['clientId'],
       confirmedByClient: json['confirmedByClient'] ?? false,
@@ -412,9 +410,8 @@ class LocalAppointmentRepository implements AppointmentRepository {
 
   /// Exporta para JSON
   String _exportToJson(List<Appointment> appointments) {
-    final appointmentsJson = appointments
-        .map((a) => _appointmentToJson(a))
-        .toList();
+    final appointmentsJson =
+        appointments.map((a) => _appointmentToJson(a)).toList();
     return jsonEncode(appointmentsJson);
   }
 

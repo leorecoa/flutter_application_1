@@ -4,7 +4,7 @@ import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -58,9 +58,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               : null,
         );
 
-        final success = await ref
-            .read(authProvider.notifier)
-            .updateUser(updatedUser);
+        final success =
+            await ref.read(authProvider.notifier).updateUser(updatedUser);
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -87,9 +86,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       return;
     }
 
-    final success = await ref
-        .read(authProvider.notifier)
-        .changePassword(
+    final success = await ref.read(authProvider.notifier).changePassword(
           _currentPasswordController.text,
           _newPasswordController.text,
         );
@@ -165,9 +162,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (confirmed == true) {
       // Aqui você pode adicionar um campo para confirmar a senha
-      final success = await ref
-          .read(authProvider.notifier)
-          .deleteAccount('password');
+      final success =
+          await ref.read(authProvider.notifier).deleteAccount('password');
       if (success && mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -220,7 +216,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             .split(' ')
                             .map((n) => n[0])
                             .take(2)
-                            .join('')
+                            .join()
                             .toUpperCase(),
                         style: const TextStyle(
                           fontSize: 24,

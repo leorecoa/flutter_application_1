@@ -6,32 +6,32 @@ import '../errors/app_exceptions.dart';
 /// Contexto do tenant atual
 class TenantContext extends StateNotifier<Tenant?> {
   TenantContext() : super(null);
-  
+
   /// Obtém o ID do tenant atual
   String get currentTenantId => state?.id ?? '';
-  
+
   /// Obtém o nome do tenant atual
   String get currentTenantName => state?.name ?? '';
-  
+
   /// Verifica se há um tenant selecionado
   bool get hasTenant => state != null;
-  
+
   /// Define o tenant atual
   void setTenant(Tenant tenant) {
     state = tenant;
   }
-  
+
   /// Limpa o tenant atual
   void clearTenant() {
     state = null;
   }
-  
+
   /// Verifica se o usuário tem acesso ao tenant
   void validateTenantAccess(String tenantId) {
     if (state == null) {
       throw TenantException('Nenhum tenant selecionado');
     }
-    
+
     if (state!.id != tenantId) {
       throw TenantException('Acesso negado ao tenant $tenantId');
     }
@@ -39,7 +39,8 @@ class TenantContext extends StateNotifier<Tenant?> {
 }
 
 /// Provider para o contexto do tenant
-final tenantContextProvider = StateNotifierProvider<TenantContext, Tenant?>((ref) {
+final tenantContextProvider =
+    StateNotifierProvider<TenantContext, Tenant?>((ref) {
   return TenantContext();
 });
 
@@ -47,32 +48,32 @@ final tenantContextProvider = StateNotifierProvider<TenantContext, Tenant?>((ref
 class TenantMiddleware extends ConsumerWidget {
   final Widget child;
   final String? requiredTenantId;
-  
+
   const TenantMiddleware({
-    Key? key,
+    super.key,
     required this.child,
     this.requiredTenantId,
-  }) : super(key: key);
-  
+  });
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tenantContext = ref.watch(tenantContextProvider.notifier);
-    
+
     // Se não há requisito específico de tenant, apenas renderiza o filho
     if (requiredTenantId == null) {
       return child;
     }
-    
+
     // Verifica se há um tenant selecionado
     if (!tenantContext.hasTenant) {
       return const _TenantSelectionRequired();
     }
-    
+
     // Verifica se o tenant atual tem acesso ao recurso
     if (tenantContext.currentTenantId != requiredTenantId) {
       return const _TenantAccessDenied();
     }
-    
+
     // Acesso permitido
     return child;
   }
@@ -81,7 +82,7 @@ class TenantMiddleware extends ConsumerWidget {
 /// Widget exibido quando é necessário selecionar um tenant
 class _TenantSelectionRequired extends StatelessWidget {
   const _TenantSelectionRequired();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +113,7 @@ class _TenantSelectionRequired extends StatelessWidget {
 /// Widget exibido quando o acesso ao tenant é negado
 class _TenantAccessDenied extends StatelessWidget {
   const _TenantAccessDenied();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

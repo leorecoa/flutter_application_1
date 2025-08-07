@@ -1,5 +1,3 @@
-import 'package:flutter_application_1/domain/entities/user.dart';
-
 /// Status de agendamento
 enum AppointmentStatus {
   scheduled('Agendado'),

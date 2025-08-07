@@ -1,49 +1,38 @@
-class Service {
-  final String id;
-  final String name;
-  final int duration; // Duração em minutos
-  final double price;
-  final String? description;
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-  const Service({
-    required this.id,
+class Service {
+  final String? id;
+  final String name;
+  final String description;
+  final double price;
+  final int durationInMinutes;
+
+  Service({
+    this.id,
     required this.name,
-    required this.duration,
+    required this.description,
     required this.price,
-    this.description,
+    required this.durationInMinutes,
   });
 
-  factory Service.fromJson(Map<String, dynamic> json) {
+  factory Service.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
     return Service(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      duration: json['duration'] ?? 0,
-      price: (json['price'] ?? 0).toDouble(),
-      description: json['description'],
+      id: snapshot.id,
+      name: data['name'] ?? '',
+      description: data['description'] ?? '',
+      price: (data['price'] ?? 0.0).toDouble(),
+      durationInMinutes: data['durationInMinutes'] ?? 0,
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'duration': duration,
-        'price': price,
-        'description': description,
-      };
-
-  Service copyWith({
-    String? id,
-    String? name,
-    int? duration,
-    double? price,
-    String? description,
-  }) {
-    return Service(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      duration: duration ?? this.duration,
-      price: price ?? this.price,
-      description: description ?? this.description,
-    );
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'description': description,
+      'price': price,
+      'durationInMinutes': durationInMinutes,
+    };
   }
 }

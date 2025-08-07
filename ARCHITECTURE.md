@@ -70,9 +70,9 @@ lib/
 │   │   ├── tenant_context.dart
 │   │   └── tenant_repository.dart
 │   ├── services/
-│   │   ├── api_service.dart
-│   │   ├── auth_service.dart
-│   │   └── storage_service.dart
+│   │   ├── api_service.dart      # (Ex: Firebase Functions, REST)
+│   │   ├── auth_service.dart     # (Ex: Firebase Auth)
+│   │   └── storage_service.dart  # (Ex: Firebase Storage)
 │   └── utils/
 │       ├── debouncer.dart
 │       └── validators.dart

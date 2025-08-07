@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../models/notification_model.dart';
 import '../models/appointment_model.dart';
 
 /// Serviço para gerenciar notificações

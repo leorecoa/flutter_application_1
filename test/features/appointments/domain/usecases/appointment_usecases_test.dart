@@ -59,7 +59,7 @@ void main() {
       when(
         mockNotificationService.scheduleAppointmentReminders(any),
       ).thenAnswer((_) async {
-        return null;
+        return;
       });
 
       // Act
@@ -110,13 +110,13 @@ void main() {
       when(mockRepository.deleteAppointment(appointmentId)).thenAnswer((
         _,
       ) async {
-        return null;
+        return;
       });
 
       when(
         mockNotificationService.cancelAppointmentNotifications(appointmentId),
       ).thenAnswer((_) async {
-        return null;
+        return;
       });
 
       // Act

@@ -6,7 +6,7 @@ import '../screens/login_screen.dart';
 class AuthWrapper extends ConsumerWidget {
   final Widget child;
 
-  const AuthWrapper({Key? key, required this.child}) : super(key: key);
+  const AuthWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

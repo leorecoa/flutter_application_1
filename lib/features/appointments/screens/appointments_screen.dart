@@ -53,7 +53,7 @@ class AppointmentsScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: _getStatusColor(appointment.status),
-                    child: Icon(Icons.person, color: Colors.white),
+                    child: const Icon(Icons.person, color: Colors.white),
                   ),
                   title: Text(appointment.clientName),
                   subtitle: Text(

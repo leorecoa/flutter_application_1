@@ -6,7 +6,7 @@ import '../../../core/routes/app_router.dart';
 
 /// Tela de splash para inicialização do app
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();

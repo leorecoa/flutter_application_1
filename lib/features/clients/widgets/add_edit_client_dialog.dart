@@ -24,7 +24,7 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
   final _emailController = TextEditingController();
   final _addressController = TextEditingController();
   final _clientsService = ClientsService();
-  
+
   bool _isLoading = false;
   bool get isEditing => widget.client != null;
 
@@ -55,7 +55,8 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
                   labelText: 'Nome do Cliente',
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -66,7 +67,8 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
                 ),
                 keyboardType: TextInputType.phone,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) => value?.isEmpty == true ? 'Campo obrigatório' : null,
+                validator: (value) =>
+                    value?.isEmpty == true ? 'Campo obrigatório' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -97,9 +99,12 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _saveClient,
-          child: _isLoading 
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-            : const Text('Salvar'),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Salvar'),
         ),
       ],
     );
@@ -116,14 +121,16 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
           'name': _nameController.text,
           'phone': _phoneController.text,
           'email': _emailController.text.isEmpty ? null : _emailController.text,
-          'address': _addressController.text.isEmpty ? null : _addressController.text,
+          'address':
+              _addressController.text.isEmpty ? null : _addressController.text,
         });
       } else {
-        await _clientsService.createClientModel(
+        _clientsService.createClientModel(
           name: _nameController.text,
           phone: _phoneController.text,
           email: _emailController.text.isEmpty ? null : _emailController.text,
-          address: _addressController.text.isEmpty ? null : _addressController.text,
+          address:
+              _addressController.text.isEmpty ? null : _addressController.text,
         );
       }
 
@@ -132,7 +139,8 @@ class _AddEditClientDialogState extends State<AddEditClientDialog> {
         widget.onClientSaved?.call();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditing ? 'Cliente atualizado!' : 'Cliente criado!'),
+            content:
+                Text(isEditing ? 'Cliente atualizado!' : 'Cliente criado!'),
             backgroundColor: Colors.green,
           ),
         );

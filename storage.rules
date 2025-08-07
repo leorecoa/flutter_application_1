@@ -1,0 +1,13 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Define que todas as pastas de arquivos estarão dentro de /tenants/{tenantId}
+    match /tenants/{tenantId}/{allPaths=**} {
+      // Permite leitura e escrita de arquivos somente se o usuário autenticado
+      // pertencer ao tenant correspondente (verificado no Firestore).
+      allow read, write: if request.auth != null &&
+                           get(/databases/(default)/documents/users/$(request.auth.uid)).data.tenants[tenantId] != null;
+    }
+  }
+}

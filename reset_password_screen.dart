@@ -6,7 +6,7 @@ import 'package:flutter_application_1/features/auth/login_screen.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String email;
-  const ResetPasswordScreen({Key? key, required this.email}) : super(key: key);
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
   ConsumerState<ResetPasswordScreen> createState() =>

@@ -24,12 +24,12 @@ dependencies:
   printing: ^5.12.0
   table_calendar: ^3.1.1
 
-  # AWS Amplify - Descomentado e atualizado
-  amplify_flutter: ^1.7.0
-  amplify_auth_cognito: ^1.7.0
-  amplify_api: ^1.7.0
-  amplify_storage_s3: ^1.7.0
-  amplify_analytics_pinpoint: ^1.7.0
+  # Firebase - Adicionado para a nova arquitetura de backend
+  firebase_core: ^2.30.1
+  firebase_auth: ^4.19.2
+  cloud_firestore: ^4.17.0
+  firebase_storage: ^11.7.2
+  firebase_analytics: ^10.10.3 # Opcional, para analytics
 
 dev_dependencies:
   flutter_test:

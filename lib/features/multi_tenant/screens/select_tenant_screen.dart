@@ -7,7 +7,7 @@ import '../../../core/models/tenant_model.dart';
 
 /// Tela para seleção de tenant
 class SelectTenantScreen extends ConsumerStatefulWidget {
-  const SelectTenantScreen({Key? key}) : super(key: key);
+  const SelectTenantScreen({super.key});
 
   @override
   ConsumerState<SelectTenantScreen> createState() => _SelectTenantScreenState();

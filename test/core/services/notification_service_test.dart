@@ -63,7 +63,7 @@ void main() {
     });
 
     test('should cancel appointment notifications', () async {
-      final appointmentId = '1';
+      const appointmentId = '1';
 
       // Mock do método cancelAppointmentNotifications
       when(mockNotificationsPlugin.cancel(any)).thenAnswer((_) async => {});
